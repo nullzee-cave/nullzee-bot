@@ -1,0 +1,28 @@
+import re
+from motor.motor_asyncio import AsyncIOMotorClient
+from api_key import userColl
+
+
+def min_level(level: int):
+    async def predicate(ctx):
+        if 706285767898431500 in (
+        roles := [z.id for z in ctx.author.roles]) or 668724083718094869 in roles or 668736363297898506 in roles:
+            return True
+        user = await userColl.find_one({"_id": str(ctx.author.id)})
+        if not user:
+            return False
+        if user["level"] < level:
+            return False
+        return True
+
+    return predicate
+
+
+def stringToSeconds(string):
+    regex = "(\d+)(.)"
+    d = {"s": 1, "m": 60, "h": 3600, "d": 86400}
+    match = re.search(regex, string)
+    if not match:
+        return None
+    else:
+        return int(match.group(1)) * d[match.group(2)]
