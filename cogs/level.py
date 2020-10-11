@@ -85,12 +85,12 @@ class level(commands.Cog, name="levelling"):
     async def update_data(self, user):
         if not await userColl.find_one({"_id": str(user.id)}):
             await userColl.insert_one(
-                {"_id": str(user.id), "experience": 0, "weekly": 0, "level": 1, "last_message": 0})
+                {"_id": str(user.id), "experience": 0, "weekly": 0, "level": 1, "last_message": 0, "points": 0, "last_points": 0})
         return await userColl.find_one({"_id": str(user.id)})
 
     async def add_experience(self, userData, user, exp):
         if time.time() - userData["last_message"] > 30:
-            points_bonus = 1 if userData["experience"] > userData["last_points"] + 100 else 0
+            points_bonus = 1 if userData["experience"] > userData["last_points"] + 1000 else 0
             await userColl.update_one({"_id": str(user.id)},
                                       {"$inc": {"experience": exp, "weekly": exp, "points": points_bonus},
                                        "$set": {"last_message": time.time(), "last_points": userData["experience"] + exp if points_bonus else userData["last_points"]}})
@@ -104,6 +104,7 @@ class level(commands.Cog, name="levelling"):
         lvl_end = 50 * (lvl_start ** 1.5)
         if experience > lvl_end:
             await userColl.update_one({"_id": str(user.id)}, {"$inc": {"level": 1}, "$set": {"experience": 0, "last_points": 0}})
+            0 - (experience - (userData["last_points"] + 100))
             await ctx.channel.send(f":tada: Congrats {user.mention}, you levelled up to level {lvl_start + 1}!")
             with open('levelroles.json') as f:
                 levelroles = json.load(f)
@@ -120,7 +121,7 @@ class level(commands.Cog, name="levelling"):
         if not userData:
             return await ctx.send("This user has no level")
         embed = discord.Embed(title=f"Level: {str(round(userData['level']))}",
-                              description=f"XP: {str(round(userData['experience']))}/{str(round(50 * (round(userData['level']) ** 1.5)))}\nWeekly XP: {str(round(userData['weekly']))}",
+                              description=f"XP: {str(round(userData['experience']))}/{str(round(50 * (round(userData['level']) ** 1.5)))}\nWeekly XP: {str(round(userData['weekly']))}\nPoints: {userData['points']}",
                               color=0x00FF00)
         embed.set_author(name=user, icon_url=user.avatar_url)
         await ctx.send(embed=embed)
