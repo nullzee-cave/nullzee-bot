@@ -11,7 +11,7 @@ import math
 import os
 import datetime
 from EZPaginator import Paginator
-from helpers.utils import min_level
+from helpers.utils import min_level, get_user
 from api_key import userColl
 import pymongo
 
@@ -68,7 +68,7 @@ class level(commands.Cog, name="levelling"):
         if not message.guild:
             return
         else:
-            userData = await self.update_data(message.author)
+            userData = await get_user(message.author)
             if str(message.channel.id) in self.multipliers:
                 multiplier = self.multipliers[str(message.channel.id)]
             else:
@@ -82,11 +82,6 @@ class level(commands.Cog, name="levelling"):
             userData = await self.add_experience(userData, message.author, number)
             await self.level_up(message, userData, message.author)
 
-    async def update_data(self, user):
-        if not await userColl.find_one({"_id": str(user.id)}):
-            await userColl.insert_one(
-                {"_id": str(user.id), "experience": 0, "weekly": 0, "level": 1, "last_message": 0, "points": 0, "last_points": 0})
-        return await userColl.find_one({"_id": str(user.id)})
 
     async def add_experience(self, userData, user, exp):
         if time.time() - userData["last_message"] > 30:
