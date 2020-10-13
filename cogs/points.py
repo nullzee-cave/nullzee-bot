@@ -3,7 +3,7 @@ import discord
 from api_key import userColl
 from helpers.utils import get_user
 from perks.perkSystem import PerkConverter, perk_list
-from perks import perks
+from perks import perks, perkSystem
 
 
 class Points(commands.Cog):
@@ -18,7 +18,7 @@ class Points(commands.Cog):
             for perk in perk_list:
                 string += f"{perk.name}:  `{perk.cost} points`\n"
             return await ctx.send(embed=discord.Embed(title="Shop", description=string, color=0x00FF00) \
-                                  .set_footer(text="purchase a perk with -buy [perk name]"))
+                                  .set_footer(text="purchase a perk with -purchase [perk name]"))
         else:
             return await ctx.send(embed=discord.Embed(
                 title=f"Shop page for {item.name}",
@@ -29,11 +29,14 @@ class Points(commands.Cog):
     @commands.guild_only()
     async def purchase(self, ctx, item: PerkConverter, *, arg):
         user = await get_user(ctx.author)
+        await item.on_buy(ctx, arg)
         if user["points"] >= item.cost:
             await item.on_buy(ctx, arg)
             await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": {"points": -item.cost}})
+            await ctx.send(f"successfully bought `{item.name}` for `{item.cost}` points")
         else:
             return await ctx.send("You cannot afford this!")
+
 
 def setup(bot):
     bot.add_cog(Points(bot, False))
