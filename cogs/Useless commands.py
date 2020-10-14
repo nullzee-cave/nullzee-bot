@@ -1,10 +1,15 @@
 import discord
 from discord.ext import commands
 
-@commands.command()
-async def f(self,ctx):
-    await ctx.send('press_f')
-    await ctx.send(f'{ctx.author.mention} has paid their respects')
+class useless_commands(commands.cog, name = 'Useless Commands'):
+    def __init__ (self,bot,hidden):
+        self.bot = bot
+        self.hidden = hidden 
+
+    @commands.command()
+    async def f(self,ctx):
+        await ctx.send(':press_f:')
+        await ctx.send(f'{ctx.author.mention} has paid their respects')
 
 def setup(bot):
     bot.add_cog(usless_commands(bot, True))
