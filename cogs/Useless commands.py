@@ -11,5 +11,11 @@ class useless_commands(commands.cog, name = 'Useless Commands'):
         await ctx.send(':press_f:')
         await ctx.send(f'{ctx.author.mention} has paid their respects')
 
+    @commands.command()
+    async def hug(self,ctx,member: discord.Member):
+        await ctx.send (':hug:')
+        await ctx.send(f'{ctx.author.mention} hugged {member.mention}')
+    
+
 def setup(bot):
     bot.add_cog(usless_commands(bot, True))
