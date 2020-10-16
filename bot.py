@@ -27,7 +27,7 @@ red = color.RED
 yellow = color.YELLOW
 
 
-# endregion
+# endregion 
 
 
 def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill="█", printEnd="\r"):
