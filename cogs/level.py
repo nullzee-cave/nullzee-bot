@@ -86,7 +86,7 @@ class level(commands.Cog, name="levelling"):
     async def add_experience(self, userData, user, exp):
         if time.time() - userData["last_message"] > 30:
             await userColl.update_one({"_id": str(user.id)},
-                                      {"$inc": {"experience": exp, "weekly": exp, "points": points_bonus},
+                                      {"$inc": {"experience": exp, "weekly": exp},
                                        "$set": {"last_message": time.time()}})
             return await userColl.find_one({"_id": str(user.id)})
         else:
