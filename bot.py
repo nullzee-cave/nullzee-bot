@@ -9,7 +9,6 @@ import random
 import json
 import math
 from api_key import token
-from perks.perkSystem import PerkError
 
 
 def fmtTime():
@@ -104,8 +103,6 @@ async def on_command_error(ctx, error):
         await ctx.send("You do not have permission to use this command.")
         return
 
-    if isinstance(error, PerkError):
-        await error.send_error(ctx)
 
     #     # ignore all other exception types, but print them to stderr
     print('Ignoring exception in command {}: {}'.format(ctx.command, error), file=sys.stderr)
