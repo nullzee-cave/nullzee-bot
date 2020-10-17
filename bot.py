@@ -8,7 +8,7 @@ import asyncio
 import random
 import json
 import math
-from api_key import token
+from api_key import token, prefix
 
 
 def fmtTime():
@@ -41,7 +41,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
         print(f'\r{purple}{prefix} |{bar}| {percent}%  {suffix}{endc}', end=printEnd)
 
 
-bot = commands.Bot(command_prefix="--", case_insensitive=True)
+bot = commands.Bot(command_prefix=prefix, case_insensitive=True)
 bot.remove_command('help')
 
 cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.giveaway']
