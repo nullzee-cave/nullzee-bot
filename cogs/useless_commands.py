@@ -18,4 +18,4 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
     
 
 def setup(bot):
-    bot.add_cog(Usless_commands(bot, False))
+    bot.add_cog(Useless_commands(bot, False))
