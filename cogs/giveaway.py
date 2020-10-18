@@ -12,7 +12,12 @@ from helpers.utils import stringToSeconds as sts
 from datetime import datetime
 from EZPaginator import Paginator
 
-from api_key import userColl
+from motor.motor_asyncio import AsyncIOMotorClient
+import pymongo
+
+cluster = AsyncIOMotorClient("secret")
+db = cluster["nullzee"]
+userColl = db["users"]
 
 
 class giveaway(commands.Cog, name="giveaway"):
@@ -27,10 +32,8 @@ class giveaway(commands.Cog, name="giveaway"):
         "interactive giveaway setup"
         req = False
         reqstring = ''
-
         def check(m):
             return m.channel == ctx.channel and m.author == ctx.author
-
         await ctx.send("In which channel would you like to host the giveaway?")
         try:
             channelmsg = await self.bot.wait_for('message', timeout=60.0, check=check)
@@ -92,6 +95,17 @@ class giveaway(commands.Cog, name="giveaway"):
             level = 0
         if level > 70:
             return
+        await ctx.send("Must the winner be a current or previous server booster? `Y/N`")
+        try:
+            boosterMsg = await self.bot.wait_for('message', timeout=60.0, check=check)
+        except asyncio.TimeoutError:
+            return await ctx.send("Giveaway creation timed out")
+        if boosterMsg.content.lower() == "y":
+            req = True
+            booster = True
+            reqstring += "Must be a current or previous server booster\n"
+        else:
+            booster = False
         await ctx.send("What is the giveaway for?")
         try:
             contentmsg = await self.bot.wait_for('message', timeout=60.0, check=check)
@@ -120,8 +134,7 @@ class giveaway(commands.Cog, name="giveaway"):
             donstring = f"Donated by: {donor.mention}"
         else:
             donstring = ''
-        embed = discord.Embed(title=content, description=f"React with :tada: to enter!\n{donstring}",
-                              color=discord.Color.green()).set_footer(text=f"{winnerCount} winners, ends at")
+        embed = discord.Embed(title=content, description=f"React with :tada: to enter!\n{donstring}", color=discord.Color.green()).set_footer(text=f"{winnerCount} winners, ends at")
         giveawayTime += math.trunc(time.time())
         embed.timestamp = datetime.fromtimestamp(giveawayTime)
         if req:
@@ -133,21 +146,19 @@ class giveaway(commands.Cog, name="giveaway"):
         await msg.add_reaction(u"\U0001F389")
         with open('giveaways.json') as f:
             giveaways = json.load(f)
-        giveaways[str(msg.id)] = {"active": True, "mod": ctx.author.id, "channel": channel.id, "ends": giveawayTime,
-                                  "winnercount": winnerCount, "role": roleid, "level": level, "content": content,
-                                  "donor": donor.id}
+        giveaways[str(msg.id)] = {"active": True, "mod": ctx.author.id, "channel": channel.id, "ends": giveawayTime, "winnercount": winnerCount, "role": roleid, "level": level, "booster": booster, "content": content, "donor": donor.id}
         with open('giveaways.json', 'w') as f:
             json.dump(giveaways, f)
         await ctx.send(f"Giveaway created!\n{msg.jump_url}")
 
     async def reqcheck(self, giveaway, user):
-        # if "nick" in giveaway:
-        #     if user.nick.replace("✰", "").strip() == giveaway["nick"]:
-        #         nick = True
-        #     else:
-        #         return False
-        # else:
-        #     nick = True
+        if "booster" in giveaway and giveaway["booster"]: 
+            if 668724083718094869 in [z.id for z in user.roles] or 706285767898431500 in [z.id for z in user.roles]:
+                booster = True
+            else:
+                booster = False
+        else:
+            booster = True
         if giveaway["role"]:
             if giveaway["role"] in [z.id for z in user.roles]:
                 role = True
@@ -158,9 +169,8 @@ class giveaway(commands.Cog, name="giveaway"):
         if giveaway["level"]:
 
             try:
-                # if users[str(user.id)]["level"] >= giveaway["level"]:
-                if (userData := await userColl.find_one({"_id": str(user.id)})) and userData["level"] >= giveaway[
-                    "level"]:
+                #if users[str(user.id)]["level"] >= giveaway["level"]:
+                if (userData := await userColl.find_one({"_id": str(user.id)})) and userData["level"] >= giveaway["level"]:
                     level = True
                 else:
                     level = False
@@ -168,9 +178,11 @@ class giveaway(commands.Cog, name="giveaway"):
                 level = False
         else:
             level = True
-        return role and level
+        return role and level and booster
 
-    async def rollGiveaway(self, guild, giveaways, id: str):
+
+    async def rollGiveaway(self, guild, giveaways, id:str):
+        print("rolling {}".format(id))
         thisGiveaway = giveaways[id]
         channel = guild.get_channel(thisGiveaway["channel"])
         message = await channel.fetch_message(int(id))
@@ -181,11 +193,12 @@ class giveaway(commands.Cog, name="giveaway"):
         for i in message.reactions:
             async for user in i.users():
                 reactionusers.append(user)
-        # reactions = [z.user for z in message.reactions if str(z.emoji) == u"\U0001F389"]
+        #reactions = [z.user for z in message.reactions if str(z.emoji) == u"\U0001F389"]
         winners = []
         winrole = guild.get_role(672141836567183413)
-        for count in range(int(thisGiveaway["winnercount"])):
+        for count in range(thisGiveaway["winnercount"]):
             # print(f"{count} something here")
+            print(count)
             x = False
             attempts = 0
             while not x:
@@ -197,7 +210,7 @@ class giveaway(commands.Cog, name="giveaway"):
                     with open('giveaways.json', 'w') as f:
                         json.dump(giveaways, f)
                     return await channel.send("Could not determine a winner.")
-                    # return await channel.send("Critical error. contact developer. note: this message means that the error has been supressed and should not cause any issues. Error code: `g-w-404-tma`")
+                    #return await channel.send("Critical error. contact developer. note: this message means that the error has been supressed and should not cause any issues. Error code: `g-w-404-tma`")
             winners.append(thisWinner)
             await thisWinner.add_roles(winrole)
         winnerstring = "\n".join([z.mention for z in winners])
@@ -207,15 +220,13 @@ class giveaway(commands.Cog, name="giveaway"):
         embed.description = f'Donated by: {donor.mention}\nWinners:{winnerstring}'
         embed.color = discord.Color.darker_grey()
         await message.edit(embed=embed)
-        await channel.send(
-            f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{thisGiveaway['content']}**!!")
+        await channel.send(f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{thisGiveaway['content']}**!!")
         giveaways[id]["active"] = False
-        with open('giveaways.json', 'w') as f:
-            json.dump(giveaways, f)
-
+        # with open('giveaways.json', 'w') as f:
+        #     json.dump(giveaways, f)
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def roll(self, ctx, id: str):
+    async def roll(self, ctx, id:str):
         "roll a giveaway early"
         with open('giveaways.json') as f:
             giveaways = json.load(f)
@@ -224,10 +235,9 @@ class giveaway(commands.Cog, name="giveaway"):
             await ctx.send("rolling giveaway")
         else:
             await ctx.send("Could not find that giveaway")
-
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def gdelete(self, ctx, id: str):
+    async def gdelete(self, ctx, id:str):
         "delete a giveaway"
         with open('giveaways.json') as f:
             giveaways = json.load(f)
@@ -246,12 +256,12 @@ class giveaway(commands.Cog, name="giveaway"):
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def reroll(self, ctx, id: str):
+    async def reroll(self, ctx, id:str):
         "reroll one winner of a giveaway"
         with open('giveaways.json') as f:
             giveaways = json.load(f)
         if id in giveaways:
-            # await self.rollGiveaway(ctx.guild, giveaways, id)
+            #await self.rollGiveaway(ctx.guild, giveaways, id)
             await ctx.send("rolling giveaway")
             winners = []
             thisGiveaway = giveaways[id]
@@ -270,8 +280,7 @@ class giveaway(commands.Cog, name="giveaway"):
                     giveaways[id]["active"] = False
                     with open('giveaways.json', 'w') as f:
                         json.dump(giveaways, f)
-                    return await channel.send(
-                        "Critical error. contact developer. note: this message means that the error has been supressed and should not cause any issues. Error code: `g-w-404-tma`")
+                    return await channel.send("Critical error. contact developer. note: this message means that the error has been supressed and should not cause any issues. Error code: `g-w-404-tma`")
                 thisWinner = random.choice(reactionusers)
                 x = await self.reqcheck(thisGiveaway, thisWinner)
             await thisWinner.add_roles(ctx.guild.get_role(672141836567183413))
@@ -284,45 +293,46 @@ class giveaway(commands.Cog, name="giveaway"):
             embed.title += " (rerolled)"
             embed.color = discord.Color.darker_grey()
             await message.edit(embed=embed)
-            await channel.send(
-                f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{thisGiveaway['content']}**!!")
+            await channel.send(f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{thisGiveaway['content']}**!!")
         else:
             await ctx.send("Could not find that giveaway")
 
     @commands.command()
-    async def start(self, ctx, timer: str, winners: str, donor: discord.Member, *, prize: str):
+    @commands.has_guild_permissions(manage_messages=True)
+    async def start(self, ctx, timer:str, winners:str, donor:discord.Member, *, prize:str):
         "quickly start a giveaway with limited options"
         giveawayTime = sts(timer)
         winners = winners.replace('w', '')
         if int(winners) > 10:
             return
         donstring = f"Donated by {donor.mention}"
-        embed = discord.Embed(title=prize, description=f"React with :tada: to enter!\n{donstring}",
-                              color=discord.Color.green()).set_footer(text=f"{winners} winners, ends at")
+        embed = discord.Embed(title=prize, description=f"React with :tada: to enter!\n{donstring}", color=discord.Color.green()).set_footer(text=f"{winners} winners, ends at")
         giveawayTime += math.trunc(time.time())
         embed.timestamp = datetime.fromtimestamp(giveawayTime)
         msg = await ctx.channel.send(embed=embed)
         await msg.add_reaction(u"\U0001F389")
         with open('giveaways.json') as f:
             giveaways = json.load(f)
-        giveaways[str(msg.id)] = {"active": True, "mod": ctx.author.id, "channel": ctx.channel.id, "ends": giveawayTime,
-                                  "winnercount": int(winners), "role": None, "level": None, "content": prize,
-                                  "donor": donor.id}
+        giveaways[str(msg.id)] = {"active": True, "mod": ctx.author.id, "channel": ctx.channel.id, "ends": giveawayTime, "winnercount": int(winners), "role": None, "level": None, "content": prize, "donor": donor.id}
         with open('giveaways.json', 'w') as f:
             json.dump(giveaways, f)
         await ctx.message.delete()
-
     @tasks.loop(minutes=2)
     async def giveawayCheck(self):
         with open('giveaways.json') as f:
             giveaways = json.load(f)
+        print("loop started")
         for i in giveaways:
             if giveaways[i]["active"] == True:
+                print(i)
                 if time.time() > giveaways[i]["ends"]:
                     print(i)
                     guild = self.bot.get_guild(667953033929293855)
+                    giveaways[i]["active"] = False
                     await self.rollGiveaway(guild, giveaways, i)
-
+        with open('giveaways.json', 'w') as f:
+            json.dump(giveaways, f)
+            
 
 def setup(bot):
     bot.add_cog(giveaway(bot, True))

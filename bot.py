@@ -8,8 +8,7 @@ import asyncio
 import random
 import json
 import math
-from api_key import token
-from perks.perkSystem import PerkError
+from api_key import token, prefix
 
 
 def fmtTime():
@@ -42,11 +41,11 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
         print(f'\r{purple}{prefix} |{bar}| {percent}%  {suffix}{endc}', end=printEnd)
 
 
-bot = commands.Bot(command_prefix="--", case_insensitive=True)
+bot = commands.Bot(command_prefix=prefix, case_insensitive=True)
 bot.remove_command('help')
 
-#cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.giveaway', 'cogs.points']
-cogs = ['cogs.points','cogs.useless_commands']
+cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.giveaway','cogs.useless_commands']
+# cogs = ['cogs.points']
 
 
 
@@ -104,8 +103,6 @@ async def on_command_error(ctx, error):
         await ctx.send("You do not have permission to use this command.")
         return
 
-    if isinstance(error, PerkError):
-        await error.send_error(ctx)
 
     #     # ignore all other exception types, but print them to stderr
     print('Ignoring exception in command {}: {}'.format(ctx.command, error), file=sys.stderr)
