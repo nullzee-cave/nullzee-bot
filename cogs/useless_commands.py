@@ -1,20 +1,18 @@
 import discord
 from discord.ext import commands
 
-class useless_commands(commands.cog, name = 'Useless Commands'):
+class useless_commands(commands.Cog, name = 'useless_commands'):
     def __init__ (self,bot,hidden):
         self.bot = bot
         self.hidden = hidden 
 
     @commands.command()
     async def f(self,ctx):
-        await ctx.send(':press_f:')
-        await ctx.send(f'{ctx.author.mention} has paid their respects')
+        await ctx.send(f'<:press_f:709688246774267905> {ctx.author.mention} has paid their respects')
 
     @commands.command()
     async def hug(self,ctx,member: discord.Member):
-        await ctx.send (':hug:')
-        await ctx.send(f'{ctx.author.mention} hugged {member.mention}')
+        await ctx.send(f'<:hug:759485870146584586> {ctx.author.mention} hugged {member.mention}')
     
 
 def setup(bot):
