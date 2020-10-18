@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-class useless_commands(commands.cog, name = 'Useless Commands'):
+class Useless_commands(commands.Cog, name='Useless Commands'):
     def __init__ (self,bot,hidden):
         self.bot = bot
         self.hidden = hidden 
@@ -18,4 +18,4 @@ class useless_commands(commands.cog, name = 'Useless Commands'):
     
 
 def setup(bot):
-    bot.add_cog(usless_commands(bot, True))
+    bot.add_cog(Usless_commands(bot, False))
