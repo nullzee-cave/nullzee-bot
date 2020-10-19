@@ -159,10 +159,6 @@ async def reload(ctx):
 
 @bot.event
 async def on_command(ctx):
-    if ctx.channel.id == 667953033929293861 and 667953757954244628 not in [z.id for z in ctx.author.roles]:
-        await ctx.send(f"{ctx.author.mention}, please do not use bot commands here")
-        await asyncio.sleep(random.randint(1, 10))
-        await ctx.message.delete()
     with open('UserCount.json') as f:
         users = json.load(f)
         if not str(ctx.author.id) in users["users"]:
