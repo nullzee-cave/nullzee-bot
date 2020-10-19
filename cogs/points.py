@@ -27,9 +27,11 @@ class Points(commands.Cog):
 
     @commands.command(aliases=["buy", "redeem", "claim"])
     @commands.guild_only()
-    async def purchase(self, ctx, item: PerkConverter, *, arg):
+    async def purchase(self, ctx, item: PerkConverter, *, arg=None):
         user = await get_user(ctx.author)
-        await item.on_buy(ctx, arg)
+        # await item.on_buy(ctx, arg)
+        if item.require_arg and not arg:
+            return await ctx.send(embed=discord.Embed(title="Error!", description="You need to specify an argument for this perk!", colour=0xFF0000))
         if user["points"] >= item.cost:
             await item.on_buy(ctx, arg)
             await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": {"points": -item.cost}})

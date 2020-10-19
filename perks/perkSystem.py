@@ -8,24 +8,25 @@ def register_perk(perk):
 
 
 class Perk:
-    def __init__(self, name, description, aliases, cost, func):
+    def __init__(self, name, description, aliases, cost, reqiure_arg, func):
         self.name = name
         self.aliases = aliases
         self.description = description
         self.cost = cost
+        self.require_arg = reqiure_arg
         self.on_buy = func
 
     def match_name(self, arg):
         return arg.lower() == self.name.lower() or arg.lower() in [z.lower() for z in self.aliases]
 
 
-def perk(*, name: str = None, description: str = None, aliases=None, cost: int = 0):
+def perk(*, name: str = None, description: str = None, aliases=None, cost: int = 0, require_arg: bool=False):
     name = name
 
     def decorator(func):
         _name = name if name else func.__name__
         _aliases = aliases if aliases else []
-        this_perk = Perk(_name, description, _aliases, cost, func)
+        this_perk = Perk(_name, description, _aliases, cost, require_arg, func)
         register_perk(this_perk)
 
         def wrapper(*args, **kwargs):
