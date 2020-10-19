@@ -1,15 +1,25 @@
 import re
 from motor.motor_asyncio import AsyncIOMotorClient
 from api_key import userColl
+import discord
 
 
 async def get_user(user):
     if not await userColl.find_one({"_id": str(user.id)}):
         await userColl.insert_one(
             {"_id": str(user.id), "experience": 0, "weekly": 0, "level": 1, "last_message": 0, "points": 0,
-             "last_points": 0})
+             "last_points": 0, "embed_colour": "#00FF00"})
     return await userColl.find_one({"_id": str(user.id)})
 
+
+class Embed(discord.Embed):
+    def __init__(self, user: discord.User, **kwargs):
+        self.user = user
+        super().__init__(**kwargs)
+
+    async def user_colour(self):
+        self.color = discord.Colour((await get_user(self.user))["embed_colour"])
+        return self
 
 def min_level(level: int):
     async def predicate(ctx):

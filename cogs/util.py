@@ -11,6 +11,7 @@ from discord.ext.commands.cooldowns import BucketType
 import time
 import datetime
 import math
+from helpers.utils import Embed
 
 class util(commands.Cog, name="Other"):
     def __init__(self, bot, hidden):
@@ -39,7 +40,7 @@ class util(commands.Cog, name="Other"):
         """Log a suggestion for the server"""
         with open('suggestions.json') as f:
             suggestions = json.load(f)
-        suggestion = discord.Embed(description=answer, color=0x00FF00)
+        suggestion = await Embed(ctx.author, description=answer, color=0x00FF00).user_colour()
         suggestion.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
         sugChannel = self.bot.get_guild(667953033929293855).get_channel(667959037265969171)
         sugmsg = await sugChannel.send("<@&738691450417709077>", embed=suggestion)

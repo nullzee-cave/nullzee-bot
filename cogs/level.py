@@ -11,7 +11,7 @@ import math
 import os
 import datetime
 from EZPaginator import Paginator
-from helpers.utils import min_level, get_user
+from helpers.utils import min_level, get_user, Embed
 from api_key import userColl
 import pymongo
 
@@ -115,9 +115,8 @@ class level(commands.Cog, name="levelling"):
         userData = await userColl.find_one({"_id": str(user.id)})
         if not userData:
             return await ctx.send("This user has no level")
-        embed = discord.Embed(title=f"Level: {str(round(userData['level']))}",
-                              description=f"XP: {str(round(userData['experience']))}/{str(round(50 * (round(userData['level']) ** 1.5)))}\nWeekly XP: {str(round(userData['weekly']))}\nPoints: {userData['points']}",
-                              color=0x00FF00)
+        embed = await Embed(user, title=f"Level: {str(round(userData['level']))}",
+                              description=f"XP: {str(round(userData['experience']))}/{str(round(50 * (round(userData['level']) ** 1.5)))}\nWeekly XP: {str(round(userData['weekly']))}\nPoints: {userData['points']}").user_colour()
         embed.set_author(name=user, icon_url=user.avatar_url)
         await ctx.send(embed=embed)
 
