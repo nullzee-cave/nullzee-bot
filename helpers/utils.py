@@ -2,7 +2,7 @@ import re
 from motor.motor_asyncio import AsyncIOMotorClient
 from api_key import userColl
 import discord
-
+import json
 
 async def get_user(user):
     if not await userColl.find_one({"_id": str(user.id)}):
@@ -11,6 +11,13 @@ async def get_user(user):
              "last_points": 0, "embed_colour": "#00FF00"})
     return await userColl.find_one({"_id": str(user.id)})
 
+
+def getFileJson(filename):
+    with open(f"{filename}.json") as f:
+        return json.load(f)
+def saveFileJson(data, filename):
+    with open(f"{filename}.json", 'w') as f:
+        json.dump(data, f)
 
 class Embed(discord.Embed):
     def __init__(self, user: discord.User, **kwargs):

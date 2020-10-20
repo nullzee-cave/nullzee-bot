@@ -2,8 +2,8 @@ from perks.perkSystem import perk, PerkError
 from discord.ext import commands
 import discord
 from api_key import userColl
-from helpers.utils import get_user, Embed
-
+from helpers.utils import get_user, Embed, getFileJson, saveFileJson
+import datetime
 
 @perk(name="AskNullzee", description="Ask Nullzee a question!", cost=5, aliases=["NullzeeQuestion", "askNull"],
       require_arg=True)
@@ -29,3 +29,28 @@ async def embedColour(ctx, arg):
 async def deadChat(ctx, arg):
     await ctx.send("<@&749178299518943343>", embed=await Embed(ctx.author, description=arg).set_author(name=ctx.author,
                                                                                                        icon_url=ctx.author.avatar_url).user_colour())
+
+@perk(name="qotd", description="Choose today's QOTD!", cost=10, require_arg=True)
+async def qotd(ctx, arg):
+    if (config := getFileJson('config'))["qotd"] >= (datetime.datetime.now() - datetime.datetime.utcfromtimestamp(0)).days:
+        raise PerkError(msg="Error! QOTD has already been marked as done today")
+    config["qotd"] = (datetime.datetime.now() - datetime.datetime.utcfromtimestamp(0)).days
+    saveFileJson(config, 'config')
+    embed = discord.Embed(description=arg, color=discord.Color.orange()).set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+    await ctx.guild.get_channel(668723004213166080).send(embed=embed)
+
+@perk(name="noCooldown",
+      description="Immediately run a command and bypass cooldowns/permissions. Staff commands excluded", cost=2,
+      require_arg=True, aliases=["runCommand"])
+async def noCooldown(ctx: commands.Context, arg):
+    command: commands.Command = ctx.bot.get_command(arg)
+    if not command:
+        raise PerkError(msg="Invalid command")
+    if "staff" in command.__doc__:
+        raise PerkError(msg="Disallowed command")
+    await ctx.invoke(command)
+
+
+@perk(name="waste", description="Waste your hard earned points!", cost=1)
+async def waste(ctx, arg):
+    await ctx.send(f"{ctx.author.mention} is a dumbass")

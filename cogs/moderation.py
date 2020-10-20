@@ -10,12 +10,23 @@ from discord.ext.commands.cooldowns import BucketType
 import time
 import math
 import ast
+import datetime
 
 class moderation(commands.Cog, name="Moderation"):
     def __init__(self, bot, hidden):
         self.hidden = hidden
         self.bot = bot
 
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def qotd(self, ctx):
+        with open('config.json') as f:
+            config = json.load(f)
+        config["qotd"] = (datetime.datetime.now() - datetime.datetime.utcfromtimestamp(0)).days
+        with open('config.json', 'w') as f:
+            json.dump(config, f)
+        await ctx.send("Last QOTD time set to now")
 
 
     @commands.command()

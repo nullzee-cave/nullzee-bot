@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
 from api_key import userColl
-from helpers.utils import get_user
+from helpers.utils import get_user, getFileJson, saveFileJson
 from perks.perkSystem import PerkConverter, perk_list
 from perks import perks, perkSystem
 
@@ -38,6 +38,12 @@ class Points(commands.Cog):
             await ctx.send(f"successfully bought `{item.name}` for `{item.cost}` points")
         else:
             return await ctx.send("You cannot afford this!")
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def changePoints(self, ctx, user: discord.Member, points: int):
+        await userColl.update_one({"_id": str(user.id)}, {"$inc": {"points": points}})
+        await ctx.send(f"changed {user.mention}'s points by {points}")
 
 
 def setup(bot):
