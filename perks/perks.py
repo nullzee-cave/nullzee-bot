@@ -39,18 +39,21 @@ async def qotd(ctx, arg):
     embed = discord.Embed(description=arg, color=discord.Color.orange()).set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
     await ctx.guild.get_channel(668723004213166080).send(embed=embed)
 
-@perk(name="noCooldown",
-      description="Immediately run a command and bypass cooldowns/permissions. Staff commands excluded", cost=2,
-      require_arg=True, aliases=["runCommand"])
-async def noCooldown(ctx: commands.Context, arg):
-    command: commands.Command = ctx.bot.get_command(arg)
-    if not command:
-        raise PerkError(msg="Invalid command")
-    if "staff" in command.__doc__:
-        raise PerkError(msg="Disallowed command")
-    await ctx.invoke(command)
-
-
 @perk(name="waste", description="Waste your hard earned points!", cost=1)
 async def waste(ctx, arg):
     await ctx.send(f"{ctx.author.mention} is a dumbass")
+
+@perk(name="staffNickChange", description = "Change a Staff's nick!", cost= 10, require_arg = True)
+async def staffNickChange(ctx,arg):
+    member = await commmands.MemberConverter.convert(arg)
+    await ctx.send("What do you want to change their nick to?")
+    try:
+        nickChange = await self.bot.wait_for('message', check=check)
+    content = nickChange.content
+    if len(content) >= 32:
+        await ctx.send('This nick is too long!')
+    elif content.count('nigg') >= 1:
+        await ctx.send('get banned nerd')
+    else:
+        await member.edit(nick=f'✰ {content}')
+        await ctx.send(f"{member.mention}'s nick has been changed to ✰ {content}")
