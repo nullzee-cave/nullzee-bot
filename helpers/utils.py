@@ -26,7 +26,7 @@ class Embed(discord.Embed):
 
     async def user_colour(self):
         try:
-            self.color = discord.Colour((await get_user(self.user))["embed_colour"])
+            self.color = discord.Colour(int((await get_user(self.user))["embed_colour"], base=16))
         except:
             self.color = 0x00FF00
         return self

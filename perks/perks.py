@@ -17,7 +17,7 @@ async def askNullzee(ctx, arg):
 
 
 @perk(name="embedColour", description="Change the colour of your embeds!", cost=10,
-      aliases=["embedColor", "commandColour"])
+      aliases=["embedColor", "commandColour"], require_arg=True)
 async def embedColour(ctx, arg):
     if not (len(arg.replace('#', '')) == 6):
         raise PerkError(embed=discord.Embed(title="Error!", description="please specify a valid hex code",
@@ -46,8 +46,11 @@ async def waste(ctx, arg):
     await ctx.send(f"{ctx.author.mention} is a dumbass")
 
 @perk(name="staffNickChange", description = "Change a Staff's nick!", cost= 10, require_arg = True)
-async def staffNickChange(ctx,arg):
-    member: discord.Member = await commands.MemberConverter.convert(arg)
+async def staffNickChange(ctx, arg):
+    try:
+        member: discord.Member = await commands.MemberConverter().convert(ctx, arg)
+    except Exception as e:
+        raise e
     if not member:
         raise commands.UserInputError()
     await ctx.send("What do you want to change their nick to?")
@@ -63,5 +66,8 @@ async def staffNickChange(ctx,arg):
     elif content.count('nigg') >= 1:
         await ctx.send('get banned nerd')
     else:
-        await member.edit(nick=f'✰ {content}')
+        try:
+            await member.edit(nick=f'✰ {content}')
+        except discord.Forbidden:
+            raise PerkError(msg="I can't change an admin's nick!")
         #await ctx.send(f"{member.mention}'s nick has been changed to ✰ {content}")
