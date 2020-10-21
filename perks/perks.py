@@ -4,6 +4,8 @@ import discord
 from api_key import userColl
 from helpers.utils import get_user, Embed, getFileJson, saveFileJson
 import datetime
+import asyncio
+
 
 @perk(name="AskNullzee", description="Ask Nullzee a question!", cost=5, aliases=["NullzeeQuestion", "askNull"],
       require_arg=True)
@@ -45,13 +47,19 @@ async def waste(ctx, arg):
 
 @perk(name="staffNickChange", description = "Change a Staff's nick!", cost= 10, require_arg = True)
 async def staffNickChange(ctx,arg):
-    member = await commmands.MemberConverter.convert(arg)
+    member: discord.Member = await commands.MemberConverter.convert(arg)
+    if not member:
+        raise commands.UserInputError()
     await ctx.send("What do you want to change their nick to?")
+    if not member.guild_permissions.manage_messages:
+        raise PerkError(msg="That user is not a staff member!")
     try:
-        nickChange = await self.bot.wait_for('message', check=check)
+        nickChange = await ctx.bot.wait_for('message', check=lambda msg: msg.channel.id == ctx.channel.id and msg.author.id == ctx.author.id)
+    except asyncio.TimeoutError:
+        raise PerkError(msg="timed out")
     content = nickChange.content
-    if len(content) >= 32:
-        await ctx.send('This nick is too long!')
+    if len(content) >= 30:
+        raise PerkError(msg='This nick is too long!')
     elif content.count('nigg') >= 1:
         await ctx.send('get banned nerd')
     else:
