@@ -25,7 +25,10 @@ class Embed(discord.Embed):
         super().__init__(**kwargs)
 
     async def user_colour(self):
-        self.color = discord.Colour((await get_user(self.user))["embed_colour"])
+        try:
+            self.color = discord.Colour((await get_user(self.user))["embed_colour"])
+        except:
+            self.color = 0x00FF00
         return self
 
 def min_level(level: int):

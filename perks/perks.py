@@ -64,4 +64,4 @@ async def staffNickChange(ctx,arg):
         await ctx.send('get banned nerd')
     else:
         await member.edit(nick=f'✰ {content}')
-        await ctx.send(f"{member.mention}'s nick has been changed to ✰ {content}")
+        #await ctx.send(f"{member.mention}'s nick has been changed to ✰ {content}")
