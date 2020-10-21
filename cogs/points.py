@@ -3,7 +3,7 @@ import discord
 from api_key import userColl
 from helpers.utils import get_user, getFileJson, saveFileJson
 from perks.perkSystem import PerkConverter, perk_list
-from perks import perks, perkSystem
+from perks import perks
 
 
 class Points(commands.Cog):
@@ -29,7 +29,6 @@ class Points(commands.Cog):
     @commands.guild_only()
     async def purchase(self, ctx, item: PerkConverter, *, arg=None):
         user = await get_user(ctx.author)
-        # await item.on_buy(ctx, arg)
         if item.require_arg and not arg:
             return await ctx.send(embed=discord.Embed(title="Error!", description="You need to specify an argument for this perk!", colour=0xFF0000))
         if user["points"] >= item.cost:

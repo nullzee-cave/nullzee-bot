@@ -98,8 +98,7 @@ class level(commands.Cog, name="levelling"):
         lvl_start = userData["level"]
         lvl_end = 50 * (lvl_start ** 1.5)
         if experience > lvl_end:
-            await userColl.update_one({"_id": str(user.id)}, {"$inc": {"level": 1}, "$set": {"experience": 0, "last_points": 0}})
-            0 - (experience - (userData["last_points"] + 100))
+            await userColl.update_one({"_id": str(user.id)}, {"$inc": {"level": 1}, "$set": {"experience": 0, "last_points": 0 - (experience - (userData["last_points"] + 100))}})
             await ctx.channel.send(f":tada: Congrats {user.mention}, you levelled up to level {lvl_start + 1}!")
             with open('levelroles.json') as f:
                 levelroles = json.load(f)
