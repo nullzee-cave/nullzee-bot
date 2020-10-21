@@ -45,7 +45,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
 bot = commands.Bot(command_prefix=prefix, case_insensitive=True)
 bot.remove_command('help')
 
-cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.giveaway', 'cogs.points']
+cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.giveaway','cogs.useless_commands', 'cogs.points']
 # cogs = ['cogs.points']
 
 
@@ -104,8 +104,6 @@ async def on_command_error(ctx, error):
         await ctx.send("You do not have permission to use this command.")
         return
 
-    if isinstance(error, PerkError):
-        await error.send_error(ctx)
 
     #     # ignore all other exception types, but print them to stderr
     print('Ignoring exception in command {}: {}'.format(ctx.command, error), file=sys.stderr)
