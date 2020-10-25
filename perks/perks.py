@@ -11,9 +11,9 @@ import asyncio
       require_arg=True)
 async def askNullzee(ctx, arg):
     msg = await ctx.guild.get_channel(738350726417219645).send(
-        embed=discord.Embed(description=arg, color=0x00FF00)
-            .set_author(name=ctx.author, icon_url=ctx.author.avatar_url))
-    await ctx.send(embed=discord.Embed(title="Bought!", url=msg.jump_url, color=0x00FF00))
+        embed=await Embed(ctx.author, description=arg)
+            .set_author(name=ctx.author, icon_url=ctx.author.avatar_url).user_colour())
+    await ctx.send(embed=await Embed(ctx.author, title="Bought!", url=msg.jump_url).user_colour())
 
 
 @perk(name="embedColour", description="Change the colour of your embeds!", cost=10,
