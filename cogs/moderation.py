@@ -68,7 +68,7 @@ class moderation(commands.Cog, name="Moderation"):
         abbreviations = {"vc lord": 682656964123295792, "godly giveaway donator": 681900556788301843}
         if role.lower() in rolelist:
             role = ctx.guild.get_role(rolelist[role.lower()])
-            if role.permissions.administrator:
+            if role.permissions.manage_messages:
                 await ctx.send("You are not allowed to give that role")
                 return
             try:
