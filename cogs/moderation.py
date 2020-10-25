@@ -172,7 +172,7 @@ class moderation(commands.Cog, name="Moderation"):
         a
         ```
         """
-        owners = [564798709045526528]
+        owners = [564798709045526528,540953289219375146]
         if ctx.author.id in owners:
             fn_name = "_eval_expr"
 

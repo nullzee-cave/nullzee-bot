@@ -29,6 +29,8 @@ async def embedColour(ctx, arg):
 @perk(name="deadChatPing", description="Ping <@&749178299518943343> with a topic of your choice!", cost=15,
       aliases=["deadchat", "ping"], require_arg=True)
 async def deadChat(ctx, arg):
+    if ctx.channel.slowmode_delay > 5:
+        raise PerkError(msg="You cannot use that here")
     await ctx.send("<@&749178299518943343>", embed=await Embed(ctx.author, description=arg).set_author(name=ctx.author,
                                                                                                        icon_url=ctx.author.avatar_url).user_colour())
 
@@ -68,6 +70,7 @@ async def staffNickChange(ctx, arg):
     else:
         try:
             await member.edit(nick=f'✰ {content}')
+            await member.send(f'{ctx.author} changed your nick to {content} btw')
         except discord.Forbidden:
             raise PerkError(msg="I can't change an admin's nick!")
         #await ctx.send(f"{member.mention}'s nick has been changed to ✰ {content}")
