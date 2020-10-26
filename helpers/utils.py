@@ -25,14 +25,14 @@ class Embed(discord.Embed):
         self.user = user
         super().__init__(**kwargs)
 
-    async def user_colour(self) -> Embed:
+    async def user_colour(self):
         try:
             self.color = discord.Colour(int((await get_user(self.user))["embed_colour"], base=16))
         except:
             self.color = 0x00FF00
         return self
 
-    def auto_author(self) -> Embed:
+    def auto_author(self):
         self.set_author(name=self.user.name, icon_url=self.user.avatar_url)
         return self
 
