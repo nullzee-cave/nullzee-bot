@@ -149,7 +149,7 @@ class moderation(commands.Cog, name="Moderation"):
     @commands.has_guild_permissions(manage_messages=True)
     async def starboard(self, ctx: commands.Context, _id: int, *, title:str=""):
         msg: discord.Message = await ctx.channel.fetch_message(_id)
-        embed = (await Embed(msg.author, title=f"{title} | {ctx.channel.name}", description=msg.content, url=msg.jump_url).auto_author().timestamp_now().user_colour()).set_footer(text=f"starred by {ctx.author}")
+        embed = (await Embed(msg.author, title=f"{title} | #{ctx.channel.name}", description=msg.content, url=msg.jump_url).auto_author().timestamp_now().user_colour()).set_footer(text=f"starred by {ctx.author}")
         if msg.attachments:
             embed.set_image(url=msg.attachments[0].url)
         star_message = await ctx.guild.get_channel(770316631829643275).send(embed=embed)
