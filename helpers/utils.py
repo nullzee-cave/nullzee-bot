@@ -3,6 +3,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from api_key import userColl
 import discord
 import json
+import datetime
 
 async def get_user(user):
     if not await userColl.find_one({"_id": str(user.id)}):
@@ -24,11 +25,19 @@ class Embed(discord.Embed):
         self.user = user
         super().__init__(**kwargs)
 
-    async def user_colour(self):
+    async def user_colour(self) -> Embed:
         try:
             self.color = discord.Colour(int((await get_user(self.user))["embed_colour"], base=16))
         except:
             self.color = 0x00FF00
+        return self
+
+    def auto_author(self) -> Embed:
+        self.set_author(name=self.user.name, icon_url=self.user.avatar_url)
+        return self
+
+    def timestamp_now(self):
+        self.timestamp = datetime.datetime.now()
         return self
 
 def min_level(level: int):

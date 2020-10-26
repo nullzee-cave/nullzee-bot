@@ -1,6 +1,6 @@
 from discord.ext import commands, tasks
 from random import randint
-from helpers.utils import stringToSeconds as sts
+from helpers.utils import stringToSeconds as sts, Embed
 import json
 import asyncio
 import discord
@@ -145,6 +145,16 @@ class moderation(commands.Cog, name="Moderation"):
 
 
 
+    @commands.command(aliases=["star", "pin"])
+    @commands.has_guild_permissions(manage_messages=True)
+    async def starboard(self, ctx: commands.Context, _id: int, title:str=""):
+        msg: discord.Message = await ctx.channel.fetch_message(_id)
+        embed = (await Embed(msg.author, title=f"{title} | {ctx.channel.name}", description=msg.content, url=msg.jump_url).auto_author().timestamp_now().user_colour()).set_footer(text=f"starred by {ctx.author}")
+        if msg.attachments:
+            embed.set_image(url=msg.attachments[0].url)
+        star_message = await ctx.guild.get_channel(770316631829643275).send(embed=embed)
+        await ctx.send(embed=await Embed(ctx.author, title="Added to starboard!", url=star_message.jump_url).user_colour())
+
 
     def insert_returns(self, body):
         # insert return stmt if the last expression is a expression statement
@@ -176,7 +186,7 @@ class moderation(commands.Cog, name="Moderation"):
         if ctx.author.id in owners:
             fn_name = "_eval_expr"
 
-            cmd = cmd.strip("` ")
+            cmd = cmd.strip("`")
 
             # add a layer of indentation
             cmd = "\n".join(f"    {i}" for i in cmd.splitlines())
@@ -199,7 +209,7 @@ class moderation(commands.Cog, name="Moderation"):
             exec(compile(parsed, filename="<ast>", mode="exec"), env)
 
             result = (await eval(f"{fn_name}()", env))
-            #await ctx.send(result)
+            await ctx.send(f"```py\n{result}\n```")
 
 
 
