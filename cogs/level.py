@@ -62,7 +62,7 @@ class level(commands.Cog, name="levelling"):
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def global_multiplier(self, ctx, channel: discord.TextChannel, value: float):
+    async def global_multiplier(self, ctx, value: float):
         if value < -0.5 or value > 10:
             return await ctx.send("please resign.")
         with open('config.json') as f:
