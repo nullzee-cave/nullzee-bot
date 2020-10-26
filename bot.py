@@ -101,7 +101,7 @@ async def on_command_error(ctx, error):
         return
 
     if isinstance(error, commands.CheckFailure):
-        await ctx.send("You do not have permission to use this command.")
+        # await ctx.send("You do not have permission to use this command.")
         return
 
 
@@ -164,5 +164,7 @@ async def on_command(ctx):
         with open('UserCount.json', 'w') as f:
             json.dump(users, f)
 
+
+bot.add_check(lambda ctx: (not ctx.guild) or ctx.channel.id in [668914397531602944] or ctx.author.guild_permissions.manage_messages)
 
 bot.run(token, bot=True, reconnect=True)
