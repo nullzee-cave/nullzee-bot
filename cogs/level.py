@@ -193,7 +193,7 @@ class level(commands.Cog, name="levelling"):
             users = json.load(f)
         async for user in userColl.find({}):
             users[str(user["_id"])] = user
-        with open(f"backups/{datetime.datetime.now().strftime('%d%m%y')}.json", 'w') as f:
+        with open(f"backups/{datetime.datetime.now().strftime('%d%m%y')}.json", 'w+') as f:
             json.dump(users, f)
         await ctx.send("Backup created")
 
