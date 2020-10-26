@@ -33,7 +33,7 @@ class Embed(discord.Embed):
         return self
 
     def auto_author(self):
-        self.set_author(name=self.user.name, icon_url=self.user.avatar_url)
+        self.set_author(name=self.user.__str__(), icon_url=self.user.avatar_url)
         return self
 
     def timestamp_now(self):

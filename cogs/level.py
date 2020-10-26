@@ -45,6 +45,7 @@ class level(commands.Cog, name="levelling"):
         with open('config.json') as f:
             config = json.load(f)
         self.multipliers = config["multipliers"]
+        self.global_multiplier = config["global_multiplier"]
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
@@ -55,6 +56,19 @@ class level(commands.Cog, name="levelling"):
             config = json.load(f)
         config["multipliers"][str(channel.id)] = value
         await ctx.send(f"set XP multiplier for {channel.mention} to {value}")
+        with open('config.json', 'w') as f:
+            json.dump(config, f)
+        self.update_multipliers()
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def global_multiplier(self, ctx, channel: discord.TextChannel, value: float):
+        if value < -0.5 or value > 10:
+            return await ctx.send("please resign.")
+        with open('config.json') as f:
+            config = json.load(f)
+        config["global_multiplier"]= value
+        await ctx.send(f"set global XP multiplier to {value}")
         with open('config.json', 'w') as f:
             json.dump(config, f)
         self.update_multipliers()
@@ -73,6 +87,7 @@ class level(commands.Cog, name="levelling"):
                 multiplier = self.multipliers[str(message.channel.id)]
             else:
                 multiplier = 1
+            multiplier *= self.global_multiplier
             if message.attachments:
                 number = math.trunc(30 * multiplier)
             elif len("".join(message.content)) > 150:
