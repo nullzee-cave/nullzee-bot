@@ -64,6 +64,8 @@ class moderation(commands.Cog, name="Moderation"):
     #@commands.has_guild_permissions(manage_messages=True)
     @commands.has_any_role("Staff", "Trainee Staff")
     async def role(self, ctx, user:discord.Member, *, role:str):
+        if role.lower() == "muted":
+            return await ctx.send("no.")
         rolelist = {z.name.lower() : z.id for z in ctx.guild.roles}
         abbreviations = {"vc lord": 682656964123295792, "godly giveaway donator": 681900556788301843}
         if role.lower() in rolelist:
@@ -112,6 +114,8 @@ class moderation(commands.Cog, name="Moderation"):
     #@commands.has_guild_permissions(manage_roles=True)
     @commands.has_any_role("Staff")
     async def removerole(self, ctx, user:discord.Member, *, role:str):
+        if role.lower() == "muted":
+            return await ctx.send("no.")
         rolelist = {z.name.lower() : z.id for z in ctx.guild.roles}
         if role.lower() in rolelist:
             role = ctx.guild.get_role(rolelist[role.lower()])
