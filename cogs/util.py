@@ -178,6 +178,19 @@ class util(commands.Cog, name="Other"):
         elif rand == 2:
             await self.bot.change_presence(activity=discord.Game(name=random.choice(playing)))
 
+    @commands.command()
+    async def report(self, ctx, message_id: int, *, reason:str=None):
+        await ctx.message.delete()
+        try:
+            message = await ctx.channel.fetch_message(message_id)
+        except discord.NotFound:
+            return await ctx.send("Could not find that message")
+        if not message:
+            return await ctx.send("Could not find that message")
+        embed = discord.Embed(title="New report", colour=discord.Color.red(), url=message.jump_url, description=f"reason: {reason}" if reason else "").add_field(name="Message Content", value=message.content).add_field(name="reported by", value=f"{ctx.author.mention} ({ctx.author})").set_author(name=message.author, icon_url=message.author.avatar_url)
+        await ctx.guild.get_channel(771061232642949150).send(embed=embed)
+        await ctx.author.send("Your report has been submitted. For any further concerns, do not hesitate to contact a staff member")
+
     @commands.command(hidden=True)
     @commands.has_guild_permissions(administrator=True)
     async def manualtogglestatus(self, ctx):
