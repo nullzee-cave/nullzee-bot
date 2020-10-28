@@ -8,11 +8,16 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
 
     @commands.command()
     async def f(self,ctx):
-        await ctx.send(f'<:press_f:709688246774267905> {ctx.author.mention} has paid their respects')
+        await ctx.send(embed = discord.Embed(description = f'<:press_f:709688246774267905> {ctx.author.mention} has paid their respects', color = 0x00FF00).user_colour())
 
     @commands.command()
     async def hug(self,ctx,member: discord.Member):
-        await ctx.send(f'<:hug:759485870146584586> {ctx.author.mention} hugged {member.mention}')
+        if member == ctx.author:
+            await ctx.send(embed=discord.Embed(description = f"{ctx.author} tried to hug themself",
+                                               url = "https://cdn.discordapp.com/emojis/759485870146584586.png?v=1",
+                                               footer='self love is appreciated', color=0x00FF00).user_colour())
+        else:    
+            await ctx.send(embed = discord.Embed(description = f"{ctx.author.mention} hugged {member.mention}", url ="https://cdn.discordapp.com/emojis/759485870146584586.png?v=1"))
     
 
 def setup(bot):
