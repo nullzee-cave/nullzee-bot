@@ -12,6 +12,9 @@ from api_key import token, prefix
 from perks.perkSystem import PerkError
 
 
+intents = discord.Intents.default()
+intents.members = True
+
 def fmtTime():
     _time = datetime.now()
     return _time.strftime("%b %d %Y %H:%M:%S")
@@ -42,7 +45,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
         print(f'\r{purple}{prefix} |{bar}| {percent}%  {suffix}{endc}', end=printEnd)
 
 
-bot = commands.Bot(command_prefix=prefix, case_insensitive=True)
+bot = commands.Bot(command_prefix=prefix, case_insensitive=True, intents=intents)
 bot.remove_command('help')
 
 cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.giveaway','cogs.useless_commands', 'cogs.points']
