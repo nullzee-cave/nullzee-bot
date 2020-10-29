@@ -206,9 +206,6 @@ class giveaway(commands.Cog, name="giveaway"):
                 x = await self.reqcheck(thisGiveaway, thisWinner)
                 attempts += 1
                 if attempts > 50:
-                    giveaways[id]["active"] = False
-                    with open('giveaways.json', 'w') as f:
-                        json.dump(giveaways, f)
                     return await channel.send("Could not determine a winner.")
                     #return await channel.send("Critical error. contact developer. note: this message means that the error has been supressed and should not cause any issues. Error code: `g-w-404-tma`")
             winners.append(thisWinner)
@@ -321,17 +318,23 @@ class giveaway(commands.Cog, name="giveaway"):
     async def giveawayCheck(self):
         with open('giveaways.json') as f:
             giveaways = json.load(f)
-        print("loop started")
+        print("giveaway loop started")
+        active_giveaways = {}
         for i in giveaways:
-            if giveaways[i]["active"] == True:
-                print(i)
+            if giveaways[i]["active"]:
                 if time.time() > giveaways[i]["ends"]:
-                    print(i)
                     guild = self.bot.get_guild(667953033929293855)
                     giveaways[i]["active"] = False
-                    await self.rollGiveaway(guild, giveaways, i)
+                    try:
+                        await self.rollGiveaway(guild, giveaways, i)
+                    except Exception as e:
+                        print("exception occurred rolling giveaway: {0.__class.__name__}\n-\n{0}--".format(e))
+                else:
+                    active_giveaways[i] = giveaways[i]
         with open('giveaways.json', 'w') as f:
-            json.dump(giveaways, f)
+            json.dump(active_giveaways, f)
+        with open('giveaway_archives.json', 'r+') as f:
+            json.dump(json.load(f), f)
             
 
 def setup(bot):
