@@ -331,8 +331,9 @@ class giveaway(commands.Cog, name="giveaway"):
             json.dump(active_giveaways, f)
         with open('giveaway_archives.json') as f:
             old_giveaways = json.load(f)
+        old_giveaways.update(giveaways)
         with open('giveaway_archives.json', 'w') as f:
-            json.dump(old_giveaways.update(giveaways), f)
+            json.dump(old_giveaways, f)
             
 
 def setup(bot):
