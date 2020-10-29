@@ -255,7 +255,7 @@ class giveaway(commands.Cog, name="giveaway"):
     @commands.has_guild_permissions(manage_messages=True)
     async def reroll(self, ctx, id:str):
         "reroll one winner of a giveaway"
-        with open('giveaways.json') as f:
+        with open('giveaway_archives.json') as f:
             giveaways = json.load(f)
         if id in giveaways:
             #await self.rollGiveaway(ctx.guild, giveaways, id)
@@ -274,10 +274,7 @@ class giveaway(commands.Cog, name="giveaway"):
             while not x:
                 attempts += 1
                 if attempts > 30:
-                    giveaways[id]["active"] = False
-                    with open('giveaways.json', 'w') as f:
-                        json.dump(giveaways, f)
-                    return await channel.send("Critical error. contact developer. note: this message means that the error has been supressed and should not cause any issues. Error code: `g-w-404-tma`")
+                    return await channel.send("Could not determine a winner")
                 thisWinner = random.choice(reactionusers)
                 x = await self.reqcheck(thisGiveaway, thisWinner)
             await thisWinner.add_roles(ctx.guild.get_role(672141836567183413))
@@ -286,7 +283,6 @@ class giveaway(commands.Cog, name="giveaway"):
             embed = message.embeds[0]
             embed.set_footer(text=f"ended at:")
             embed.timestamp = datetime.now()
-            embed.description += f"\n{donor.mention}"
             embed.title += " (rerolled)"
             embed.color = discord.Color.darker_grey()
             await message.edit(embed=embed)
@@ -333,8 +329,10 @@ class giveaway(commands.Cog, name="giveaway"):
                     active_giveaways[i] = giveaways[i]
         with open('giveaways.json', 'w') as f:
             json.dump(active_giveaways, f)
-        with open('giveaway_archives.json', 'r+') as f:
-            json.dump(json.load(f).update(giveaways), f)
+        with open('giveaway_archives.json') as f:
+            old_giveaways = json.load(f)
+        with open('giveaway_archives.json', 'w') as f:
+            json.dump(old_giveaways.update(giveaways), f)
             
 
 def setup(bot):
