@@ -59,7 +59,7 @@ class giveaway(commands.Cog, name="giveaway"):
         except asyncio.TimeoutError:
             return await ctx.send("Giveaway creation timed out")
         winnerCount = int(winnerCountMsg.content)
-        if winnerCount > 10:
+        if winnerCount > 30:
             return
         await ctx.send("Which role must users have in order to win?")
         try:
