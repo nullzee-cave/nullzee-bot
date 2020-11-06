@@ -4,12 +4,22 @@ from helpers.utils import stringToSeconds as sts, Embed
 import json
 import asyncio
 import discord
+from helpers import payloads, moderationUtils
 from api_key import moderationColl
 
 class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns, mutes etc.
     def __init__(self, bot, hidden):
         self.hidden = hidden
         self.bot = bot
+
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def warn(self, ctx, user: discord.Member, *, reason:str):
+        payload = payloads.warn_payload(offender_id=user.id, mod_id=ctx.author.id, reason=reason)
+        await moderationColl.insert_one(payload)
+        await ctx.send(embed=discord.Embed(title=f"{user} has been warned", description=reason, colour=0xF7FF00))
+        await moderationUtils.log(self.bot, payload)
 
 
     @commands.command()

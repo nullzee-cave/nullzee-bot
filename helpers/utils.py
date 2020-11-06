@@ -4,6 +4,8 @@ from api_key import userColl
 import discord
 import json
 import datetime
+import random
+import string
 
 async def get_user(user):
     if not await userColl.find_one({"_id": str(user.id)}):
@@ -12,6 +14,9 @@ async def get_user(user):
              "last_points": 0, "embed_colour": "#00FF00"})
     return await userColl.find_one({"_id": str(user.id)})
 
+
+def nanoId(length=20):
+    return ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(length))
 
 def getFileJson(filename):
     with open(f"{filename}.json") as f:
