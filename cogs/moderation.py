@@ -1,4 +1,5 @@
 from discord.ext import commands, tasks
+import typing
 from random import randint
 from helpers.utils import stringToSeconds as sts, Embed
 import json
@@ -18,8 +19,21 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
     async def warn(self, ctx, user: discord.Member, *, reason:str):
         payload = payloads.warn_payload(offender_id=user.id, mod_id=ctx.author.id, reason=reason)
         await moderationColl.insert_one(payload)
-        await ctx.send(embed=discord.Embed(title=f"{user} has been warned", description=reason, colour=0xF7FF00))
+        await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
+        await user.send(f"You were warned in {ctx.guild.name} for {reason}")
         await moderationUtils.log(self.bot, payload)
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def mute(self, ctx, user: discord.Member, _time: typing.Optional[str]=None, *, reason:str=None):
+        int_time = sts(_time)
+        if not _time:
+            return await ctx.send("Invalid time")
+        payload = payloads.mute_payload(offender_id=user.id, mod_id=ctx.author.id, duration=int_time, reason=reason)
+        await user.add_roles(ctx.guild.get_role(moderationUtils.MUTED_ROLE))
+        await moderationColl.insert_one(payload)
+        await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
+        await user.send(f"You were muted in {ctx.guild.name} {f'for `{_time}`' if int_time else ''} {f'for `{reason}`' if reason else ''}")
 
 
     @commands.command()

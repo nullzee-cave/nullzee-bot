@@ -1,12 +1,19 @@
 import discord
 import datetime
 
+MUTED_ROLE = 678911295835078657
+
 colours = {
     "warn": 0xF7FF00,
     "mute": 0xFF8F00,
     "kick": 0xFF5D00,
     "ban": 0xFF0000
 }
+
+def chatEmbed(ctx, payload):
+    offender = ctx.bot.get_user(payload["offender_id"])
+    embed = discord.Embed(title=payload["type"], colour=colours[payload["type"]], description=payload["reason"] if payload["reason"] else "").set_author(name=offender, icon_url=offender.avatar_url)
+    return embed
 
 async def log(bot, payload):
     offender = bot.get_user(payload["offender_id"])
