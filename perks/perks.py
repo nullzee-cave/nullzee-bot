@@ -47,7 +47,7 @@ async def qotd(ctx, arg):
 async def waste(ctx, arg):
     await ctx.send(f"{ctx.author.mention} is a dumbass")
 
-@perk(name="staffNickChange", description = "Change a Staff's nick!", cost= 10, require_arg = True
+@perk(name="staffNickChange", description = "Change a Staff's nick!", cost= 10, require_arg = True,
       aliases = ["bullyStaff,snc"])
 async def staffNickChange(ctx, arg):
     try:
