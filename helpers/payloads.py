@@ -20,7 +20,7 @@ def mute_payload(*, offender_id, mod_id, reason, duration):
         "reason": reason,
         "timestamp": round(time.time()),
         "duration": duration,
-        "ends": round(time.time()) + duration,
+        "ends": round(time.time()) + duration if duration else 0,
         "active": True,
         "permanent": True if not duration else False
     }
