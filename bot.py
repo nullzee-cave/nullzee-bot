@@ -10,6 +10,7 @@ import json
 import math
 from api_key import token, prefix
 from perks.perkSystem import PerkError
+import traceback
 
 
 intents = discord.Intents.default()
@@ -48,7 +49,8 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
 bot = commands.Bot(command_prefix=prefix, case_insensitive=True, intents=intents)
 bot.remove_command('help')
 
-cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points']
+# cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points']
+cogs = ['cogs.moderation', 'cogs.staff', 'cogs.automod']
 
 
 
@@ -105,10 +107,11 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
         # await ctx.send("You do not have permission to use this command.")
         return
-
+    if isinstance(error, discord.Forbidden):
+        return await ctx.send("I do not have permission to perform an action for that command")
 
     #     # ignore all other exception types, but print them to stderr
-    print('Ignoring exception in command {}: {}'.format(ctx.command, error), file=sys.stderr)
+    print( "EXCEPTION TRACE PRINT:\n{}".format( "".join(traceback.format_exception(type(error), error, error.__traceback__))))
 
 
 @bot.event
@@ -136,7 +139,7 @@ async def on_ready():
              hidden=True,
              case_insensitive=True)
 @commands.guild_only()
-@commands.has_guild_permissions(administrator=True)
+@commands.has_guild_permissions(manage_roles=True)
 async def reload(ctx):
     # await ctx.channel.purge(limit=int(1))
     """ Reloads cogs while bot is still online """

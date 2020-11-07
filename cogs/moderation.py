@@ -75,6 +75,16 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
 
 
     @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def delwarn(self, ctx, _id:str):
+        doc = await moderationColl.find_one({"id": _id})
+        if not doc:
+            return await ctx.send("Could not find that warning")
+        else:
+            await moderationColl.update_one(doc, {"$set": {"expired": True}})
+            await ctx.send("Successfully deleted warning `{}`".format(_id))
+
+    @commands.command()
     async def warnings(self, ctx, user:discord.Member=None):
         user = user if user else ctx.author
         warnings = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
