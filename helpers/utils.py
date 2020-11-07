@@ -6,6 +6,7 @@ import json
 import datetime
 import random
 import string
+from discord.ext import commands
 
 async def get_user(user):
     if not await userColl.find_one({"_id": str(user.id)}):
@@ -60,10 +61,18 @@ def min_level(level: int):
     return predicate
 
 
-def stringToSeconds(string):
+class TimeConverter(commands.Converter):
+    async def convert(self, ctx, argument):
+        _time = stringToSeconds(argument)
+        if _time:
+            return _time
+        else:
+            raise commands.UserInputError
+
+def stringToSeconds(_string):
     regex = "(\d+)(.)"
     d = {"s": 1, "m": 60, "h": 3600, "d": 86400}
-    match = re.search(regex, string)
+    match = re.search(regex, _string)
     if not match:
         return None
     else:

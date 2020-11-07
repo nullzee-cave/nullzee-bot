@@ -1,7 +1,8 @@
 import discord
 import datetime
 
-MUTED_ROLE = 678911295835078657
+# MUTED_ROLE = 678911295835078657
+MUTED_ROLE = 749178299518943343
 GUILD_ID = 667953033929293855
 LOG_CHANNEL_ID = 667957285837864960
 DELETE_WARNS_AFTER = 1209600
@@ -24,7 +25,7 @@ async def end_punishment(bot, payload, moderator, reason):
 
 def chatEmbed(ctx, payload):
     offender = ctx.bot.get_user(payload["offender_id"])
-    embed = discord.Embed(title=payload["type"], colour=colours[payload["type"]], description=payload["reason"] if payload["reason"] else "").set_author(name=offender, icon_url=offender.avatar_url)
+    embed = discord.Embed(title=f'**{payload["type"]}{"ed" if payload["type"][:-1] != "e" else "e"}**', colour=colours[payload["type"]], description=payload["reason"] if payload["reason"] else "").set_author(name=offender, icon_url=offender.avatar_url)
     return embed
 
 async def end_log(bot, payload, *, moderator, reason):
@@ -39,7 +40,7 @@ async def log(bot, payload):
     embed = discord.Embed(title=payload["type"], colour=colours[payload["type"]]).set_author(name=offender, icon_url=offender.avatar_url)
     embed.add_field(name="reason", value=payload["reason"], inline=False)
     embed.add_field(name="Moderator", value=f"<@{payload['mod_id']}>", inline=False)
-    if "duration" in payload:
+    if "duration" in payload and payload["duration"]:
         embed.add_field(name="duration", value=payload["duration_string"])
     embed.set_footer(text=f"case ID: {payload['id']}")
     embed.timestamp = datetime.datetime.now()
