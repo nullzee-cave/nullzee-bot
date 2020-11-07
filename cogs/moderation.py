@@ -85,14 +85,21 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
             await ctx.send("Successfully deleted warning `{}`".format(_id))
 
     @commands.command()
-    async def warnings(self, ctx, user:discord.Member=None):
-        user = user if user else ctx.author
-        warnings = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
-        embed = discord.Embed(title=f"{len(warnings)} warnings", colour=discord.Colour.green())
-        embed.set_author(name=user, icon_url=user.avatar_url)
-        for warning in warnings:
-            embed.add_field(name=f"ID: {warning['id']} | {ctx.guild.get_member(warning['mod_id'])}", value=f"{warning['reason']} - {datetime.datetime.fromtimestamp(warning['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}")
-        await ctx.send(embed=embed)
+    @commands.has_guild_permissions(manage_messages = True)
+    async def kick(self,ctx, user: discord.Member,*,reason:str=None):
+        if user.guild_permissions.manage_messages:
+            embed = discord.Embed(description = "You cannot kick a moderator/administrator", color = 0xff0000)
+            return await ctx.send(embed = embed)
+        payload = payloads.kick_payload(offender_id=user.id,  mod_id = ctx.author.id, reason = reason)
+        await moderationColl.insert_one(payload)
+        await ctx.send(embed = moderationUtils.chatEmbed(ctx,payload))
+        await moderationUtils.log(self.bot,payload)
+        await user.kick(reason=reason)
+        await user.send(f"You were kicked from {ctx.guild.name} {f'for `{reason}`' if reason else 'No reason given'}")
+
+
+
+
 
 
 def setup(bot):
