@@ -55,8 +55,22 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
         await moderationColl.insert_one(payload)
         await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
         await moderationUtils.log(self.bot, payload)
-        await user.send(f"You were banned from {ctx.guild.name} {f'for `{_time}`' if int_time else ''} {f'for `{reason}`' if reason else ''}")
+        await member.ban(reason=reason)
+        await user.send(f"You were banned from {ctx.guild.name} {f'for `{_time}`' if int_time else ''} {f'for `{reason}`' if reason else 'No reason given'}")
 
+    @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def unban(self,ctx,*,member):
+        banned_users = await ctx.guild.bans()
+        member_name, member_discriminator = member.split("#")
+        for bans in banned_users:
+            user = bans.user
+            if (user.name, user.discriminator) == (member_name, member_discriminator):
+                await ctx.guild.unbann(user)
+                embed = discord.Embed(title = "Member was unbanned", description = f"{user} was unbanned")
+                logchannel = ctx.guild.get_channel(667957285837864960)
+                await logchannel.send(embed=embed)
+        
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
