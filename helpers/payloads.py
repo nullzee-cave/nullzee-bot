@@ -41,3 +41,12 @@ def ban_payload(*, offender_id, mod_id, reason, duration):
         "active": True,
         "permanent": True if not duration else False
     }
+def kick_payload(*,offender_id, mod_id,reason):
+    return {
+        "id": utils.nanoId(),
+        "offender_id": offender_id,
+        "mod_id": mod_id,
+        "type": "kick",
+        "reason": reason,
+        "timestamp": round(time.time())
+    }
