@@ -9,7 +9,8 @@ def warn_payload(*, offender_id, mod_id, reason):
         "mod_id": mod_id,
         "type": "warn",
         "reason": reason,
-        "timestamp": round(time.time())
+        "timestamp": round(time.time()),
+        "expired": False
     }
 
 def mute_payload(*, offender_id, mod_id, reason, duration):

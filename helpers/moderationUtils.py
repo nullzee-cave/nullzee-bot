@@ -1,5 +1,6 @@
 import discord
 import datetime
+from api_key import moderationColl
 
 # MUTED_ROLE = 678911295835078657
 MUTED_ROLE = 749178299518943343
@@ -25,13 +26,22 @@ class BannedUser(object):
     def __init__(self, _id):
         self.id = _id
 
+async def warn_punishments(ctx, user):
+    warns = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
+    if len(warns) == 3:
+        await ctx.invoke(ctx.bot.get_command("mute"), user, "1d", reason="3 warnings within 2 weeks")
+
+
 async def end_punishment(bot, payload, moderator, reason):
     guild = bot.get_guild(GUILD_ID)
     if payload["type"] == "mute":
         member = guild.get_member(payload["offender_id"])
         await member.remove_roles(guild.get_role(MUTED_ROLE))
     elif payload["type"] == "ban":
-        await guild.unban(BannedUser(payload["offender_id"]), reason="punishment ended")
+        try:
+            await guild.unban(BannedUser(payload["offender_id"]), reason="punishment ended")
+        except (discord.NotFound, discord.HTTPException):
+            return
     await end_log(bot, payload, moderator=moderator, reason=reason)
 
 def chatEmbed(ctx, payload):
@@ -41,7 +51,7 @@ def chatEmbed(ctx, payload):
 
 async def end_log(bot, payload, *, moderator, reason):
     user = bot.get_user(payload["offender_id"])
-    embed = discord.Embed(title=f"un{payload['type']}", colour=discord.Colour.green()).set_author(name=user, icon_url=user.avatar_url)
+    embed = discord.Embed(title=f"un{payload['type']}", colour=discord.Colour.green()).set_author(name=user if user else "", icon_url=user.avatar_url if user else "")
     embed.add_field(name="moderator", value=moderator, inline=False)
     embed.add_field(name="reason", value=reason, inline=False)
     await bot.get_guild(GUILD_ID).get_channel(LOG_CHANNEL_ID).send(embed=embed)

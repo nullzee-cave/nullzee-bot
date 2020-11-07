@@ -4,6 +4,7 @@ from discord.ext import commands
 import json
 import datetime
 from helpers.utils import stringToSeconds as sts, Embed
+import asyncio
 
 
 def insert_returns(body):
@@ -172,6 +173,21 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
             result = (await eval(f"{fn_name}()", env))
             await ctx.send(f"```py\n{result}\n```")
 
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def purge(self, ctx, limit:int):
+        def check(m):
+            return not m.pinned
+        await ctx.channel.purge(limit=limit + 1, check=check)
+        await asyncio.sleep(1)
+        chatembed = discord.Embed(description=f"Cleared {limit} messages", color=0xfb00fd)
+        chatembed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=chatembed)
+        logembed = discord.Embed(title="Purge", description=f"{limit} messages cleared from {ctx.channel.mention}")
+        logembed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+        logchannel = ctx.guild.get_channel(667957285837864960)
+        await logchannel.send(embed=logembed)
 
 def setup(bot):
     bot.add_cog(Staff(bot, True))

@@ -7,6 +7,7 @@ import asyncio
 import discord
 from helpers import payloads, moderationUtils
 from api_key import moderationColl
+import datetime
 
 class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns, mutes etc.
     def __init__(self, bot, hidden):
@@ -22,6 +23,7 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
         await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
         await user.send(f"You were warned in {ctx.guild.name} for {reason}")
         await moderationUtils.log(self.bot, payload)
+        await moderationUtils.warn_punishments(ctx, user)
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
@@ -51,7 +53,11 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
         if user.guild_permissions.manage_messages:
             return await ctx.send("You cannot ban a moderator/administrator")
         payload = payloads.ban_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason)
-        await user.send(f"You were banned from {ctx.guild.name} {f'for `{_time}`' if _time else ''} {f'for `{reason}`' if reason else ''}")
+        time_string = payload["duration_string"]
+        try:
+            await user.send(f"You were banned from {ctx.guild.name} {f'for `{time_string}`' if _time else ''} {f'for `{reason}`' if reason else ''}")
+        except discord.Forbidden:
+            pass
         await user.ban(reason=reason)
         await moderationColl.insert_one(payload)
         await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
@@ -59,34 +65,24 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def unban(self,ctx,*,member):
-        banned_users = await ctx.guild.bans()
-        member_name, member_discriminator = member.split("#")
-        for bans in banned_users:
-            user = bans.user
-            if (user.name, user.discriminator) == (member_name, member_discriminator):
-                await ctx.guild.unbann(user)
-                embed = discord.Embed(title = "Member was unbanned", description = f"{user} was unbanned")
-                logchannel = ctx.guild.get_channel(667957285837864960)
-                await logchannel.send(embed=embed)
+    async def unban(self, ctx, member, *, reason:str=None):
+        try:
+            await ctx.guild.unban(moderationUtils.BannedUser(member))
+        except (discord.NotFound, discord.HTTPException):
+            return await ctx.send("Could not find a ban for that user")
+        await moderationUtils.end_log(self.bot, {"type": "ban", "offender_id": member}, moderator=ctx.author, reason=reason)
+        await ctx.send(embed=discord.Embed(description=f"**{member} was unbanned**", color=discord.Colour.green()))
 
 
     @commands.command()
-    @commands.has_permissions(manage_messages=True)
-    async def purge(self, ctx, limit:int):
-        def check(m):
-            return not m.pinned
-        await ctx.channel.purge(limit=limit + 1, check=check)
-        await asyncio.sleep(1)
-        chatembed = discord.Embed(description=f"Cleared {limit} messages", color=0xfb00fd)
-        chatembed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=chatembed)
-        logembed = discord.Embed(title="Purge", description=f"{limit} messages cleared from {ctx.channel.mention}")
-        logembed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-        logchannel = ctx.guild.get_channel(667957285837864960)
-        await logchannel.send(embed=logembed)
-
-
+    async def warnings(self, ctx, user:discord.Member=None):
+        user = user if user else ctx.author
+        warnings = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
+        embed = discord.Embed(title=f"{len(warnings)} warnings", colour=discord.Colour.green())
+        embed.set_author(name=user, icon_url=user.avatar_url)
+        for warning in warnings:
+            embed.add_field(name=f"ID: {warning['id']} | {ctx.guild.get_member(warning['mod_id'])}", value=f"{warning['reason']} - {datetime.datetime.fromtimestamp(warning['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}")
+        await ctx.send(embed=embed)
 
 
 def setup(bot):
