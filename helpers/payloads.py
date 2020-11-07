@@ -36,7 +36,7 @@ def ban_payload(*, offender_id, mod_id, reason, duration):
         "reason": reason,
         "timestamp": round(time.time()),
         "duration": duration,
-        "duration_string": "{:0>8}".format(str(datetime.timedelta(seconds=duration))),
+        "duration_string": "{:0>8}".format(str(datetime.timedelta(seconds=duration))) if duration else 0,
         "ends": round(time.time()) + duration if duration else 0,
         "active": True,
         "permanent": True if not duration else False

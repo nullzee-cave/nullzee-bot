@@ -7,6 +7,13 @@ GUILD_ID = 667953033929293855
 LOG_CHANNEL_ID = 667957285837864960
 DELETE_WARNS_AFTER = 1209600
 
+PAST_PARTICIPLES = {
+    "mute": "muted",
+    "ban": "banned",
+    "warn": "warned",
+    "kick": "kicked"
+}
+
 colours = {
     "warn": 0xF7FF00,
     "mute": 0xFF8F00,
@@ -14,18 +21,22 @@ colours = {
     "ban": 0xFF0000
 }
 
+class BannedUser(object):
+    def __init__(self, _id):
+        self.id = _id
+
 async def end_punishment(bot, payload, moderator, reason):
     guild = bot.get_guild(GUILD_ID)
     if payload["type"] == "mute":
         member = guild.get_member(payload["offender_id"])
         await member.remove_roles(guild.get_role(MUTED_ROLE))
     elif payload["type"] == "ban":
-        await guild.unban(payload["offender_id"], reason="punishment ended")
+        await guild.unban(BannedUser(payload["offender_id"]), reason="punishment ended")
     await end_log(bot, payload, moderator=moderator, reason=reason)
 
 def chatEmbed(ctx, payload):
     offender = ctx.bot.get_user(payload["offender_id"])
-    embed = discord.Embed(title=f'**{payload["type"]}{"ed" if payload["type"][:-1] != "e" else "e"}**', colour=colours[payload["type"]], description=payload["reason"] if payload["reason"] else "").set_author(name=offender, icon_url=offender.avatar_url)
+    embed = discord.Embed(title=f'**{PAST_PARTICIPLES[payload["type"]]}**', colour=colours[payload["type"]], description=payload["reason"] if payload["reason"] else "").set_author(name=offender, icon_url=offender.avatar_url)
     return embed
 
 async def end_log(bot, payload, *, moderator, reason):

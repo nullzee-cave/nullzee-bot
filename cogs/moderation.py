@@ -51,10 +51,11 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
         if user.guild_permissions.manage_messages:
             return await ctx.send("You cannot ban a moderator/administrator")
         payload = payloads.ban_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason)
+        await user.send(f"You were banned from {ctx.guild.name} {f'for `{_time}`' if _time else ''} {f'for `{reason}`' if reason else ''}")
+        await user.ban(reason=reason)
         await moderationColl.insert_one(payload)
         await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
         await moderationUtils.log(self.bot, payload)
-        await user.send(f"You were banned from {ctx.guild.name} {f'for `{_time}`' if _time else ''} {f'for `{reason}`' if reason else ''}")
 
 
     @commands.command()
