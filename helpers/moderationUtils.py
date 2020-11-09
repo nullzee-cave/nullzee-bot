@@ -1,5 +1,6 @@
 import discord
 import datetime
+from api_key import moderationColl
 
 # MUTED_ROLE = 678911295835078657
 MUTED_ROLE = 749178299518943343
@@ -20,16 +21,37 @@ colours = {
     "kick": 0xFF5D00,
     "ban": 0xFF0000
 }
+doc = {}
+async def update_config():
+    global doc
+    doc = await moderationColl.find_one({"_id": "config"})
+
+async def get_config():
+    if not doc:
+        await update_config()
+    return doc
+
 
 class BannedUser(object):
     def __init__(self, _id):
         self.id = _id
 
+async def warn_punishments(ctx, user):
+    warns = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
+    config = await get_config()
+    punishment = config["punishForWarns"][str(len(warns))] if str(len(warns)) in config["warnsForMute"] else None
+    if not punishment:
+        return
+    ctx.author = ctx.guild.me
+    cmd = ctx.bot.get_command(punishment["type"])
+    if not cmd: return
+    await ctx.invoke(cmd, user, punishment["duration"], reason=f"{len(warns)} warns")
+
 async def end_punishment(bot, payload, moderator, reason):
     guild = bot.get_guild(GUILD_ID)
     if payload["type"] == "mute":
         member = guild.get_member(payload["offender_id"])
-        await member.remove_roles(guild.get_role(MUTED_ROLE))
+        await member.remove_roles(guild.get_role((await get_config())["mutedRole"]))
     elif payload["type"] == "ban":
         await guild.unban(BannedUser(payload["offender_id"]), reason="punishment ended")
     await end_log(bot, payload, moderator=moderator, reason=reason)

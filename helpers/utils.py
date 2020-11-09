@@ -63,6 +63,8 @@ def min_level(level: int):
 
 class TimeConverter(commands.Converter):
     async def convert(self, ctx, argument):
+        if isinstance(argument, int):
+            return argument
         _time = stringToSeconds(argument)
         if _time:
             return _time
@@ -71,9 +73,10 @@ class TimeConverter(commands.Converter):
 
 def stringToSeconds(_string):
     regex = "(\d+)(.)"
-    d = {"s": 1, "m": 60, "h": 3600, "d": 86400}
+    d = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
     match = re.search(regex, _string)
     if not match:
         return None
     else:
-        return int(match.group(1)) * d[match.group(2)]
+        return int(match.group(1)) * d[match.group(2)] if match.group(2) in d else None
+

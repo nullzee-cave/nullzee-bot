@@ -8,6 +8,7 @@ import discord
 from helpers import payloads, moderationUtils
 from api_key import moderationColl
 import datetime
+from EZPaginator import Paginator
 
 class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns, mutes etc.
     def __init__(self, bot, hidden):
@@ -31,7 +32,7 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
         if user.guild_permissions.manage_messages:
             return await ctx.send("You cannot mute a moderator/administrator")
         payload = payloads.mute_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason)
-        await user.add_roles(ctx.guild.get_role(moderationUtils.MUTED_ROLE))
+        await user.add_roles(ctx.guild.get_role((await moderationUtils.get_config())["mutedRole"]))
         await moderationColl.insert_one(payload)
         await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
         await moderationUtils.log(self.bot, payload)
@@ -96,6 +97,39 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
         await moderationUtils.log(self.bot,payload)
         await user.kick(reason=reason)
         await user.send(f"You were kicked from {ctx.guild.name} {f'for `{reason}`' if reason else 'No reason given'}")
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def warnings(self, ctx, user:discord.Member=None):
+        user = user if user else ctx.author
+        warnings = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
+        embed = discord.Embed(title=f"{len(warnings)} warnings", colour=discord.Colour.green())
+        embed.set_author(name=user, icon_url=user.avatar_url)
+        for warning in warnings:
+            embed.add_field(name=f"ID: {warning['id']} | {ctx.guild.get_member(warning['mod_id'])}", value=f"{warning['reason']} - {datetime.datetime.fromtimestamp(warning['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}")
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def modlogs(self, ctx, user: discord.Member):
+        user = user if user else ctx.author
+        infractions = [z async for z in moderationColl.find({"offender_id": user.id})]
+        if not infractions:
+            return await ctx.send(f"No infractions found for {user}")
+        embeds = [discord.Embed(title=f"All infractions for {user}", color=discord.Colour.orange())]
+        embed_count = 0
+        for i, infraction in enumerate(infractions):
+            embeds[embed_count].add_field(name=f"{infraction['type']} | ID: {infraction['id']} | {ctx.guild.get_member(infraction['mod_id'])}", value=f"{infraction['reason']} - {datetime.datetime.fromtimestamp(infraction['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}")
+            if not i % 5 and i != 0:
+                embed_count += 1
+                embeds.append(discord.Embed(title=f"All infractions for {user}", color=discord.Colour.orange()))
+        msg = await ctx.send(embed=embeds[0])
+        if len(embeds) == 1:
+            return
+        for i, e in enumerate(embeds):
+            e.set_footer(text=f"page {i} of {len(embeds)}")
+        pages = Paginator(self.bot, msg, embeds=embeds, timeout=60, use_more=True, only=ctx.author)
+        await pages.start()
 
 
 

@@ -3,8 +3,10 @@ import ast
 from discord.ext import commands
 import json
 import datetime
-from helpers.utils import stringToSeconds as sts, Embed
-
+from helpers.utils import stringToSeconds as sts, Embed, TimeConverter
+from helpers import moderationUtils
+import asyncio
+from api_key import moderationColl
 
 def insert_returns(body):
     # insert return stmt if the last expression is a expression statement
@@ -121,6 +123,21 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
         await ctx.send(embed=await Embed(ctx.author, title="Added to starboard!", url=star_message.jump_url).user_colour())
 
 
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def purge(self, ctx, limit:int):
+        def check(m):
+            return not m.pinned
+        await ctx.channel.purge(limit=limit + 1, check=check)
+        await asyncio.sleep(1)
+        chatembed = discord.Embed(description=f"Cleared {limit} messages", color=0xfb00fd)
+        chatembed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=chatembed)
+        logembed = discord.Embed(title="Purge", description=f"{limit} messages cleared from {ctx.channel.mention}")
+        logembed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+        logchannel = ctx.guild.get_channel(667957285837864960)
+        await logchannel.send(embed=logembed)
+
 
     @commands.command(name="eval", aliases=["eval_fn", "-e"])
     async def eval_fn(self, ctx, *, cmd):
@@ -171,6 +188,119 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
 
             result = (await eval(f"{fn_name}()", env))
             await ctx.send(f"```py\n{result}\n```")
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def modhelp(self, ctx):
+        bot: commands.Bot = ctx.bot
+        mod_cogs = [bot.get_cog(z) for z in bot.cogs]
+        mod_cogs = filter(lambda x: x.hidden, mod_cogs)
+        embed = discord.Embed(title="Moderation Help!", colour=discord.Colour.gold())
+        string = ""
+        for cog in mod_cogs:
+            cog_string = ""
+            for cmd in cog.get_commands():
+                cog_string += f"\n`{ctx.prefix}{cmd.name}`"
+            string += f"\n**{cog.qualified_name}:**{cog_string}"
+        embed.description = string
+        await ctx.send(embed=embed)
+
+    # @commands.group(aliases=["-c"])
+    # @commands.has_guild_permissions(manage_messages=True)
+    # async def config(self, ctx):
+    #     print('layer1')
+    #
+    # @config.group(invoke_without_command=True)
+    # async def automod(self, ctx):
+    #     print('layer2')
+    #
+    # @automod.group(invoke_without_command=True)
+    # async def mentions(self, ctx):
+    #     print('layer3')
+    #
+    # @mentions.command()
+    # async def allowChannel(self, ctx, channel: discord.TextChannel):
+    #     print(channel.name)
+
+
+    @commands.group(aliases=["-c"])
+    @commands.has_guild_permissions(manage_messages=True)
+    async def config(self, ctx):
+        if not ctx.invoked_subcommand:
+            await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.config.commands]))
+        else:
+            await ctx.send("Successfully updated configuration")
+            await moderationUtils.update_config()
+
+    @config.command()
+    async def mutedRole(self, ctx, *, role: discord.Role):
+        await moderationColl.update_one({"_id": "config"}, {"$set": {"muteRole": role.id}})
+    @config.command()
+    async def deleteWarnsAfter(self, ctx, _time: TimeConverter):
+        await moderationColl.update_one({"_id": "config"}, {"$set": {"deleteWarnsAfter": _time}})
+
+    @config.group(invoke_without_command=True)
+    async def punishForWarns(self, ctx):
+        await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.punishForWarns.commands]))
+    @punishForWarns.command()
+    async def add(self, ctx, warns:int, duration: TimeConverter, _type="mute"):
+        await moderationColl.update_one({"_id": "config"}, {"$set": {"punishForWarns.{}".format(warns): {"type": _type, "duration": duration}}})
+    @punishForWarns.command()
+    async def remove(self, ctx, warns:int):
+        await moderationColl.update_one({"_id": "config"}, {"$unset": {"punishForWarns.{}".format(warns): ""}})
+
+    @config.group(invoke_without_command=True)
+    async def automod(self, ctx):
+        await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.automod.commands]))
+
+
+    @automod.group(invoke_without_command=True)
+    async def mentions(self, ctx):
+        await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.mentions.commands]))
+
+    @mentions.command(name="punishment")
+    async def m_punishment(self, ctx, action:str="delete"):
+        await moderationColl.update_one({"_id": "config"}, {"$set": {"mentions.action": action if action == "warn" else "delete"}})
+    @mentions.command()
+    async def value(self, ctx, val:int):
+        await moderationColl.update_one({"_id": "config"}, {"$set": {"mentions.val": val}})
+    @mentions.command(name="allowChannel")
+    async def m_allowChannel(self, ctx, channel: discord.TextChannel):
+        await moderationColl.update_one({"_id": "config"}, {"$push": {"mentions.allowed_channels": channel.id}})
+    @mentions.command(name="disallowChannel")
+    async def m_disallowChannel(self, ctx, channel: discord.TextChannel):
+        await moderationColl.update_one({"_id": "config"}, {"$pull": {"mentions.allowed_channels": channel.id}})
+
+
+    @automod.group(invoke_without_command=True)
+    async def invites(self, ctx):
+        await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.invites.commands]))
+    @invites.command(name="punishment")
+    async def i_punishment(self, ctx, action:str="delete"):
+        await moderationColl.update_one({"_id": "config"}, {"$set": {"invites.action": action if action == "warn" else "delete"}})
+    @invites.command(name="allowChannel")
+    async def i_allowChannel(self, ctx, channel: discord.TextChannel):
+        await moderationColl.update_one({"_id": "config"}, {"$push": {"invites.allowed_channels": channel.id}})
+    @invites.command(name="disallowChannel")
+    async def i_disallowChannel(self, ctx, channel: discord.TextChannel):
+        await moderationColl.update_one({"_id": "config"}, {"$pull": {"invites.allowed_channels": channel.id}})
+
+    @automod.group(invoke_without_command=True)
+    async def badWords(self, ctx):
+        await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.badWords.commands]))
+
+    @badWords.command()
+    async def add(self, ctx, word:str, action:str="delete"):
+        await moderationColl.update_one({"_id": "config"}, {"$set": {"badWords.{}".format(word): action}})
+    @badWords.command()
+    async def remove(self, word:str):
+        await moderationColl.update_one({"_id": "config"}, {"unset": {"badWords.{}".format(word): ""}})
+
+
+
+
+
+
 
 
 def setup(bot):
