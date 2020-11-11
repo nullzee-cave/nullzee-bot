@@ -4,6 +4,9 @@ from api_key import userColl
 import discord
 import json
 import datetime
+import random
+import string
+from discord.ext import commands
 
 async def get_user(user):
     if not await userColl.find_one({"_id": str(user.id)}):
@@ -12,6 +15,9 @@ async def get_user(user):
              "last_points": 0, "embed_colour": "#00FF00"})
     return await userColl.find_one({"_id": str(user.id)})
 
+
+def nanoId(length=20):
+    return ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(length))
 
 def getFileJson(filename):
     with open(f"{filename}.json") as f:
@@ -55,11 +61,22 @@ def min_level(level: int):
     return predicate
 
 
-def stringToSeconds(string):
+class TimeConverter(commands.Converter):
+    async def convert(self, ctx, argument):
+        if isinstance(argument, int):
+            return argument
+        _time = stringToSeconds(argument)
+        if _time:
+            return _time
+        else:
+            raise commands.UserInputError
+
+def stringToSeconds(_string):
     regex = "(\d+)(.)"
-    d = {"s": 1, "m": 60, "h": 3600, "d": 86400}
-    match = re.search(regex, string)
+    d = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
+    match = re.search(regex, _string)
     if not match:
         return None
     else:
-        return int(match.group(1)) * d[match.group(2)]
+        return int(match.group(1)) * d[match.group(2)] if match.group(2) in d else None
+
