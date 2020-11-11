@@ -2,6 +2,7 @@ import discord
 import ast
 from discord.ext import commands
 import json
+import time
 import datetime
 from helpers.utils import stringToSeconds as sts, Embed, TimeConverter
 from helpers import moderationUtils
@@ -184,10 +185,14 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
                 'ctx': ctx,
                 '__import__': __import__
             }
-            exec(compile(parsed, filename="<ast>", mode="exec"), env)
 
-            result = (await eval(f"{fn_name}()", env))
-            await ctx.send(f"```py\n{result}\n```")
+            try:
+                exec(compile(parsed, filename="<ast>", mode="exec"), env)
+                result = (await eval(f"{fn_name}()", env))
+                await ctx.send(f"```py\n{result}\n```")
+            except Exception as e:
+                await ctx.send(f"An exception occurred:```py\n{e}\n```")
+
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
@@ -204,23 +209,6 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
             string += f"\n**{cog.qualified_name}:**{cog_string}"
         embed.description = string
         await ctx.send(embed=embed)
-
-    # @commands.group(aliases=["-c"])
-    # @commands.has_guild_permissions(manage_messages=True)
-    # async def config(self, ctx):
-    #     print('layer1')
-    #
-    # @config.group(invoke_without_command=True)
-    # async def automod(self, ctx):
-    #     print('layer2')
-    #
-    # @automod.group(invoke_without_command=True)
-    # async def mentions(self, ctx):
-    #     print('layer3')
-    #
-    # @mentions.command()
-    # async def allowChannel(self, ctx, channel: discord.TextChannel):
-    #     print(channel.name)
 
 
     @commands.group(aliases=["-c"])
@@ -291,10 +279,10 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
 
     @badWords.command()
     async def add(self, ctx, word:str, action:str="delete"):
-        await moderationColl.update_one({"_id": "config"}, {"$set": {"badWords.{}".format(word): action}})
+        await moderationColl.update_one({"_id": "config"}, {"$set": {"badWords.{}".format(word.lower()): action}})
     @badWords.command()
-    async def remove(self, word:str):
-        await moderationColl.update_one({"_id": "config"}, {"unset": {"badWords.{}".format(word): ""}})
+    async def remove(self, ctx, word:str):
+        await moderationColl.update_one({"_id": "config"}, {"$unset": {"badWords.{}".format(word.lower()): ""}})
 
 
 

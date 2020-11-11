@@ -9,10 +9,10 @@ LOG_CHANNEL_ID = 667957285837864960
 DELETE_WARNS_AFTER = 1209600
 
 PAST_PARTICIPLES = {
-    "mute": "muted",
-    "ban": "banned",
-    "warn": "warned",
-    "kick": "kicked"
+    "mute": "Muted",
+    "ban": "Banned",
+    "warn": "Warned",
+    "kick": "Kicked"
 }
 
 colours = {
@@ -43,8 +43,10 @@ async def warn_punishments(ctx, user):
     if not punishment:
         return
     ctx.author = ctx.guild.me
-    cmd = ctx.bot.get_command(punishment["type"])
+    cmd = ctx.bot.get_command(punishment["type"].lower())
     if not cmd: return
+    if cmd.name == "kick":
+        return await ctx.invoke(cmd, user, reason=f"{len(warns)} warns")
     await ctx.invoke(cmd, user, punishment["duration"], reason=f"{len(warns)} warns")
 
 async def end_punishment(bot, payload, moderator, reason):
@@ -64,17 +66,17 @@ def chatEmbed(ctx, payload):
 async def end_log(bot, payload, *, moderator, reason):
     user = bot.get_user(payload["offender_id"])
     embed = discord.Embed(title=f"un{payload['type']}", colour=discord.Colour.green()).set_author(name=user, icon_url=user.avatar_url)
-    embed.add_field(name="moderator", value=moderator, inline=False)
-    embed.add_field(name="reason", value=reason, inline=False)
+    embed.add_field(name="Moderator", value=moderator, inline=False)
+    embed.add_field(name="Reason", value=reason, inline=False)
     await bot.get_guild(GUILD_ID).get_channel(LOG_CHANNEL_ID).send(embed=embed)
 
 async def log(bot, payload):
     offender = bot.get_user(payload["offender_id"])
     embed = discord.Embed(title=payload["type"], colour=colours[payload["type"]]).set_author(name=offender, icon_url=offender.avatar_url)
-    embed.add_field(name="reason", value=payload["reason"], inline=False)
+    embed.add_field(name="Reason", value=payload["reason"], inline=False)
     embed.add_field(name="Moderator", value=f"<@{payload['mod_id']}>", inline=False)
     if "duration" in payload and payload["duration"]:
-        embed.add_field(name="duration", value=payload["duration_string"])
-    embed.set_footer(text=f"case ID: {payload['id']}")
+        embed.add_field(name="Duration", value=payload["duration_string"])
+    embed.set_footer(text=f"Case ID: {payload['id']}")
     embed.timestamp = datetime.datetime.now()
     await bot.get_guild(GUILD_ID).get_channel(LOG_CHANNEL_ID).send(embed=embed)
