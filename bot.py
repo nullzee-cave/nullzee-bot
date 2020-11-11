@@ -49,8 +49,8 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
 bot = commands.Bot(command_prefix=prefix, case_insensitive=True, intents=intents)
 bot.remove_command('help')
 
-# cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points']
-cogs = ['cogs.moderation', 'cogs.staff', 'cogs.automod']
+cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points']
+# cogs = ['cogs.moderation', 'cogs.staff', 'cogs.automod']
 
 
 
