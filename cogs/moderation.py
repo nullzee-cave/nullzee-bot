@@ -106,7 +106,7 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
         embed = discord.Embed(title=f"{len(warnings)} warnings", colour=discord.Colour.green())
         embed.set_author(name=user, icon_url=user.avatar_url)
         for warning in warnings:
-            embed.add_field(name=f"ID: {warning['id']} | {ctx.guild.get_member(warning['mod_id'])}", value=f"{warning['reason']} - {datetime.datetime.fromtimestamp(warning['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}")
+            embed.add_field(name=f"ID: {warning['id']} | {ctx.guild.get_member(warning['mod_id'])}", value=f"{warning['reason']} - {datetime.datetime.fromtimestamp(warning['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}", inline=False)
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -119,7 +119,7 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
         embeds = [discord.Embed(title=f"All infractions for {user}", color=discord.Colour.orange())]
         embed_count = 0
         for i, infraction in enumerate(infractions):
-            embeds[embed_count].add_field(name=f"{infraction['type']} | ID: {infraction['id']} | {ctx.guild.get_member(infraction['mod_id'])}", value=f"{infraction['reason']} - {datetime.datetime.fromtimestamp(infraction['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}")
+            embeds[embed_count].add_field(name=f"{infraction['type']} | ID: {infraction['id']} | {ctx.guild.get_member(infraction['mod_id'])}", value=f"{infraction['reason']} - {datetime.datetime.fromtimestamp(infraction['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}", inline=False)
             if not i % 5 and i != 0:
                 embed_count += 1
                 embeds.append(discord.Embed(title=f"All infractions for {user}", color=discord.Colour.orange()))
