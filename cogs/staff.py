@@ -183,6 +183,7 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
                 'discord': discord,
                 'commands': commands,
                 'ctx': ctx,
+                "moderationColl": moderationColl,
                 '__import__': __import__
             }
 
