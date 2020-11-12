@@ -230,11 +230,11 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
     @config.group(invoke_without_command=True)
     async def punishForWarns(self, ctx):
         await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.punishForWarns.commands]))
-    @punishForWarns.command()
-    async def add(self, ctx, warns:int, duration: TimeConverter, _type="mute"):
+    @punishForWarns.command(name="add")
+    async def p_add(self, ctx, warns:int, duration: TimeConverter, _type="mute"):
         await moderationColl.update_one({"_id": "config"}, {"$set": {"punishForWarns.{}".format(warns): {"type": _type, "duration": duration}}})
-    @punishForWarns.command()
-    async def remove(self, ctx, warns:int):
+    @punishForWarns.command(name="remove")
+    async def p_remove(self, ctx, warns:int):
         await moderationColl.update_one({"_id": "config"}, {"$unset": {"punishForWarns.{}".format(warns): ""}})
 
     @config.group(invoke_without_command=True)
@@ -277,11 +277,11 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
     async def badWords(self, ctx):
         await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.badWords.commands]))
 
-    @badWords.command()
-    async def add(self, ctx, word:str, action:str="delete"):
+    @badWords.command(name="add")
+    async def b_add(self, ctx, word:str, action:str="delete"):
         await moderationColl.update_one({"_id": "config"}, {"$set": {"badWords.{}".format(word.lower()): action}})
-    @badWords.command()
-    async def remove(self, ctx, word:str):
+    @badWords.command(name="remove")
+    async def b_remove(self, ctx, word:str):
         await moderationColl.update_one({"_id": "config"}, {"$unset": {"badWords.{}".format(word.lower()): ""}})
 
 
