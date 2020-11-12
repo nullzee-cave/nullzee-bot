@@ -95,8 +95,11 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
         await moderationColl.insert_one(payload)
         await ctx.send(embed = moderationUtils.chatEmbed(ctx,payload))
         await moderationUtils.log(self.bot,payload)
+        try:
+            await user.send(f"You were kicked from {ctx.guild.name} {f'for `{reason}`' if reason else 'No reason given'}")
+        except discord.Forbidden:
+            pass
         await user.kick(reason=reason)
-        await user.send(f"You were kicked from {ctx.guild.name} {f'for `{reason}`' if reason else 'No reason given'}")
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
