@@ -39,7 +39,7 @@ class BannedUser(object):
 async def warn_punishments(ctx, user):
     warns = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
     config = await get_config()
-    punishment = config["punishForWarns"][str(len(warns))] if str(len(warns)) in config["warnsForMute"] else None
+    punishment = config["punishForWarns"][str(len(warns))] if str(len(warns)) in config["punishForWarns"] else None
     if not punishment:
         return
     ctx.author = ctx.guild.me
