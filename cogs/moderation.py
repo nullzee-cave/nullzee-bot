@@ -32,7 +32,7 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
         if user.guild_permissions.manage_messages:
             return await ctx.send("You cannot mute a moderator/administrator")
         payload = payloads.mute_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason)
-        await user.add_roles(ctx.guild.get_role((await moderationUtils.get_config())["mutedRole"]))
+        await user.add_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]))
         await moderationColl.insert_one(payload)
         await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
         await moderationUtils.log(self.bot, payload)
@@ -43,7 +43,7 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
     @commands.has_guild_permissions(manage_messages=True)
     async def unmute(self, ctx, user:discord.Member, *, reason:str=None):
         await moderationColl.delete_many({"offender_id": user.id, "type": "mute"})
-        await user.remove_roles(ctx.guild.get_role(moderationUtils.MUTED_ROLE))
+        await user.remove_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]))
         await moderationUtils.end_log(self.bot, {"type": "mute", "offender_id": user.id}, moderator=ctx.author, reason=reason)
         await ctx.send(embed=discord.Embed(description=f"unmuted {user}", colour=discord.Colour.green()))
 
