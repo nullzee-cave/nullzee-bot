@@ -131,6 +131,9 @@ class Moderation(commands.Cog, name="Moderation"): # moderation commands, warns,
         pages = Paginator(self.bot, msg, embeds=embeds, timeout=60, use_more=True, only=ctx.author)
         await pages.start()
 
+    async def cog_after_invoke(self, ctx):
+        await ctx.message.delete()
+
 
 
 
