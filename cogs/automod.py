@@ -46,9 +46,9 @@ class Automod(commands.Cog): # this is for timed punishments, removing warns etc
 
     @tasks.loop(minutes=1)
     async def delete_warns(self):
-        async for warn in moderationColl.find({"type": "warn"}):
-            if warn["timestamp"] + (await moderationUtils.get_config())["deleteWarnsAfter"]:
-                await moderationColl.delete_one(warn)
+        async for warn in moderationColl.find({"type": "warn", "active": True}):
+            if warn["timestamp"] + (await moderationUtils.get_config())["deleteWarnsAfter"] > time.time():
+                await moderationColl.update_one(warn, {"$set": {"active": False}})
 
     @tasks.loop(minutes=1)
     async def timed_punishments(self):
