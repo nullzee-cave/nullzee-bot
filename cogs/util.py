@@ -10,7 +10,7 @@ import random
 from discord.ext.commands.cooldowns import BucketType
 import time
 import datetime
-import math
+from api_key import moderationColl
 from helpers.utils import Embed
 
 class util(commands.Cog, name="Other"):
@@ -31,6 +31,21 @@ class util(commands.Cog, name="Other"):
     async def subcount(self, ctx):
         await ctx.send(embed=discord.Embed(title="Nullzee's YouTube stats", description=f"Subscribers: {int(self.sub_count['subscriberCount']):,}\nTotal Views: {int(self.sub_count['viewCount']):,}\nVideo count: {int(self.sub_count['videoCount']):,}", color=0x00FF00, url="https://youtube.com/nullzee").set_thumbnail(url="https://cdn.discordapp.com/avatars/165629105541349376/2d7ff05116b8930a2fa2bf22bdb119c7.webp?size=1024"))
         self.updateSubCount()
+
+    @commands.command()
+    async def appeal(self, ctx, _id: str, *, reason:str=None):
+        punishment = await moderationColl.find_one({"id": _id})
+        if not punishment:
+            return await ctx.send("Could not find a punishment with that ID")
+        if punishment["offender_id"] != ctx.author.id:
+            return await ctx.send("You can only appeal your own punishments")
+        location = punishment["message"].split('-')
+        print(location)
+        msg = await self.bot.get_guild(int(location[0])).get_channel(int(location[1])).fetch_message(int(location[2]))
+        embed = discord.Embed(title="Punishment appeal", url=msg.jump_url, description=reason, colour=discord.Colour.orange())
+        embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+        await self.bot.get_guild(int(location[0])).get_channel(771061232642949150).send(embed=embed)
+        await ctx.send("Punishment appeal submitted.")
 
 
     @commands.command()

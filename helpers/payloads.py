@@ -2,6 +2,10 @@ from helpers import utils
 import time
 import datetime
 
+def insert_message(payload, message):
+    payload["message"] = f"{message.guild.id}-{message.channel.id}-{message.id}"
+    return payload
+
 def warn_payload(*, offender_id, mod_id, reason):
     return {
         "id": utils.nanoId(),
