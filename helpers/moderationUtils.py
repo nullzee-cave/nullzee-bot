@@ -50,13 +50,16 @@ async def warn_punishments(ctx, user):
     await ctx.invoke(cmd, user, punishment["duration"], reason=f"{len(warns)} warns")
 
 async def end_punishment(bot, payload, moderator, reason):
-    guild = bot.get_guild(GUILD_ID)
-    if payload["type"] == "mute":
-        member = guild.get_member(payload["offender_id"])
-        await member.remove_roles(guild.get_role((await get_config())["muteRole"]))
-    elif payload["type"] == "ban":
-        await guild.unban(BannedUser(payload["offender_id"]), reason="punishment ended")
-    await end_log(bot, payload, moderator=moderator, reason=reason)
+    try:
+        guild = bot.get_guild(GUILD_ID)
+        if payload["type"] == "mute":
+            member = guild.get_member(payload["offender_id"])
+            await member.remove_roles(guild.get_role((await get_config())["muteRole"]))
+        elif payload["type"] == "ban":
+            await guild.unban(BannedUser(payload["offender_id"]), reason="punishment ended")
+        await end_log(bot, payload, moderator=moderator, reason=reason)
+    except:
+        return
 
 def chatEmbed(ctx, payload):
     offender = ctx.bot.get_user(payload["offender_id"])
