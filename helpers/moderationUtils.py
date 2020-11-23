@@ -15,12 +15,21 @@ PAST_PARTICIPLES = {
     "kick": "Kicked"
 }
 
-colours = {
+COLOURS = {
     "warn": 0xF7FF00,
     "mute": 0xFF8F00,
     "kick": 0xFF5D00,
     "ban": 0xFF0000
 }
+
+SEVERITY = {
+    "warn": 1,
+    "mute": 3,
+    "kick": 9,
+    "ban": 18
+}
+
+
 doc = {}
 async def update_config():
     global doc
@@ -39,15 +48,16 @@ class BannedUser(object):
 async def warn_punishments(ctx, user):
     warns = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
     config = await get_config()
-    punishment = config["punishForWarns"][str(len(warns))] if str(len(warns)) in config["punishForWarns"] else None
+    score = sum([SEVERITY[z["type"]] for z in warns])
+    punishment = config["punishForWarns"][str(score)] if str(score) in config["punishForWarns"] else None
     if not punishment:
         return
     ctx.author = ctx.guild.me
     cmd = ctx.bot.get_command(punishment["type"].lower())
     if not cmd: return
     if cmd.name == "kick":
-        return await ctx.invoke(cmd, user, reason=f"{len(warns)} warns")
-    await ctx.invoke(cmd, user, punishment["duration"], reason=f"{len(warns)} warns")
+        return await ctx.invoke(cmd, user, reason=f"{score} warns")
+    await ctx.invoke(cmd, user, punishment["duration"], reason=f"{score} warns")
 
 async def end_punishment(bot, payload, moderator, reason):
     try:
@@ -63,7 +73,7 @@ async def end_punishment(bot, payload, moderator, reason):
 
 def chatEmbed(ctx, payload):
     offender = ctx.bot.get_user(payload["offender_id"])
-    embed = discord.Embed(title=f'**{PAST_PARTICIPLES[payload["type"]]}**', colour=colours[payload["type"]], description=payload["reason"] if payload["reason"] else "").set_author(name=offender, icon_url=offender.avatar_url)
+    embed = discord.Embed(title=f'**{PAST_PARTICIPLES[payload["type"]]}**', colour=COLOURS[payload["type"]], description=payload["reason"] if payload["reason"] else "").set_author(name=offender, icon_url=offender.avatar_url)
     return embed
 
 async def end_log(bot, payload, *, moderator, reason):
@@ -75,7 +85,7 @@ async def end_log(bot, payload, *, moderator, reason):
 
 async def log(bot, payload):
     offender = bot.get_user(payload["offender_id"])
-    embed = discord.Embed(title=payload["type"], colour=colours[payload["type"]]).set_author(name=offender, icon_url=offender.avatar_url)
+    embed = discord.Embed(title=payload["type"], colour=COLOURS[payload["type"]]).set_author(name=offender, icon_url=offender.avatar_url)
     embed.add_field(name="Reason", value=payload["reason"], inline=False)
     embed.add_field(name="Moderator", value=f"<@{payload['mod_id']}>", inline=False)
     if "duration" in payload and payload["duration"]:

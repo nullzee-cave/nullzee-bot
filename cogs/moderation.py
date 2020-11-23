@@ -111,9 +111,22 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def warnings(self, ctx, user: discord.Member = None):
+    async def punishments(self, ctx, user: discord.Member = None):
         user = user if user else ctx.author
         warnings = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
+        embed = discord.Embed(title=f"{len(warnings)} punishments", colour=discord.Colour.green())
+        embed.set_author(name=user, icon_url=user.avatar_url)
+        for warning in warnings:
+            embed.add_field(name=f"ID: {warning['id']} | {ctx.guild.get_member(warning['mod_id'])}",
+                            value=f"[{warning['type']}] {warning['reason']} - {datetime.datetime.fromtimestamp(warning['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}",
+                            inline=False)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def warnings(self, ctx, user: discord.Member = None):
+        user = user if user else ctx.author
+        warnings = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False, "type": "warn"})]
         embed = discord.Embed(title=f"{len(warnings)} warnings", colour=discord.Colour.green())
         embed.set_author(name=user, icon_url=user.avatar_url)
         for warning in warnings:
