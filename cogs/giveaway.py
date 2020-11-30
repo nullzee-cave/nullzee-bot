@@ -15,9 +15,7 @@ from EZPaginator import Paginator
 from motor.motor_asyncio import AsyncIOMotorClient
 import pymongo
 
-cluster = AsyncIOMotorClient("secret")
-db = cluster["nullzee"]
-userColl = db["users"]
+from api_key import userColl
 
 
 class giveaway(commands.Cog, name="giveaway"):
@@ -314,7 +312,6 @@ class giveaway(commands.Cog, name="giveaway"):
     async def giveawayCheck(self):
         with open('giveaways.json') as f:
             giveaways = json.load(f)
-        print("giveaway loop started")
         active_giveaways = {}
         for i in giveaways:
             if giveaways[i]["active"]:
