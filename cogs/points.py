@@ -17,7 +17,7 @@ class Points(commands.Cog):
             string = ""
             for perk in perk_list:
                 string += f"{perk.name}:  `{perk.cost} points`\n"
-            return await ctx.send(embed=discord.Embed(title=f"Shop - {user["points"]}", description=string, color=0x00FF00) \
+            return await ctx.send(embed=discord.Embed(title=f"Shop - {user['points']}", description=string, color=0x00FF00) \
                                   .set_footer(text="purchase a perk with -purchase [perk name]"))
         else:
             return await ctx.send(embed=discord.Embed(

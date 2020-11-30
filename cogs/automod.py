@@ -43,7 +43,7 @@ class Automod(commands.Cog): # this is for timed punishments, removing warns etc
                 elif config["badWords"][word] == "ban":
                     await ctx.invoke(self.bot.get_command("ban"), message.author, reason="Disallowed word/phrase")
                 elif config["badWords"][word] == "report":
-                    await util.report(message.id)
+                    await ctx.invoke(self.bot.get_command("report"), message.id, reason="Disallowed word/phrase")
 
 
     @tasks.loop(minutes=1)
