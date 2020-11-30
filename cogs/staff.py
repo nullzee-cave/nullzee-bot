@@ -7,7 +7,7 @@ import datetime
 from helpers.utils import stringToSeconds as sts, Embed, TimeConverter
 from helpers import moderationUtils
 import asyncio
-from api_key import moderationColl
+from api_key import moderationColl, userColl
 
 def insert_returns(body):
     # insert return stmt if the last expression is a expression statement
@@ -184,6 +184,7 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
                 'commands': commands,
                 'ctx': ctx,
                 "moderationColl": moderationColl,
+                "userColl": userColl,
                 '__import__': __import__
             }
 
