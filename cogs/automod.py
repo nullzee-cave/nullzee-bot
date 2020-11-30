@@ -35,7 +35,7 @@ class Automod(commands.Cog): # this is for timed punishments, removing warns etc
         if config["invites"]["action"] == "delete" and message.channel.id not in config["invites"]["allowed_channels"] and re.match(INVITE_REGEX, message.content, re.IGNORECASE):
             await message.delete()
         for word in config["badWords"]:
-            if word in message.content.lower():
+	    if word.lower() == mesasge.content.lower() or f" {word.lower()} " in message.content.lower() or message.content.lower().startswith(word.lower()) or message.content.lower().endswith(word.lower()):
                 if config["badWords"][word] == "delete":
                     await message.delete()
                 elif config["badWords"][word] == "warn":
