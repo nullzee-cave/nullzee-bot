@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 from api_key import moderationColl
 import time
 from helpers import moderationUtils
-import re
+import re 
 
 INVITE_REGEX = "discord.gg\/(\w{6})"
 
@@ -42,6 +42,8 @@ class Automod(commands.Cog): # this is for timed punishments, removing warns etc
                     await ctx.invoke(self.bot.get_command('warn'), message.author, reason="Disallowed word/phrase")
                 elif config["badWords"][word] == "ban":
                     await ctx.invoke(self.bot.get_command("ban"), message.author, reason="Disallowed word/phrase")
+                elif config["badWords"][word] == "report":
+                    await util.report(message.id)
 
 
     @tasks.loop(minutes=1)

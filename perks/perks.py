@@ -27,7 +27,7 @@ async def embedColour(ctx, arg):
 
 
 @perk(name="deadChatPing", description="Ping <@&749178299518943343> with a topic of your choice!", cost=15,
-      aliases=["deadchat", "ping"], require_arg=True)
+      aliases=["deadchat", "ping","revive"], require_arg=True)
 async def deadChat(ctx, arg):
     if ctx.channel.slowmode_delay > 5:
         raise PerkError(msg="You cannot use that here")

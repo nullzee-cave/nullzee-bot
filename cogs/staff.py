@@ -277,7 +277,6 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
     @automod.group(invoke_without_command=True)
     async def badWords(self, ctx):
         await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.badWords.commands]))
-
     @badWords.command(name="add")
     async def b_add(self, ctx, word:str, action:str="delete"):
         await moderationColl.update_one({"_id": "config"}, {"$set": {"badWords.{}".format(word.lower()): action}})
@@ -285,6 +284,17 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
     async def b_remove(self, ctx, word:str):
         await moderationColl.update_one({"_id": "config"}, {"$unset": {"badWords.{}".format(word.lower()): ""}})
 
+    whiteListedServers = ["667953033929293855","722421169311187037"]
+
+    @config.group(invoke_without_command = True)
+    async def allowed_guilds(self, ctx):
+        await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.allowed_guilds.commands]))
+    @allowed_guilds.command(name="add")
+    async def g_add(self,ctx, id: int):
+        await whiteListedServers.append(id)
+    @allowed_guilds.command(name="remove")
+    async def g_remove(self,ctx, id: int):
+        await whiteListedServers.remove(id)
 
 
 
