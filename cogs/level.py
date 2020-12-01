@@ -160,7 +160,7 @@ class level(commands.Cog, name="levelling"):
                 for i, e in enumerate(contents):
                     e.set_footer(text=f"page {i + 1} of {len(contents)}")
                 msg = await ctx.send(embed=contents[0])
-                pages = Paginator(self.bot, msg, embeds=contents, timeout=180, use_more=True, only=ctx.author)
+                pages = Paginator(self.bot, msg, embeds=contents, timeout=180, use_extend=True, only=ctx.author)
                 await pages.start()
                 return
 
@@ -264,7 +264,7 @@ class level(commands.Cog, name="levelling"):
                 for i, e in enumerate(contents):
                     e.set_footer(text=f"page {i + 1} of {len(contents)}")
                 msg = await ctx.send(embed=contents[0])
-                pages = Paginator(self.bot, msg, embeds=contents, timeout=180, use_more=True, only=ctx.author)
+                pages = Paginator(self.bot, msg, embeds=contents, timeout=180, use_extend=True, only=ctx.author)
                 await pages.start()
                 return
 

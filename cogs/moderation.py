@@ -157,7 +157,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
             return
         for i, e in enumerate(embeds):
             e.set_footer(text=f"page {i} of {len(embeds)}")
-        pages = Paginator(self.bot, msg, embeds=embeds, timeout=60, use_more=True, only=ctx.author)
+        pages = Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author)
         await pages.start()
 
     async def cog_after_invoke(self, ctx):
