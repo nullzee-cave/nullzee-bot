@@ -172,17 +172,17 @@ class level(commands.Cog, name="levelling"):
             users = json.load(f)
         async for user in userColl.find({}):
             users[str(user["_id"])] = user
-        if (math.trunc(time.time()) + 604800) > users["config"]["week_start"]:
-            with open(f"backups/{datetime.datetime.now().strftime('%d%m%y')}.json", 'w') as f:
-                json.dump(users, f)
-            await userColl.update_many({}, {"$set": {"weekly": 0}})
-            users["config"]["week_start"] = math.trunc(time.time())
-            with open('users.json', 'w') as f:
-                json.dump(users, f)
-            await self.bot.get_guild(667953033929293855).get_channel(667957285837864960).send(
-                embed=discord.Embed(description="Weekly XP leaderboard was reset"), color=discord.Color.blue())
-            await ctx.send(
-                embed=discord.Embed(description="Weekly XP leaderboard was reset", color=discord.Color.blue()))
+        # if (math.trunc(time.time()) + 604800) > users["config"]["week_start"]:
+        with open(f"backups/{datetime.datetime.now().strftime('%d%m%y')}.json", 'w') as f:
+            json.dump(users, f)
+        await userColl.update_many({}, {"$set": {"weekly": 0}})
+        # users["config"]["week_start"] = math.trunc(time.time())
+        with open('users.json', 'w') as f:
+            json.dump(users, f)
+        await self.bot.get_guild(667953033929293855).get_channel(667957285837864960).send(
+            embed=discord.Embed(description="Weekly XP leaderboard was reset"), color=discord.Color.blue())
+        await ctx.send(
+            embed=discord.Embed(description="Weekly XP leaderboard was reset", color=discord.Color.blue()))
 
     # @tasks.loop(hours=1)
     # async def weeklyreset(self):
