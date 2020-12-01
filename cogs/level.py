@@ -180,7 +180,7 @@ class level(commands.Cog, name="levelling"):
         with open('users.json', 'w') as f:
             json.dump(users, f)
         await self.bot.get_guild(667953033929293855).get_channel(667957285837864960).send(
-            embed=discord.Embed(description="Weekly XP leaderboard was reset"), color=discord.Color.blue())
+            embed=discord.Embed(description="Weekly XP leaderboard was reset", color=discord.Color.blue()))
         await ctx.send(
             embed=discord.Embed(description="Weekly XP leaderboard was reset", color=discord.Color.blue()))
 
