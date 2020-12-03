@@ -41,8 +41,8 @@ class util(commands.Cog, name="Other"):
             return await ctx.send("You can only appeal your own punishments")
         location = punishment["message"].split('-')
         print(location)
-        msg = await self.bot.get_guild(int(location[0])).get_channel(int(location[1])).fetch_message(int(location[2]))
-        embed = discord.Embed(title="Punishment appeal", url=msg.jump_url, description=reason, colour=discord.Colour.orange())
+        msg = f"https://discord.com/channels/{location[0]}/{location[1]}/{location[2]}"
+        embed = discord.Embed(title="Punishment appeal", url=msg, description=reason, colour=discord.Colour.orange())
         embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
         await self.bot.get_guild(int(location[0])).get_channel(771061232642949150).send(embed=embed)
         await ctx.send("Punishment appeal submitted.")
