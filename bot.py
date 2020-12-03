@@ -111,7 +111,7 @@ async def on_command_error(ctx, error):
         return await ctx.send("I do not have permission to perform an action for that command")
 
     if isinstance(error, PerkError):
-        return await error.send_error()
+        return await error.send_error(ctx)
     #     # ignore all other exception types, but print them to stderr
     print( "EXCEPTION TRACE PRINT:\n{}".format( "".join(traceback.format_exception(type(error), error, error.__traceback__))))
 
