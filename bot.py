@@ -172,6 +172,6 @@ async def on_command(ctx):
             json.dump(users, f)
 
 
-bot.add_check(lambda ctx: (not ctx.guild) or ctx.channel.id in [668914397531602944] or ctx.author.guild_permissions.manage_messages or ctx.command.name in ["claimroles", "purchase", "report"])
+bot.add_check(lambda ctx: (not ctx.guild) or ctx.channel.id in [668914397531602944] or ctx.author.guild_permissions.manage_messages or ctx.command.name in ["hug", "f", "claimroles", "purchase", "report"])
 
 bot.run(token, bot=True, reconnect=True)
