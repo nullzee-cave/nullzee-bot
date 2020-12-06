@@ -54,7 +54,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def ban(self, ctx, user: discord.Member, _time: typing.Optional[TimeConverter], *, reason: str = None):
+    async def ban(self, ctx, user: discord.Member, _time: typing.Optional[TimeConverter]=None, *, reason: str = None):
         if user.guild_permissions.manage_messages:
             return await ctx.send("You cannot ban a moderator/administrator")
         payload = payloads.ban_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason)
