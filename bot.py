@@ -111,7 +111,7 @@ async def on_command_error(ctx, error):
         return await ctx.send("I do not have permission to perform an action for that command")
 
     if isinstance(error, PerkError):
-        return await error.send_error()
+        return await error.send_error(ctx)
     #     # ignore all other exception types, but print them to stderr
     print( "EXCEPTION TRACE PRINT:\n{}".format( "".join(traceback.format_exception(type(error), error, error.__traceback__))))
 
@@ -172,6 +172,6 @@ async def on_command(ctx):
             json.dump(users, f)
 
 
-bot.add_check(lambda ctx: (not ctx.guild) or ctx.channel.id in [668914397531602944] or ctx.author.guild_permissions.manage_messages or ctx.command.name in ["claimroles", "purchase", "report"])
+bot.add_check(lambda ctx: (not ctx.guild) or ctx.channel.id in [668914397531602944] or ctx.author.guild_permissions.manage_messages or ctx.command.name in ["hug", "f", "claimroles", "purchase", "report"])
 
 bot.run(token, bot=True, reconnect=True)
