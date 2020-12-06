@@ -7,7 +7,7 @@ import datetime
 import asyncio
 
 
-@perk(name="AskNullzee", description="Ask Nullzee a question!", cost=5, aliases=["NullzeeQuestion", "askNull"],
+@perk(name="AskNullzee", description="Ask Nullzee a question!", cost=10, aliases=["NullzeeQuestion", "askNull"],
       require_arg=True)
 async def askNullzee(ctx, arg):
     msg = await ctx.guild.get_channel(738350726417219645).send(
@@ -16,7 +16,7 @@ async def askNullzee(ctx, arg):
     await ctx.send(embed=await Embed(ctx.author, title="Bought!", url=msg.jump_url).user_colour())
 
 
-@perk(name="embedColour", description="Change the colour of your embeds!", cost=10,
+@perk(name="embedColour", description="Change the colour of your embeds!", cost=7,
       aliases=["embedColor", "commandColour"], require_arg=True)
 async def embedColour(ctx, arg):
     if not (len(arg.replace('#', '')) == 6):
@@ -26,7 +26,7 @@ async def embedColour(ctx, arg):
     await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"embed_colour": arg.replace('#', '')}})
 
 
-@perk(name="deadChatPing", description="Ping <@&749178299518943343> with a topic of your choice!", cost=15,
+@perk(name="deadChatPing", description="Ping <@&749178299518943343> with a topic of your choice!", cost=10,
       aliases=["deadchat", "ping","revive"], require_arg=True)
 async def deadChat(ctx, arg):
     if ctx.channel.slowmode_delay > 5:
@@ -47,7 +47,7 @@ async def qotd(ctx, arg):
 async def waste(ctx, arg):
     await ctx.send(f"{ctx.author.mention} is a dumbass")
 
-@perk(name="staffNickChange", description = "Change a Staff's nick!", cost= 10, require_arg = True, aliases = ["bullyStaff","snc"])
+@perk(name="staffNickChange", description = "Change a Staff's nick!", cost= 12, require_arg = True, aliases = ["bullyStaff","snc"])
 async def staffNickChange(ctx, arg):
     try:
         member: discord.Member = await commands.MemberConverter().convert(ctx, arg)
