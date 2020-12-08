@@ -159,9 +159,21 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
             e.set_footer(text=f"page {i} of {len(embeds)}")
         pages = Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author)
         await pages.start()
+                
+                
+    @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def whereiswarn(self, ctx, warn:str):
+        warning = await moderationColl.find_one({"id": warn})
+        if not warning:
+            return await ctx.send("Could not find a warning with that ID")
+        location = warning["message"].split('-')
+        await ctx.send(f"https://discord.com/channels/{location[0]}/{location[1]}/{location[2]}")
 
     async def cog_after_invoke(self, ctx):
         await ctx.message.delete()
+                
+                
 
 
 def setup(bot):
