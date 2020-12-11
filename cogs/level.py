@@ -129,7 +129,7 @@ class level(commands.Cog, name="levelling"):
         userData = await userColl.find_one({"_id": str(user.id)})
         if not userData:
             return await ctx.send("This user has no level")
-        embed = await Embed(user, title=f"Level: {str(round(userData['level']))}",
+        embed = await Embed(user, title=f"Level: {str(round(userData['level']))}", url="https://nullzee.ga",
                               description=f"XP: {str(round(userData['experience']))}/{str(round(50 * (round(userData['level']) ** 1.5)))}\nWeekly XP: {str(round(userData['weekly']))}\nPoints: {userData['points']}\nTotal XP: {(sum([round(50 * z ** 1.5) for z in range(1, userData['level'])]) + userData['experience']):,}").user_colour()
         embed.set_author(name=user, icon_url=user.avatar_url)
         await ctx.send(embed=embed)
