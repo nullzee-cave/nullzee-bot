@@ -56,7 +56,7 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
         abbreviations = {"vc lord": 682656964123295792, "godly giveaway donator": 681900556788301843}
         if role.lower() in rolelist:
             role = ctx.guild.get_role(rolelist[role.lower()])
-            if role.permissions.manage_messages:
+            if role.permissions.manage_messages or role.permissions.administrator:
                 await ctx.send("You are not allowed to give that role")
                 return
             try:
