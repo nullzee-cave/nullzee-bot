@@ -8,7 +8,8 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
 
     @commands.command()
     async def f(self,ctx):
-        await ctx.send(embed = discord.Embed(description = f'<:press_f:709688246774267905> {ctx.author.mention} has paid their respects', color = 0x00FF00))
+        embed = await Embed(description = f'<:press_f:709688246774267905> {ctx.author.mention} has paid their respects').user_colour()
+        await ctx.send(embed = embed)
 
     @commands.command()
     async def hug(self,ctx,member: discord.Member):
