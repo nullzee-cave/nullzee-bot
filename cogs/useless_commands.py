@@ -20,6 +20,12 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         else:    
             await ctx.send(embed = discord.Embed(description = f"{ctx.author.mention} hugged {member.mention}", url ="https://cdn.discordapp.com/emojis/759485870146584586.png?v=1"))
     
+    @commands.command()
+    async def stab(member: discord.Member):
+        if member ==  ctx.author:
+            await ctx.send(embed = discord.Embed(description = "We do not promote self harm in Nullzee's cave."))
+        else:
+            await ctx.send(embed = discord.Embed(description = f"{ctx.author.mention} caused harm to {member.mention}"))         
 
 def setup(bot):
     bot.add_cog(Useless_commands(bot, False))
