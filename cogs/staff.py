@@ -9,13 +9,15 @@ from helpers import moderationUtils
 import asyncio
 from api_key import moderationColl, userColl
 
+
 def insert_returns(body):
     # insert return stmt if the last expression is a expression statement
     if isinstance(body[-1], ast.Expr):
         body[-1] = ast.Return(body[-1].value)
         ast.fix_missing_locations(body[-1])
 
-class Staff(commands.Cog): # general staff-only commands that don't fit into another category
+
+class Staff(commands.Cog):  # general staff-only commands that don't fit into another category
     def __init__(self, bot, hidden):
         self.hidden = hidden
         self.bot: commands.Bot = bot
@@ -29,7 +31,6 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
         with open('config.json', 'w') as f:
             json.dump(config, f)
         await ctx.send("Last QOTD time set to now")
-
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
@@ -45,14 +46,12 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
                 await ctx.channel.edit(slowmode_delay=timer)
                 return await ctx.send(f"slowmode has been set to `{time}` by {ctx.author.mention}")
 
-
-
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def role(self, ctx, user:discord.Member, *, role:str):
+    async def role(self, ctx, user: discord.Member, *, role: str):
         if role.lower() == "muted":
             return await ctx.send("no.")
-        rolelist = {z.name.lower() : z.id for z in ctx.guild.roles}
+        rolelist = {z.name.lower(): z.id for z in ctx.guild.roles}
         abbreviations = {"vc lord": 682656964123295792, "godly giveaway donator": 681900556788301843}
         if role.lower() in rolelist:
             role = ctx.guild.get_role(rolelist[role.lower()])
@@ -64,8 +63,10 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
             except discord.Forbidden:
                 await ctx.send("I am not allowed to assign that role to that user")
                 return
-            chatembed = discord.Embed(title="Role added :scroll:", description=f":white_check_mark: Gave {role.mention} to {user.mention}", color=0xfb00fd)
-            #chatembed.set_thumbnail(url="https://media1.tenor.com/images/ff7606164243cc6032f5769b5c5b76cd/tenor.gif?itemid=16266330")
+            chatembed = discord.Embed(title="Role added :scroll:",
+                                      description=f":white_check_mark: Gave {role.mention} to {user.mention}",
+                                      color=0xfb00fd)
+            # chatembed.set_thumbnail(url="https://media1.tenor.com/images/ff7606164243cc6032f5769b5c5b76cd/tenor.gif?itemid=16266330")
             # role = discord.utils.get(ctx.guild.roles, name=role)
             await ctx.send(embed=chatembed)
             await ctx.message.delete()
@@ -77,22 +78,25 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
             except discord.Forbidden:
                 await ctx.send("I am not allowed to assign that role to that user")
                 return
-            chatembed = discord.Embed(title="Role added :scroll:", description=f":white_check_mark: Gave {role.mention} to {user.mention}", color=0xfb00fd)
+            chatembed = discord.Embed(title="Role added :scroll:",
+                                      description=f":white_check_mark: Gave {role.mention} to {user.mention}",
+                                      color=0xfb00fd)
             await ctx.send(embed=chatembed)
             await ctx.message.delete()
             return
         else:
-            embed = discord.Embed(title=":x: Adding role failed", description=f"Correct Usage: `-role <@user> <rolename>`", color=0xff0000)
+            embed = discord.Embed(title=":x: Adding role failed",
+                                  description=f"Correct Usage: `-role <@user> <rolename>`", color=0xff0000)
             embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
             return
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def removerole(self, ctx, user:discord.Member, *, role:str):
+    async def removerole(self, ctx, user: discord.Member, *, role: str):
         if role.lower() == "muted":
             return await ctx.send("no.")
-        rolelist = {z.name.lower() : z.id for z in ctx.guild.roles}
+        rolelist = {z.name.lower(): z.id for z in ctx.guild.roles}
         if role.lower() in rolelist:
             role = ctx.guild.get_role(rolelist[role.lower()])
             if role.permissions.administrator or role.permissions.manage_messages:
@@ -103,32 +107,38 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
             except discord.Forbidden:
                 await ctx.send("I am not allowed to remove that role from that user")
                 return
-            chatembed = discord.Embed(title="Role removed :scroll:", description=f":white_check_mark: removed {role.mention} from {user.mention}", color=0xfb00fd)
+            chatembed = discord.Embed(title="Role removed :scroll:",
+                                      description=f":white_check_mark: removed {role.mention} from {user.mention}",
+                                      color=0xfb00fd)
             await ctx.send(embed=chatembed)
             await ctx.message.delete()
             return
         else:
-            embed = discord.Embed(title=":x: removing role failed", description=f"Correct Usage: `-removerole <@user> <rolename>`", color=0xff0000)
+            embed = discord.Embed(title=":x: removing role failed",
+                                  description=f"Correct Usage: `-removerole <@user> <rolename>`", color=0xff0000)
             embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
             return
 
     @commands.command(aliases=["star", "pin"])
     @commands.has_guild_permissions(manage_messages=True)
-    async def starboard(self, ctx: commands.Context, _id: int, *, title:str=""):
+    async def starboard(self, ctx: commands.Context, _id: int, *, title: str = ""):
         msg: discord.Message = await ctx.channel.fetch_message(_id)
-        embed = (await Embed(msg.author, title=f"{title} | #{ctx.channel.name}", description=msg.content, url=msg.jump_url).auto_author().timestamp_now().user_colour()).set_footer(text=f"starred by {ctx.author}")
+        embed = (await Embed(msg.author, title=f"{title} | #{ctx.channel.name}", description=msg.content,
+                             url=msg.jump_url).auto_author().timestamp_now().user_colour()).set_footer(
+            text=f"starred by {ctx.author}")
         if msg.attachments:
             embed.set_image(url=msg.attachments[0].url)
         star_message = await ctx.guild.get_channel(770316631829643275).send(embed=embed)
-        await ctx.send(embed=await Embed(ctx.author, title="Added to starboard!", url=star_message.jump_url).user_colour())
-
+        await ctx.send(
+            embed=await Embed(ctx.author, title="Added to starboard!", url=star_message.jump_url).user_colour())
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
-    async def purge(self, ctx, limit:int):
+    async def purge(self, ctx, limit: int):
         def check(m):
             return not m.pinned
+
         await ctx.channel.purge(limit=limit + 1, check=check)
         await asyncio.sleep(1)
         chatembed = discord.Embed(description=f"Cleared {limit} messages", color=0xfb00fd)
@@ -138,7 +148,6 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
         logembed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
         logchannel = ctx.guild.get_channel(667957285837864960)
         await logchannel.send(embed=logembed)
-
 
     @commands.command(name="eval", aliases=["eval_fn", "-e"])
     async def eval_fn(self, ctx, *, cmd):
@@ -195,7 +204,6 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
             except Exception as e:
                 await ctx.send(f"An exception occurred:```py\n{e}\n```")
 
-
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def modhelp(self, ctx):
@@ -212,12 +220,12 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
         embed.description = string
         await ctx.send(embed=embed)
 
-
     @commands.group(aliases=["-c"])
     @commands.has_guild_permissions(manage_messages=True)
     async def config(self, ctx):
         if not ctx.invoked_subcommand:
-            await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.config.commands]))
+            await ctx.send(
+                "\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.config.commands]))
         else:
             await ctx.send("Successfully updated configuration")
             await moderationUtils.update_config()
@@ -225,82 +233,117 @@ class Staff(commands.Cog): # general staff-only commands that don't fit into ano
     @config.command()
     async def mutedRole(self, ctx, *, role: discord.Role):
         await moderationColl.update_one({"_id": "config"}, {"$set": {"muteRole": role.id}})
+
     @config.command()
     async def deleteWarnsAfter(self, ctx, _time: TimeConverter):
         await moderationColl.update_one({"_id": "config"}, {"$set": {"deleteWarnsAfter": _time}})
 
     @config.group(invoke_without_command=True)
     async def punishForWarns(self, ctx):
-        await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.punishForWarns.commands]))
+        await ctx.send("\n".join(
+            [f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.punishForWarns.commands]))
+
     @punishForWarns.command(name="add")
-    async def p_add(self, ctx, warns:int, duration: TimeConverter, _type="mute"):
-        await moderationColl.update_one({"_id": "config"}, {"$set": {"punishForWarns.{}".format(warns): {"type": _type, "duration": duration}}})
+    async def p_add(self, ctx, warns: int, duration: TimeConverter, _type="mute"):
+        await moderationColl.update_one({"_id": "config"}, {
+            "$set": {"punishForWarns.{}".format(warns): {"type": _type, "duration": duration}}})
+
     @punishForWarns.command(name="remove")
-    async def p_remove(self, ctx, warns:int):
+    async def p_remove(self, ctx, warns: int):
         await moderationColl.update_one({"_id": "config"}, {"$unset": {"punishForWarns.{}".format(warns): ""}})
 
     @config.group(invoke_without_command=True)
     async def automod(self, ctx):
-        await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.automod.commands]))
-
+        await ctx.send(
+            "\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.automod.commands]))
 
     @automod.group(invoke_without_command=True)
     async def mentions(self, ctx):
-        await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.mentions.commands]))
+        await ctx.send(
+            "\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.mentions.commands]))
 
     @mentions.command(name="punishment")
-    async def m_punishment(self, ctx, action:str="delete"):
-        await moderationColl.update_one({"_id": "config"}, {"$set": {"mentions.action": action if action == "warn" else "delete"}})
+    async def m_punishment(self, ctx, action: str = "delete"):
+        await moderationColl.update_one({"_id": "config"},
+                                        {"$set": {"mentions.action": action if action == "warn" else "delete"}})
+
     @mentions.command()
-    async def value(self, ctx, val:int):
+    async def value(self, ctx, val: int):
         await moderationColl.update_one({"_id": "config"}, {"$set": {"mentions.val": val}})
+
     @mentions.command(name="allowChannel")
     async def m_allowChannel(self, ctx, channel: discord.TextChannel):
         await moderationColl.update_one({"_id": "config"}, {"$push": {"mentions.allowed_channels": channel.id}})
+
     @mentions.command(name="disallowChannel")
     async def m_disallowChannel(self, ctx, channel: discord.TextChannel):
         await moderationColl.update_one({"_id": "config"}, {"$pull": {"mentions.allowed_channels": channel.id}})
 
-
     @automod.group(invoke_without_command=True)
     async def invites(self, ctx):
-        await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.invites.commands]))
+        await ctx.send(
+            "\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.invites.commands]))
+
     @invites.command(name="punishment")
-    async def i_punishment(self, ctx, action:str="delete"):
-        await moderationColl.update_one({"_id": "config"}, {"$set": {"invites.action": action if action == "warn" else "delete"}})
+    async def i_punishment(self, ctx, action: str = "delete"):
+        await moderationColl.update_one({"_id": "config"},
+                                        {"$set": {"invites.action": action if action == "warn" else "delete"}})
+
     @invites.command(name="allowChannel")
     async def i_allowChannel(self, ctx, channel: discord.TextChannel):
         await moderationColl.update_one({"_id": "config"}, {"$push": {"invites.allowed_channels": channel.id}})
+
     @invites.command(name="disallowChannel")
     async def i_disallowChannel(self, ctx, channel: discord.TextChannel):
         await moderationColl.update_one({"_id": "config"}, {"$pull": {"invites.allowed_channels": channel.id}})
 
     @automod.group(invoke_without_command=True)
     async def badWords(self, ctx):
-        await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.badWords.commands]))
+        await ctx.send(
+            "\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.badWords.commands]))
+
     @badWords.command(name="add")
-    async def b_add(self, ctx, word:str, action:str="delete"):
+    async def b_add(self, ctx, word: str, action: str = "delete"):
         await moderationColl.update_one({"_id": "config"}, {"$set": {"badWords.{}".format(word.lower()): action}})
+
     @badWords.command(name="remove")
-    async def b_remove(self, ctx, word:str):
+    async def b_remove(self, ctx, word: str):
         await moderationColl.update_one({"_id": "config"}, {"$unset": {"badWords.{}".format(word.lower()): ""}})
 
-    whiteListedServers = ["667953033929293855","722421169311187037"]
+    # whiteListedServers = ["667953033929293855","722421169311187037"]
+    #
+    # @config.group(invoke_without_command = True)
+    # async def allowed_guilds(self, ctx):
+    #     await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.allowed_guilds.commands]))
+    # @allowed_guilds.command(name="add")
+    # async def g_add(self,ctx, id: int):
+    #     await whiteListedServers.append(id)
+    # @allowed_guilds.command(name="remove")
+    # async def g_remove(self,ctx, id: int):
+    #     await whiteListedServers.remove(id)
 
-    @config.group(invoke_without_command = True)
-    async def allowed_guilds(self, ctx):
-        await ctx.send("\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.allowed_guilds.commands]))
-    @allowed_guilds.command(name="add")
-    async def g_add(self,ctx, id: int):
-        await whiteListedServers.append(id)
-    @allowed_guilds.command(name="remove")
-    async def g_remove(self,ctx, id: int):
-        await whiteListedServers.remove(id)
+    @commands.group(invoke_with_command=True)
+    @commands.has_any_role(788183123136741426, 667953757954244628)
+    async def sbinfo(self, ctx):
+        await ctx.send("usage: `-sbinfo [newCategory|add]`")
 
+    @sbinfo.command()
+    @commands.guild_only()
+    async def newCategory(self, ctx, name: str, *, description: str = None):
+        msg: discord.Message = await ctx.guild.get_channel().send(
+            embed=discord.Embed(title=name, description=description, colour=0x00FF00))
+        await moderationColl.update_one({"_id": "config"}, {"set": {f"sbinfoMessages.{name.lower()}": msg.id}})
 
-
-
-
+    @sbinfo.command()
+    async def add(self, ctx: commands.Context, category: str, name: str, *, description: str):
+        try:
+            _id = (await moderationColl.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
+        except KeyError:
+            return await ctx.send("Could not find that category")
+        msg: discord.Message = await ctx.guild.get_channel().fetch_message(_id)
+        await msg.edit(embed=msg.embeds[0].add_field(name=name, value=description, inline=False))
+        await ctx.send("Done!")
+        await ctx.message.delete()
 
 
 def setup(bot):
