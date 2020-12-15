@@ -23,7 +23,7 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
             await ctx.send(embed = discord.Embed(description = f"{ctx.author.mention} hugged {member.mention}", url ="https://cdn.discordapp.com/emojis/759485870146584586.png?v=1"))
     
     @commands.command()
-    async def stab(ctx,member: discord.Member):
+    async def stab(self, ctx, member: discord.Member):
         gamer = ctx.author.mention
         stabby = member.mention
         funny = [f"{gamer} caused great harm to {stabby}",
