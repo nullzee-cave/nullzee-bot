@@ -325,17 +325,20 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.group(invoke_with_command=True)
     @commands.has_any_role(788183123136741426, 667953757954244628)
     async def sbinfo(self, ctx):
-        await ctx.send("usage: `-sbinfo [newCategory|add]`")
+        pass
+        # await ctx.send("usage: `-sbinfo [newCategory|add]`")
 
     @sbinfo.command()
     @commands.guild_only()
-    async def newCategory(self, ctx, name: str, *, description: str = None):
+    async def newCategory(self, ctx: commands.Context, name: str, *, description: str = None):
         msg: discord.Message = await ctx.guild.get_channel(788162727461781504).send(
             embed=discord.Embed(title=name, description=description, colour=0x00FF00))
         await moderationColl.update_one({"_id": "config"}, {"set": {f"sbinfoMessages.{name.lower()}": msg.id}})
+        await ctx.send("Successfully created category")
+        await ctx.message.delete()
 
-    @sbinfo.command()
-    async def add(self, ctx: commands.Context, category: str, name: str, *, description: str):
+    @sbinfo.command(name="add")
+    async def sbi_add(self, ctx: commands.Context, category: str, name: str, *, description: str):
         try:
             _id = (await moderationColl.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
         except KeyError:
