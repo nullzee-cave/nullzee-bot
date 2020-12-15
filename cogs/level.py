@@ -135,6 +135,7 @@ class level(commands.Cog, name="levelling"):
         await ctx.send(embed=embed)
 
     @commands.command()
+    @commands.guild_only()
     async def weekly(self, ctx):
         """View the server's weekly XP leaderboard"""
         embed = discord.Embed(color=0x00FF00).set_author(name="Nullzee's cave leaderboard", icon_url=ctx.guild.icon_url)
@@ -239,6 +240,7 @@ class level(commands.Cog, name="levelling"):
         await ctx.send(f"removed {xp} xp from {user.mention}")
 
     @commands.command()
+    @commands.guild_only()
     async def leaderboard(self, ctx):
         """View the server's XP leaderboard"""
         embed = discord.Embed(color=0x00FF00).set_author(name="Nullzee's cave leaderboard", icon_url=ctx.guild.icon_url)
