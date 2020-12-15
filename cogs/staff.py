@@ -330,7 +330,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @sbinfo.command()
     @commands.guild_only()
     async def newCategory(self, ctx, name: str, *, description: str = None):
-        msg: discord.Message = await ctx.guild.get_channel().send(
+        msg: discord.Message = await ctx.guild.get_channel(788162727461781504).send(
             embed=discord.Embed(title=name, description=description, colour=0x00FF00))
         await moderationColl.update_one({"_id": "config"}, {"set": {f"sbinfoMessages.{name.lower()}": msg.id}})
 
@@ -340,7 +340,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             _id = (await moderationColl.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
         except KeyError:
             return await ctx.send("Could not find that category")
-        msg: discord.Message = await ctx.guild.get_channel().fetch_message(_id)
+        msg: discord.Message = await ctx.guild.get_channel(788162727461781504).fetch_message(_id)
         await msg.edit(embed=msg.embeds[0].add_field(name=name, value=description, inline=False))
         await ctx.send("Done!")
         await ctx.message.delete()
