@@ -333,7 +333,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     async def newCategory(self, ctx: commands.Context, name: str, *, description: str = None):
         msg: discord.Message = await ctx.guild.get_channel(788162727461781504).send(
             embed=discord.Embed(title=name, description=description, colour=0x00FF00))
-        await moderationColl.update_one({"_id": "config"}, {"set": {f"sbinfoMessages.{name.lower()}": msg.id}})
+        await moderationColl.update_one({"_id": "config"}, {"$set": {f"sbinfoMessages.{name.lower()}": msg.id}})
         await ctx.send("Successfully created category")
         await ctx.message.delete()
 
