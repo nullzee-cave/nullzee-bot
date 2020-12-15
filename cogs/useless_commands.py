@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import random
+from helpers.utils import Embed
 
 class Useless_commands(commands.Cog, name='Useless Commands'):
     def __init__ (self,bot,hidden):
