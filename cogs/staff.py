@@ -323,13 +323,17 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     #     await whiteListedServers.remove(id)
 
     @commands.group(invoke_with_command=True)
-    @commands.has_any_role(788183123136741426, 667953757954244628)
-    async def sbinfo(self, ctx):
-        pass
-        # await ctx.send("usage: `-sbinfo [newCategory|add]`")
+    async def sbinfo(self, ctx, category:str):
+        try:
+            _id = (await moderationColl.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
+        except KeyError:
+            return await ctx.send("Could not find that category")
+        url = f"https://discord.com/channels/667953033929293855/788162727461781504/{_id}"
+        await ctx.send(embed=discord.Embed(title=category, description=f"Click [here]({url}) to view info about {category}", colour=0x00ff00, url=url))
 
     @sbinfo.command()
     @commands.guild_only()
+    @commands.has_any_role(788183123136741426, 667953757954244628)
     async def newCategory(self, ctx: commands.Context, name: str, *, description: str = None):
         msg: discord.Message = await ctx.guild.get_channel(788162727461781504).send(
             embed=discord.Embed(title=name, description=description, colour=0x00FF00))
@@ -351,6 +355,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
                        
     @sbinfo.command(name="edit")
     @commands.guild_only()
+    @commands.has_any_role(788183123136741426, 667953757954244628)
     async def sbi_edit(self, ctx, category:str, param:str, *, value):
         try:
             _id = (await moderationColl.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
