@@ -338,6 +338,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         await ctx.message.delete()
 
     @sbinfo.command(name="add")
+    @commands.guild_only()
     async def sbi_add(self, ctx: commands.Context, category: str, name: str, *, description: str):
         try:
             _id = (await moderationColl.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
@@ -347,6 +348,20 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         await msg.edit(embed=msg.embeds[0].add_field(name=name, value=description, inline=False))
         await ctx.send("Done!")
         await ctx.message.delete()
+                       
+    @sbinfo.command(name="edit")
+    @commands.guild_only()
+    async def sbi_edit(self, ctx, category:str, param:str, *, value):
+        try:
+            _id = (await moderationColl.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
+        except KeyError:
+            return await ctx.send("Could not find that category")
+        msg: discord.Message = await ctx.guild.get_channel(788162727461781504).fetch_message(_id)
+        embed = msg.embeds[0]
+        setattr(embed, param, value)
+        await msg.edit(embed=embed)
+        await ctx.send("Done!")
+        await ctx.message.delete()        
 
 
 def setup(bot):
