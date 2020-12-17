@@ -322,7 +322,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     # async def g_remove(self,ctx, id: int):
     #     await whiteListedServers.remove(id)
 
-    @commands.group(invoke_with_command=True)
+    @commands.group(invoke_without_command=True)
     async def sbinfo(self, ctx, category:str):
         try:
             _id = (await moderationColl.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
