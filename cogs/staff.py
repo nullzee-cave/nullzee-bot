@@ -358,6 +358,11 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             return await ctx.send("Could not find that category")
         msg: discord.Message = await ctx.guild.get_channel(788162727461781504).fetch_message(_id)
         embed = msg.embeds[0]
+        if param == "colour":
+            try:
+                value = int(value, 16)
+            except ValueError:
+                return await ctx.send("Invalid hex colour")
         setattr(embed, param, value)
         await msg.edit(embed=embed)
         await ctx.send("Done!")
