@@ -10,7 +10,7 @@ import random
 from discord.ext.commands.cooldowns import BucketType
 import time
 import datetime
-from api_key import moderationColl
+from api_key import moderationColl, hypixel_api_key
 from helpers.utils import Embed
 
 class util(commands.Cog, name="Other"):
@@ -219,9 +219,7 @@ class util(commands.Cog, name="Other"):
         if ctx.channel.id != 676693868741263381:
             return await ctx.send("go to <#676693868741263381> for that!")
         await ctx.trigger_typing()
-        #key = "c78026a2-8180-49d9-8564-c255fe1b53fb"
-        #key = "e2bede711-9481-43d1-81fb-91cc8b7d9d23"
-        key = "3a8c518e-7bdc-4745-a9d8-1268cc511c47"
+        key = hypixel_api_key
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(f"https://api.mojang.com/users/profiles/minecraft/{ign}") as resp:
