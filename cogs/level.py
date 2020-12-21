@@ -24,7 +24,7 @@ class level(commands.Cog, name="levelling"):
 
     @commands.command()
     async def linkTwitch(self, ctx, username:str):
-        await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"twitch_name": username}})
+        await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"twitch_name": username.lower()}})
         await ctx.send(embed=discord.Embed(description=f"You will now gain XP when talking in Nullzee's twitch chat as `{username}`", colour=0x00ff00))
         
     @commands.Cog.listener()
