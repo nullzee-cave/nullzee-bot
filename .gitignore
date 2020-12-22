@@ -1,3 +1,8 @@
 api_key.py
 backups/*
 *.json
+.idea/*
+__pycache__/*
+cogs/__pycache__/*
+helpers/__pycache__/*
+perks/__pycache__/*
