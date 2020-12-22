@@ -25,7 +25,7 @@ class level(commands.Cog, name="levelling"):
     @commands.command()
     async def linkTwitch(self, ctx, username:str):
         await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"twitch_name": username.lower(), "twitch_verified": False}})
-        await ctx.send(embed=discord.Embed(description=f"You will now gain XP when talking in Nullzee's twitch chat as `{username}`", colour=0x00ff00))
+        await ctx.send(embed=discord.Embed(description=f"You have linked your discord account to your twitch account. In order to start gaining XP in Nullzee's twitch chat, you must type `-verify {ctx.author.id}` there.", colour=0x00ff00))
         
     @commands.Cog.listener()
     async def on_member_join(self, member):
