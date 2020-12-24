@@ -22,13 +22,13 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         else:    
             await ctx.send(embed = discord.Embed(description = f"{ctx.author.mention} hugged {member.mention}", url ="https://cdn.discordapp.com/emojis/759485870146584586.png?v=1"))
     
-    @commands.command()
+    @commands.command(aliases = ["slap"])
     async def stab(self, ctx, member: discord.Member):
         gamer = ctx.author.mention
         stabby = member.mention
         funny = [f"{gamer} caused great harm to {stabby}",
                  f"{gamer} caused suffering to {stabby}",
-                 f"{gamer} sent {stabby} to the ER",
+                 f"{gamer} sent {stabby} to the hospital",
                  f"{gamer} made {stabby} feel great amounts of pain",
                  f"{gamer} stabbed {stabby}",
                  f"{stabby} was stabbed by {gamer}",
@@ -38,7 +38,11 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
                  f"{stabby} got stabby stabby stabbed by {gamer}",
                  f"{gamer} :knife: {stabby}",
                  f"{stabby} wasn't spicy enough for {gamer}",
-                 f"{stabby} was brutally slain by {gamer}"]
+                 f"{stabby} was brutally slain by {gamer}",
+                 f"{stabby} was slapped by {gamer}",
+                 f"{gamer} slapped {stabby}",
+                 f"{gamer} smacked {stabby} across the face",
+                 f"{gamer} hurt {stabby}"]
         if member ==  ctx.author:
             await ctx.send(embed = discord.Embed(description = "We do not promote self harm in Nullzee's cave."))
         else:
