@@ -173,6 +173,8 @@ async def on_command(ctx):
             json.dump(users, f)
 
 async def restrict_command_usage(ctx):
+    if not ctx.guild:
+        return True
     user = await get_user(ctx.author)
     user_bypass = ctx.author.guild_permissions.manage_messages or user["level"] >= 50
     channel_allowed = ctx.channel.id in [668914397531602944]
