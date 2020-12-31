@@ -7,6 +7,14 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
     def __init__ (self,bot,hidden):
         self.bot = bot
         self.hidden = hidden 
+        
+    @commands.command()
+    async def demote(self,ctx,member: discord.Member):
+        if not member.guild_permissions.manage_messages:
+            await ctx.send("That person isn't a staff member!")
+        else:
+            embed = discord.Embed(description = f"{member.mention} was demoted")
+            await ctx.send(embed = embed)
 
     @commands.command()
     async def f(self,ctx):
@@ -16,11 +24,13 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
     @commands.command()
     async def hug(self,ctx,member: discord.Member):
         if member == ctx.author:
-            await ctx.send(embed=discord.Embed(description = f"{ctx.author} tried to hug themself",
+            embed = await Embed(description = f"{ctx.author} tried to hug themself",
                                                url = "https://cdn.discordapp.com/emojis/759485870146584586.png?v=1", color=0x00FF00)
-                          .set_footer(text="self love is appreciated"))
+                                               .set_footer(text="self love is appreciated").user_colour()
+            await ctx.send(embed = embed)
         else:    
-            await ctx.send(embed = discord.Embed(description = f"{ctx.author.mention} hugged {member.mention}", url ="https://cdn.discordapp.com/emojis/759485870146584586.png?v=1"))
+            embed = await Embed(description = f"{ctx.author.mention} hugged {member.mention}", url ="https://cdn.discordapp.com/emojis/759485870146584586.png?v=1").user_colour()
+            await ctx.send(embed = embed)
     
     @commands.command(aliases = ["slap"])
     async def stab(self, ctx, member: discord.Member):
