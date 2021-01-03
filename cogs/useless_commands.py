@@ -9,14 +9,6 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         self.hidden = hidden 
         
     @commands.command()
-    async def demote(self,ctx,member: discord.Member):
-        if not member.guild_permissions.manage_messages:
-            await ctx.send("That person isn't a staff member!")
-        else:
-            embed = discord.Embed(description = f"{member.mention} was demoted")
-            await ctx.send(embed = embed)
-
-    @commands.command()
     async def f(self,ctx):
         embed = await Embed(ctx.author, description = f'<:press_f:709688246774267905> {ctx.author.mention} has paid their respects').user_colour()
         await ctx.send(embed = embed)
