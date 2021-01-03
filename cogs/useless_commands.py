@@ -16,7 +16,7 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
     @commands.command()
     async def hug(self,ctx,member: discord.Member):
         if member == ctx.author:
-            embed = await Embed(description = f"{ctx.author} tried to hug themself",
+            embed = await Embed(ctx.author, description = f"{ctx.author} tried to hug themself",
                                                url = "https://cdn.discordapp.com/emojis/759485870146584586.png?v=1", color=0x00FF00).set_footer(text="self love is appreciated").user_colour()
             await ctx.send(embed = embed)
         else:    
