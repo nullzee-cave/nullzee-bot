@@ -10,7 +10,7 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         
     @commands.command()
     async def f(self,ctx):
-        embed = await Embed(ctx.author, description = f'<:press_f:709688246774267905> {ctx.author.mention} has paid their respects').user_colour()
+        embed = await Embed(ctx.author, description = f'<:press_f:709688246774267905> {ctx.author.mention} has paid thEir respects').user_colour()
         await ctx.send(embed = embed)
 
     @commands.command()
