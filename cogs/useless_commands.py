@@ -10,7 +10,7 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         
     @commands.command()
     async def smh(self,ctx):
-        embed = await Embed(ctx.auhthor, description = f'{ctx.author.mention} shakes their head').user_colour()
+        embed = await Embed(ctx.author, description = f'{ctx.author.mention} shakes their head').user_colour()
         await ctx.send(embed = embed)
         
     @commands.command()
@@ -25,7 +25,7 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
                                                url = "https://cdn.discordapp.com/emojis/759485870146584586.png?v=1", color=0x00FF00).set_footer(text="self love is appreciated").user_colour()
             await ctx.send(embed = embed)
         else:    
-            embed = await Embed(ctx.author, description = f"{ctx.author.mention} hugged {member.mention}", url ="https://cdn.discordapp.com/emojis/759485870146584586.png?v=1").user_colour()
+            embed = await Embed(ctx.author, description = f"{ctx.author.mention} hugged {member.mention}", url ="https://cdn.discordapp.com/emojis/759485870146584586.png?7v=1").user_colour()
             await ctx.send(embed = embed)
     
     @commands.command(aliases = ["slap"])
