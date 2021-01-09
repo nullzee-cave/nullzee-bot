@@ -178,7 +178,7 @@ async def restrict_command_usage(ctx):
     user = await get_user(ctx.author)
     user_bypass = ctx.author.guild_permissions.manage_messages or user["level"] >= 50
     channel_allowed = ctx.channel.id in [668914397531602944]
-    command_bypass = ctx.command.name in ["stab", "hug", "f", "claimroles", "purchase", "report", "sbinfo","smh"]
+    command_bypass = ctx.command.name in ["stab", "hug", "f", "claimroles", "purchase", "report", "sbinfo", "smh"]
     return user_bypass or channel_allowed or command_bypass
 
 bot.add_check(restrict_command_usage)
