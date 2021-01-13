@@ -152,7 +152,7 @@ class level(commands.Cog, name="levelling"):
         desiredTotalXp = LevelXp(desiredLevel)
         embed = await Embed(user, title = ("XP calculator")).user_colour()
         embed.add_field(name = "Next Level", value = f"XP until next level: {LevelXp(userLevel+1)-(LevelXp(userLevel)+userXp)}\nXP of level: {LevelXp(userLevel+1)}", inline = False)
-        embed.add_field(name = "Desired Level", value = f"XP until desired level: {LevelXp(desiredLevel)-(LevelXp(userLevel)+userXp)}\nXP of desired level: {LevelXp(desiredLevel)}}", inline = False)
+        embed.add_field(name = "Desired Level", value = f"XP until desired level: {LevelXp(desiredLevel)-(LevelXp(userLevel)+userXp)}\nXP of desired level: {LevelXp(desiredLevel)}", inline = False)
         embed.add_field(name = "Total XP Stats", value = f"Total XP until desired level: {TotalXp(desiredXp)-(TotalXp(userLevel)+userXp)}\nTotal XP of desired level: {TotalXp(desiredLevel)}")
         await ctx.send(embed = embed)
                             
