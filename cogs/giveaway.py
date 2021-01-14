@@ -192,6 +192,7 @@ class giveaway(commands.Cog, name="giveaway"):
             async for user in i.users():
                 reactionusers.append(user)
         #reactions = [z.user for z in message.reactions if str(z.emoji) == u"\U0001F389"]
+        reactionusers = [z for z in reactionusers if isinstance(z, discord.Member)]
         winners = []
         winrole = guild.get_role(672141836567183413)
         for count in range(thisGiveaway["winnercount"]):
