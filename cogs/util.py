@@ -269,6 +269,7 @@ class util(commands.Cog, name="Other"):
         slayers = []
         slots = {}
         pets = []
+        bank = 0
         skills = {"combat": [0], "farming": [0], "fishing": [0], "foraging": [0], "alchemy": [0], "enchanting": [0], "mining": [0]}
         skillroles = {"combat": 694957008759160862, "farming": 694956649458434111, "fishing": 694956709537513502, "foraging": 694957060907073586, "alchemy": 694956798125408416, "enchanting": 694958166550642838, "mining": 694957334195208274}
         for profile in player["profiles"]:
@@ -299,6 +300,8 @@ class util(commands.Cog, name="Other"):
                         for pet in profile["members"][user]["pets"]:
                             if pet["type"] not in pets:
                                 pets.append(pet["type"])
+                    if "coin_purse" in profile["members"][user]:
+                        bank += profile["members"][user]["coin_purse"]
                 try:
                     #print(profile["members"][user][len("crafted_generators")])
                     #print(len(profile["members"][user]["crafted_generators"]))
@@ -307,7 +310,6 @@ class util(commands.Cog, name="Other"):
                     pass
 
         #print(max(souls))
-        bank = 0
         for profile in player["profiles"]:
             try:
                 bank += (profile["banking"]["balance"])
