@@ -50,7 +50,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
 bot = commands.Bot(command_prefix=prefix, case_insensitive=True, intents=intents)
 bot.remove_command('help')
 
-cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points']
+cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points', 'cogs.events_v2']
 # cogs = ['cogs.moderation', 'cogs.staff', 'cogs.automod']
 
 
@@ -177,9 +177,10 @@ async def restrict_command_usage(ctx):
         return True
     user = await get_user(ctx.author)
     user_bypass = ctx.author.guild_permissions.manage_messages or user["level"] >= 50
+    booster_bypass = (roles := [z.id for z in ctx.author.roles]) and 706285767898431500 in roles or 668724083718094869 in roles
     channel_allowed = ctx.channel.id in [668914397531602944]
     command_bypass = ctx.command.name in ["stab", "hug", "f", "claimroles", "purchase", "report", "sbinfo", "smh"]
-    return user_bypass or channel_allowed or command_bypass
+    return user_bypass or channel_allowed or command_bypass or booster_bypass
 
 bot.add_check(restrict_command_usage)
 
