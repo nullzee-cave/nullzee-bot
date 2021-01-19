@@ -14,7 +14,9 @@ class Events(commands.Cog, name="events"):
 
     @commands.command()
     @commands.guild_only()
-    async def participate(self, ctx, uname: str, timezone: str = 'GMT'):
+    async def participate(self, ctx, uname: str, timezone:str):
+        if not timezone in ['1', '2']:
+            raise commands.UserInputError
         timezone = timezone.upper()
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://api.slothpixel.me/api/players/{uname}") as resp:
@@ -27,7 +29,7 @@ class Events(commands.Cog, name="events"):
                                                       colour=discord.Colour.red()))
         await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"uname": uname, "timezone": timezone}})
         await ctx.guild.get_channel(LOG_CHANNEL).send(f"{ctx.author.mention} [{timezone}] - `{uname}`")
-        await ctx.send(f"You have signed up as {uname} with a timezone of {timezone}")
+        await ctx.send(f"You have signed up as {uname} for event {timezone}")
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
