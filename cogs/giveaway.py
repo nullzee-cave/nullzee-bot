@@ -216,7 +216,7 @@ class giveaway(commands.Cog, name="giveaway"):
         embed.description = f'Donated by: {donor.mention}\nWinners:{winnerstring}'
         embed.color = discord.Color.darker_grey()
         await message.edit(embed=embed)
-        await channel.send(f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{thisGiveaway['content']}**!!")
+        await message.reply(f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{thisGiveaway['content']}**!!")
         giveaways[id]["active"] = False
         # with open('giveaways.json', 'w') as f:
         #     json.dump(giveaways, f)
@@ -285,7 +285,7 @@ class giveaway(commands.Cog, name="giveaway"):
             embed.title += " (rerolled)"
             embed.color = discord.Color.darker_grey()
             await message.edit(embed=embed)
-            await channel.send(f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{thisGiveaway['content']}**!!")
+            await message.reply(f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{thisGiveaway['content']}**!!")
         else:
             await ctx.send("Could not find that giveaway")
 
