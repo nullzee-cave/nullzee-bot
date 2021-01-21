@@ -3,7 +3,7 @@ from discord.ext import commands
 import random
 from helpers.utils import Embed
 
-class Useless_commands(commands.Cog, name='Useless Commands'):
+class useless_commands(commands.Cog, name='useless_commands'):
     def __init__ (self,bot,hidden):
         self.bot = bot
         self.hidden = hidden 
@@ -59,4 +59,4 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         await ctx.send(embed = discord.Embed(description = f"{member.mention} got bonked"))
 
 def setup(bot):
-    bot.add_cog(Useless_commands(bot, False))
+    bot.add_cog(useless_commands(bot, False))
