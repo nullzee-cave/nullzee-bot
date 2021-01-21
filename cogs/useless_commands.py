@@ -52,7 +52,11 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         if member ==  ctx.author:
             await ctx.send(embed = discord.Embed(description = "We do not promote self harm in Nullzee's cave."))
         else:
-            await ctx.send(embed = discord.Embed(description = str(random.choice(funny))))         
+            await ctx.send(embed = discord.Embed(description = str(random.choice(funny)))) 
+
+    @commands.command()
+    async def bonk(self, ctx, member: discord.Member):
+        ctx.send(embed = discord.Embed(description = "bonk!"))
 
 def setup(bot):
     bot.add_cog(Useless_commands(bot, False))
