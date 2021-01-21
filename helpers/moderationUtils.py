@@ -51,7 +51,8 @@ async def warn_punishments(ctx, user):
     score = sum([SEVERITY[z["type"]] for z in warns if z["type"] == "warn" or z["mod_id"] != ctx.bot.user.id])
     punishment = config["punishForWarns"][str(score)] if str(score) in config["punishForWarns"] else None
     if not punishment:
-        return
+        if list(config["punishForWarns"].keys())[-1] < score:
+            return await ctx.invoke(self.bot.get_command("ban"), user, 31536000, reason="maximum warning limit exceeded")
     ctx.author = ctx.guild.me
     cmd = ctx.bot.get_command(punishment["type"].lower())
     if not cmd: return
