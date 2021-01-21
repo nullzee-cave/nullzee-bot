@@ -48,7 +48,7 @@ class BannedUser(object):
 async def warn_punishments(ctx, user):
     warns = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
     config = await get_config()
-    score = sum([SEVERITY[z["type"]] for z in warns if z["type"] != "warn" or z["mod_id"] != ctx.bot.user.id])
+    score = sum([SEVERITY[z["type"]] for z in warns if z["type"] == "warn" or z["mod_id"] != ctx.bot.user.id])
     punishment = config["punishForWarns"][str(score)] if str(score) in config["punishForWarns"] else None
     if not punishment:
         return
