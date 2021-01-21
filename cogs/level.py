@@ -126,7 +126,7 @@ class level(commands.Cog, name="levelling"):
                 role = ctx.guild.get_role(int(levelroles[str(lvl_start + 1)]))
                 await user.add_roles(role)
 
-    @commands.command(aliases=['level'])
+    @commands.command(aliases=['level', "lvl"])
     async def rank(self, ctx, user: discord.Member = None):
         """View your or the mentioned user's level"""
         if not user:
