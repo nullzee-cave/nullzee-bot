@@ -180,7 +180,8 @@ async def restrict_command_usage(ctx):
     booster_bypass = (roles := [z.id for z in ctx.author.roles]) and 706285767898431500 in roles or 668724083718094869 in roles
     channel_allowed = ctx.channel.id in [668914397531602944]
     command_bypass = ctx.command.name in ["stab", "hug", "f", "claimroles", "purchase", "report", "sbinfo", "smh", "bonk"]
-    return user_bypass or channel_allowed or command_bypass or booster_bypass
+    cog_bypass = ctx.command.cog.qualified_name in ["useless_commands"]
+    return user_bypass or channel_allowed or command_bypass or booster_bypass or cog_bypass
 
 bot.add_check(restrict_command_usage)
 
