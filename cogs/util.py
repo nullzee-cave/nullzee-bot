@@ -59,7 +59,7 @@ class util(commands.Cog, name="Other"):
         suggestion.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
         sugChannel = self.bot.get_guild(667953033929293855).get_channel(667959037265969171)
         sugmsg = await sugChannel.send("<@&738691450417709077>", embed=suggestion)
-        suggestions[sugmsg.id] = {"stage_two": False}
+        suggestions.append(sugmsg.id)
         with open('suggestions.json', 'w') as f:
             json.dump(suggestions, f)
         await sugmsg.add_reaction(u"\u2705")
@@ -72,24 +72,22 @@ class util(commands.Cog, name="Other"):
         with open('suggestions.json') as f:
             suggestions = json.load(f)
 
-        #for i in [z for z in suggestions if not z["stage_two"]]:
         killList = []
         for i in suggestions:
-            if not suggestions[i]["stage_two"]:
-                try:
-                    msg = await self.bot.get_guild(667953033929293855).get_channel(667959037265969171).fetch_message(i)
-                    upvotes = [z.count for z in msg.reactions if str(z.emoji) == '✅']
-                    downvotes = [z.count for z in msg.reactions if str(z.emoji) == '❎']
-                    karma = upvotes[0] - downvotes[0]
-                    if karma > 15:
-                        await self.bot.get_guild(667953033929293855).get_channel(738506620098576434).send(embed=msg.embeds[0])
-                        suggestions[i]["stage_two"] = True
-                except:
-                    pass
-            else:
+            try:
+                msg = await self.bot.get_guild(667953033929293855).get_channel(667959037265969171).fetch_message(i)
+                upvotes = [z.count for z in msg.reactions if str(z.emoji) == '✅']
+                downvotes = [z.count for z in msg.reactions if str(z.emoji) == '❎']
+                karma = upvotes[0] - downvotes[0]
+                if karma > 15:
+                    await self.bot.get_guild(667953033929293855).get_channel(738506620098576434).send(embed=msg.embeds[0])
+                    killList.append(i)
+                elif downvotes > 8:
+                    killList.append(i)
+            except:
                 killList.append(i)
         for i in killList:
-            del suggestions[i]
+            suggestions.remove(i)
         with open('suggestions.json', 'w') as f:
             json.dump(suggestions, f)
 
