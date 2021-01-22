@@ -47,7 +47,8 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         channel = channel if channel else ctx.channel
         if not ctx.author.permissions_in(channel).send_messages:
             raise commands.MissingPermissions
-        await channel.send(message)
+        msg = await channel.send(message)
+        await ctx.send(msg.jump_url)
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
