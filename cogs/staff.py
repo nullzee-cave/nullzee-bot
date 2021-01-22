@@ -9,6 +9,8 @@ from helpers import moderationUtils
 import asyncio
 from api_key import moderationColl, userColl
 import subprocess
+import typing
+
 
 def insert_returns(body):
     # insert return stmt if the last expression is a expression statement
@@ -28,14 +30,24 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             return
         embed = discord.Embed(title=f"UNAUTHORISED GUILD JOIN", colour=discord.Colour.red())
         try:
-            embed.add_field(name="guild info", value=f"ID: {guild.id}\nname: {guild.name}\nmembers: {guild.member_count}", inline=False)
+            embed.add_field(name="guild info",
+                            value=f"ID: {guild.id}\nname: {guild.name}\nmembers: {guild.member_count}", inline=False)
             embed.add_field(name="owner", value=f"{guild.owner} ({guild.owner.id})", inline=False)
-            embed.add_field(name="invite", value=str(await [z for z in guild.channels if isinstance(z, discord.TextChannel)][0].create_invite()), inline=False)
+            embed.add_field(name="invite", value=str(
+                await [z for z in guild.channels if isinstance(z, discord.TextChannel)][0].create_invite()),
+                            inline=False)
         except:
             pass
         await guild.leave()
         await self.bot.get_user(564798709045526528).send(embed=embed)
 
+    @commands.command(aliases=["say"])
+    @commands.has_guild_permissions(manage_messages=True)
+    async def send(self, ctx, channel: typing.Optional[discord.TextChannel]=None, *, message:str):
+        channel = channel if channel else ctx.channel
+        if not ctx.author.permissions_in(channel).send_messages:
+            raise commands.MissingPermissions
+        await channel.send(message)
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
@@ -222,7 +234,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     async def host_eval(self, ctx, *, args):
         if ctx.author.id in [564798709045526528]:
             await ctx.send(f"```\n{subprocess.check_output(args.split(' ')).decode('utf-8')[:1900]}\n```")
-                
+
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def modhelp(self, ctx):
@@ -342,13 +354,15 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     #     await whiteListedServers.remove(id)
 
     @commands.group(invoke_without_command=True)
-    async def sbinfo(self, ctx, category:str):
+    async def sbinfo(self, ctx, category: str):
         try:
             _id = (await moderationColl.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
         except KeyError:
             return await ctx.send("Could not find that category")
         url = f"https://discord.com/channels/667953033929293855/788162727461781504/{_id}"
-        await ctx.send(embed=discord.Embed(title=category, description=f"Click [here]({url}) to view info about {category}", colour=0x00ff00, url=url))
+        await ctx.send(
+            embed=discord.Embed(title=category, description=f"Click [here]({url}) to view info about {category}",
+                                colour=0x00ff00, url=url))
 
     @sbinfo.command()
     @commands.guild_only()
@@ -371,11 +385,11 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         await msg.edit(embed=msg.embeds[0].add_field(name=name, value=description, inline=False))
         await ctx.send("Done!")
         await ctx.message.delete()
-                       
+
     @sbinfo.command(name="edit")
     @commands.guild_only()
     @commands.has_any_role(788183123136741426, 667953757954244628)
-    async def sbi_edit(self, ctx, category:str, param:str, *, value):
+    async def sbi_edit(self, ctx, category: str, param: str, *, value):
         try:
             _id = (await moderationColl.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
         except KeyError:
@@ -390,7 +404,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         setattr(embed, param, value)
         await msg.edit(embed=embed)
         await ctx.send("Done!")
-        await ctx.message.delete()        
+        await ctx.message.delete()
 
 
 def setup(bot):
