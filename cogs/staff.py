@@ -46,7 +46,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     async def send(self, ctx, channel: typing.Optional[discord.TextChannel]=None, *, message:str):
         channel = channel if channel else ctx.channel
         if not ctx.author.permissions_in(channel).send_messages:
-            raise commands.MissingPermissions([discord.Permissions.send_messages])
+            raise commands.MissingPermissions(["manage_messages"])
         msg = await channel.send(message)
         if channel.id != ctx.channel.id:
             await ctx.send(msg.jump_url)
