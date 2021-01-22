@@ -122,8 +122,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
 
     @commands.command(aliases=["star", "pin"])
     @commands.has_guild_permissions(manage_messages=True)
-    async def starboard(self, ctx: commands.Context, _id: int, *, title: str = ""):
-        msg: discord.Message = await ctx.channel.fetch_message(_id)
+    async def starboard(self, ctx: commands.Context, message: discord.Message, *, title: str = ""):
         embed = (await Embed(msg.author, title=f"{title} | #{ctx.channel.name}", description=msg.content,
                              url=msg.jump_url).auto_author().timestamp_now().user_colour()).set_footer(
             text=f"starred by {ctx.author}")
