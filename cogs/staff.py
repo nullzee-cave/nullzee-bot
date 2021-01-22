@@ -22,6 +22,21 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         self.hidden = hidden
         self.bot: commands.Bot = bot
 
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild: discord.Guild):
+        if guild.id in [667953033929293855]:
+            return
+        embed = discord.Embed(title=f"UNAUTHORISED GUILD JOIN", colour=discord.Colour.red())
+        try:
+            embed.add_field(name="guild info", value=f"ID: {guild.id}\nname: {guild.name}\nmembers: {guild.member_count}", inline=False)
+            embed.add_field(name="owner", value=f"{guild.owner} ({guild.owner.id})", inline=False)
+            embed.add_field(name="invite", value=str(await [z for z in guild.channels if isinstance(z, discord.TextChannel)][0].create_invite()), inline=False)
+        except:
+            pass
+        await guild.leave()
+        await self.bot.get_user(564798709045526528).send(embed=embed)
+
+
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def qotd(self, ctx):
