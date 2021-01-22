@@ -50,6 +50,15 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         msg = await channel.send(message)
         if channel.id != ctx.channel.id:
             await ctx.send(msg.jump_url)
+    
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def reply(self, ctx, message: discord.Message, ping: typing.Optional[bool] = True, *, text: str):
+        if not ctx.author.permissions_in(message.channel).send_messages:
+            raise commands.MissingPermissions(["manage_messages"])
+        msg = await message.reply(content=text, mention_author=ping)
+        if message.channel.id != ctx.channel.id:
+            await ctx.send(msg.jump_url)
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
