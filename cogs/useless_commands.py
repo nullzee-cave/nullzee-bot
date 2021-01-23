@@ -57,6 +57,9 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
     @commands.command()
     async def bonk(self, ctx, member: discord.Member):
         await ctx.send(embed = discord.Embed(description = f"{member.mention} got bonked"))
+        
+    async def cog_after_invoke(self, ctx):
+        await ctx.message.delete()
 
 def setup(bot):
     bot.add_cog(Useless_commands(bot, False))
