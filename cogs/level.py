@@ -156,7 +156,7 @@ class level(commands.Cog, name="levelling"):
         embed.add_field(name = "Total XP Stats", value = f"Total XP until desired level: {TotalXp(desiredXp)-(TotalXp(userLevel)+userXp)}\nTotal XP of desired level: {TotalXp(desiredLevel)}")
         await ctx.send(embed = embed)
                             
-    @commands.command()
+    @commands.command(aliases=["wk"])
     @commands.guild_only()
     async def weekly(self, ctx):
         """View the server's weekly XP leaderboard"""
@@ -261,7 +261,7 @@ class level(commands.Cog, name="levelling"):
             await userColl.update_one({"_id": str(user.id)}, {"$inc": {"experience": -xp}})
         await ctx.send(f"removed {xp} xp from {user.mention}")
 
-    @commands.command()
+    @commands.command(aliases=["lb"])
     @commands.guild_only()
     async def leaderboard(self, ctx):
         """View the server's XP leaderboard"""
