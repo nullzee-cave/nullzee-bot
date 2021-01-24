@@ -57,6 +57,10 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
     @commands.command()
     async def bonk(self, ctx, member: discord.Member):
         await ctx.send(embed = discord.Embed(description = f"{member.mention} got bonked"))
+    
+    @commands.command()
+    async def crikey(self, ctx):
+        await ctx.send(embed = discord.Embed(description = "crikey", footer = "pls dm qwerety#2929 a good crikey emote so the command can be finished"))
         
     async def cog_after_invoke(self, ctx):
         await ctx.message.delete()
