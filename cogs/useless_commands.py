@@ -50,9 +50,11 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
                  f"{gamer} smacked {stabby} across the face",
                  f"{gamer} hurt {stabby}"]
         if member ==  ctx.author:
-            await ctx.send(embed = discord.Embed(description = "We do not promote self harm in Nullzee's cave."))
+            embed = await Embed(ctx.author, description = "We do not promote self harm in Nullzee's Cave.").user_colour
         else:
-            await ctx.send(embed = discord.Embed(description = str(random.choice(funny)))) 
+            embed = await Embed(ctx.author, description = str(random.choice(funny)))
+        await ctx.send(embed = embed)
+             
 
     @commands.command()
     async def bonk(self, ctx, member: discord.Member):
@@ -61,6 +63,11 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
     @commands.command()
     async def crikey(self, ctx):
         await ctx.send(embed = discord.Embed(description = "crikey", footer = "pls dm qwerety#2929 a good crikey emote so the command can be finished"))
+        
+    @commands.command()
+    async def boop(self, ctx, member: discord.Member):
+        embed = await Embed(ctx.author, description = f":boop:{member.mention}").user_colour
+        await ctx.send(embed = embed)
         
     async def cog_after_invoke(self, ctx):
         await ctx.message.delete()
