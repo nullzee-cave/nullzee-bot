@@ -66,7 +66,7 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         
     @commands.command()
     async def boop(self, ctx, member: discord.Member):
-        embed = await Embed(ctx.author, description = f":boop:{member.mention}").user_colour()
+        embed = await Embed(ctx.author, description = f"<:boop:803398424166137856>{member.mention}").user_colour()
         await ctx.send(embed = embed)
         
     async def cog_after_invoke(self, ctx):
