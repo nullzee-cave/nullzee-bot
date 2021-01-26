@@ -50,9 +50,9 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
                  f"{gamer} smacked {stabby} across the face",
                  f"{gamer} hurt {stabby}"]
         if member ==  ctx.author:
-            embed = await Embed(ctx.author, description = "We do not promote self harm in Nullzee's Cave.").user_colour
+            embed = await Embed(ctx.author, description = "We do not promote self harm in Nullzee's Cave.").user_colour()
         else:
-            embed = await Embed(ctx.author, description = str(random.choice(funny)))
+            embed = await Embed(ctx.author, description = str(random.choice(funny))).user_colour()
         await ctx.send(embed = embed)
              
 
@@ -66,7 +66,7 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         
     @commands.command()
     async def boop(self, ctx, member: discord.Member):
-        embed = await Embed(ctx.author, description = f":boop:{member.mention}").user_colour
+        embed = await Embed(ctx.author, description = f":boop:{member.mention}").user_colour()
         await ctx.send(embed = embed)
         
     async def cog_after_invoke(self, ctx):
