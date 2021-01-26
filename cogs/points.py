@@ -18,13 +18,14 @@ class Points(commands.Cog):
             string = ""
             for perk in perk_list:
                 string += f"{perk.name}:  `{perk.cost} points`\n"
-            return await ctx.send(embed=discord.Embed(title=f"Shop - {user['points']} points", description=string, color=0x00FF00) \
-                                  .set_footer(text="purchase a perk with -purchase [perk name]"))
+            return await ctx.send(embed=await Embed(ctx.author, title=f"Shop - {user['points']} points", description=string, color=0x00FF00) \
+                                  .set_footer(text="purchase a perk with -purchase [perk name]").user_colour())
         else:
-            return await ctx.send(embed=discord.Embed(
+            return await ctx.send(embed=await Embed(
+                ctx.author,
                 title=f"Shop page for {item.name}",
                 description=f"\n\nName: {item.name}\n\nDescription: {item.description}\n\nPrice: `{item.cost} points`\n\nAliases: {', '.join(item.aliases)}",
-                color=0x00FF00))
+                color=0x00FF00).user_colour())
 
     @commands.command(aliases=["buy", "redeem", "claim"])
     @commands.guild_only()
