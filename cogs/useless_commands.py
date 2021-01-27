@@ -12,11 +12,13 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
     async def smh(self,ctx):
         embed = await Embed(ctx.author, description = f'{ctx.author.mention} shakes their head').user_colour()
         await ctx.send(embed = embed)
+        await ctx.message.delete()
         
     @commands.command()
     async def f(self,ctx):
         embed = await Embed(ctx.author, description = f'<:press_f:709688246774267905> {ctx.author.mention} has paid their respects').user_colour()
         await ctx.send(embed = embed)
+        await ctx.message.delete()
 
     @commands.command()
     async def hug(self,ctx,member: discord.Member):
@@ -63,14 +65,13 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
     @commands.command()
     async def crikey(self, ctx):
         await ctx.send(embed = discord.Embed(description = "crikey", footer = "pls dm qwerety#2929 a good crikey emote so the command can be finished"))
+        await ctx.message.delete()
         
     @commands.command()
     async def boop(self, ctx, member: discord.Member):
         embed = await Embed(ctx.author, description = f"<:boop:803398424166137856>{member.mention}").user_colour()
         await ctx.send(embed = embed)
         
-    async def cog_after_invoke(self, ctx):
-        await ctx.message.delete()
 
 def setup(bot):
     bot.add_cog(Useless_commands(bot, False))
