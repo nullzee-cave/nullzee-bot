@@ -11,7 +11,7 @@ import math
 import os
 import datetime
 from EZPaginator import Paginator
-from helpers.utils import min_level, get_user, Embed
+from helpers.utils import min_level, get_user, Embed, getFileJson
 from api_key import userColl
 import pymongo
 
@@ -19,18 +19,35 @@ import pymongo
 class level(commands.Cog, name="levelling"):
     def __init__(self, bot, hidden):
         self.hidden = hidden
-        self.bot = bot
+        self.bot: commands.Bot = bot
         self.update_multipliers()
+        self.vc_tracker.start()
+
+    @tasks.loop(minutes=1)
+    async def vc_tracker(self):
+        guild: discord.Guild = self.bot.get_guild(667953033929293855)
+        timed_roles = getFileJson("levelroles")["vc"]
+        for channel in filter(lambda x: isinstance(x, discord.VoiceChannel), guild.channels):
+            channel: discord.VoiceChannel
+            for member in channel.members:
+                member: discord.Member
+                user_data = await get_user(member)
+                await userColl.update_one({"_id": str(member.id)}, {"$inc": {"vc_minutes": 1}})
+                await member.add_roles(
+                    *[guild.get_role(timed_roles[z]) for z in timed_roles if user_data["vc_minutes"] > z])
 
     @commands.command()
-    async def linkTwitch(self, ctx, username:str):
-        await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"twitch_name": username.lower(), "twitch_verified": False}})
-        await ctx.send(embed=discord.Embed(description=f"You have linked your discord account to your twitch account. In order to start gaining XP in Nullzee's twitch chat, you must type `-verify {ctx.author.id}` there.", colour=0x00ff00))
-        
+    async def linkTwitch(self, ctx, username: str):
+        await userColl.update_one({"_id": str(ctx.author.id)},
+                                  {"$set": {"twitch_name": username.lower(), "twitch_verified": False}})
+        await ctx.send(embed=discord.Embed(
+            description=f"You have linked your discord account to your twitch account. In order to start gaining XP in Nullzee's twitch chat, you must type `-verify {ctx.author.id}` there.",
+            colour=0x00ff00))
+
     @commands.Cog.listener()
     async def on_member_join(self, member):
         with open('levelroles.json') as f:
-            levelroles = json.load(f)
+            levelroles = json.load(f)["levels"]
         roles = []
         userData = await userColl.find_one({"_id": str(member.id)})
         if not userData:
@@ -72,7 +89,7 @@ class level(commands.Cog, name="levelling"):
             return await ctx.send("please resign.")
         with open('config.json') as f:
             config = json.load(f)
-        config["global_multiplier"]= value
+        config["global_multiplier"] = value
         await ctx.send(f"set global XP multiplier to {value}")
         with open('config.json', 'w') as f:
             json.dump(config, f)
@@ -102,13 +119,14 @@ class level(commands.Cog, name="levelling"):
             userData = await self.add_experience(userData, message.author, number)
             await self.level_up(message, userData, message.author)
 
-
     async def add_experience(self, userData, user, exp):
         if time.time() - userData["last_message"] > 30:
             points_bonus = 1 if userData["experience"] > userData["last_points"] + 1000 else 0
             await userColl.update_one({"_id": str(user.id)},
                                       {"$inc": {"experience": exp, "weekly": exp, "points": points_bonus},
-                                       "$set": {"last_message": time.time(), "last_points": userData["experience"] + exp if points_bonus else userData["last_points"]}})
+                                       "$set": {"last_message": time.time(),
+                                                "last_points": userData["experience"] + exp if points_bonus else
+                                                userData["last_points"]}})
             return await userColl.find_one({"_id": str(user.id)})
         else:
             return await userColl.find_one({"_id": str(user.id)})
@@ -118,7 +136,11 @@ class level(commands.Cog, name="levelling"):
         lvl_start = userData["level"]
         lvl_end = 50 * (lvl_start ** 1.5)
         if experience > lvl_end:
-            await userColl.update_one({"_id": str(user.id)}, {"$inc": {"level": 1}, "$set": {"experience": 0, "last_points": 0 - (experience - (userData["last_points"] + 100))}})
+            await userColl.update_one({"_id": str(user.id)}, {"$inc": {"level": 1}, "$set": {"experience": 0,
+                                                                                             "last_points": 0 - (
+                                                                                                         experience - (
+                                                                                                             userData[
+                                                                                                                 "last_points"] + 100))}})
             await ctx.channel.send(f":tada: Congrats {user.mention}, you levelled up to level {lvl_start + 1}!")
             with open('levelroles.json') as f:
                 levelroles = json.load(f)
@@ -134,28 +156,33 @@ class level(commands.Cog, name="levelling"):
         userData = await userColl.find_one({"_id": str(user.id)})
         if not userData:
             return await ctx.send("This user has no level")
+        string = f"XP: {str(round(userData['experience']))}/{str(round(50 * (round(userData['level']) ** 1.5)))}"
+        string += f"\nWeekly XP: {str(round(userData['weekly']))}"
+        string += f"\nPoints: {userData['points']}"
+        string += f"\nTotal XP: {(sum([round(50 * z ** 1.5) for z in range(1, userData['level'])]) + userData['experience']):,}"
+        string += f"\nMinutes in VC: {userData['vc_minutes']:,}"
         embed = await Embed(user, title=f"Level: {str(round(userData['level']))}", url="https://nullzee.ga",
-                              description=f"XP: {str(round(userData['experience']))}/{str(round(50 * (round(userData['level']) ** 1.5)))}\nWeekly XP: {str(round(userData['weekly']))}\nPoints: {userData['points']}\nTotal XP: {(sum([round(50 * z ** 1.5) for z in range(1, userData['level'])]) + userData['experience']):,}").user_colour()
+                            description=string).user_colour()
         embed.set_author(name=user, icon_url=user.avatar_url)
         await ctx.send(embed=embed)
-                            
-    #@commands.command(aliases=['hffl'])
-    #async def howfarfromlevel(self, ctx, desiredLevel: int):
-        #user = ctx.author
-        #userData = await userColl.find_one({"_id": str(user.id)})
-        #userLevel = int(userData["level"])
-        #userXp = int(userData["experience"])
-        #def LevelXp(x):
-            #return round(50*(x**1.5))
-        #def TotalXp(level):
-            #return sum([round(50 * z ** 1.5) for z in range(1, level)])
-        #desiredTotalXp = LevelXp(desiredLevel)
-        #embed = await Embed(user, title = ("XP calculator")).user_colour()
-        #embed.add_field(name = "Next Level", value = f"XP until next level: {LevelXp(userLevel+1)-(LevelXp(userLevel)+userXp)}\nXP of level: {LevelXp(userLevel+1)}", inline = False)
-        #embed.add_field(name = "Desired Level", value = f"XP until desired level: {LevelXp(desiredLevel)-(LevelXp(userLevel)+userXp)}\nXP of desired level: {LevelXp(desiredLevel)}", inline = False)
-        #embed.add_field(name = "Total XP Stats", value = f"Total XP until desired level: {TotalXp(desiredTotalXp)-(TotalXp(userLevel)+userXp)}\nTotal XP of desired level: {TotalXp(desiredLevel)}", inline = False)
-        #await ctx.send(embed = embed)
-                            
+
+    # @commands.command(aliases=['hffl'])
+    # async def howfarfromlevel(self, ctx, desiredLevel: int):
+    # user = ctx.author
+    # userData = await userColl.find_one({"_id": str(user.id)})
+    # userLevel = int(userData["level"])
+    # userXp = int(userData["experience"])
+    # def LevelXp(x):
+    # return round(50*(x**1.5))
+    # def TotalXp(level):
+    # return sum([round(50 * z ** 1.5) for z in range(1, level)])
+    # desiredTotalXp = LevelXp(desiredLevel)
+    # embed = await Embed(user, title = ("XP calculator")).user_colour()
+    # embed.add_field(name = "Next Level", value = f"XP until next level: {LevelXp(userLevel+1)-(LevelXp(userLevel)+userXp)}\nXP of level: {LevelXp(userLevel+1)}", inline = False)
+    # embed.add_field(name = "Desired Level", value = f"XP until desired level: {LevelXp(desiredLevel)-(LevelXp(userLevel)+userXp)}\nXP of desired level: {LevelXp(desiredLevel)}", inline = False)
+    # embed.add_field(name = "Total XP Stats", value = f"Total XP until desired level: {TotalXp(desiredTotalXp)-(TotalXp(userLevel)+userXp)}\nTotal XP of desired level: {TotalXp(desiredLevel)}", inline = False)
+    # await ctx.send(embed = embed)
+
     @commands.command(aliases=["wk"])
     @commands.guild_only()
     async def weekly(self, ctx):
@@ -170,7 +197,7 @@ class level(commands.Cog, name="levelling"):
             if count < 225:
                 if ctx.guild.get_member(int(user["_id"])):
                     string += f'**{count}:  {str(ctx.guild.get_member(int(user["_id"])))}** - {str(round(user["weekly"]))} XP \n'
-                count += 1
+                    count += 1
                 if count % 15 == 0:
                     contents[embedcount].add_field(name="Gain XP by chatting", value=string, inline=False)
                     contents[embedcount].set_footer(text=f"page {embedcount + 1} of 15")
@@ -187,6 +214,36 @@ class level(commands.Cog, name="levelling"):
                 await pages.start()
                 return
 
+    @commands.command(aliases=["vclb"])
+    @commands.guild_only()
+    async def vcleaderboard(self, ctx):
+        """View the server's weekly XP leaderboard"""
+        embed = discord.Embed(color=0x00FF00).set_author(name="Nullzee's cave leaderboard", icon_url=ctx.guild.icon_url)
+        count = 1
+        contents = [embed]
+        string = ''
+        embedcount = 0
+        info = [z async for z in userColl.find().sort('vc_minutes', pymongo.DESCENDING)]
+        for number, user in enumerate(info):
+            if count < 225:
+                if ctx.guild.get_member(int(user["_id"])):
+                    string += f'**{count}:  {str(ctx.guild.get_member(int(user["_id"])))}** - {round(user["vc_minutes"]):,} minutes \n'
+                    count += 1
+                if count % 15 == 0:
+                    contents[embedcount].add_field(name="Talk in a voice channel to gain time", value=string, inline=False)
+                    contents[embedcount].set_footer(text=f"page {embedcount + 1} of 15")
+                    embedcount += 1
+                    if embedcount < 15:
+                        contents.append(discord.Embed(color=0x00FF00))
+                        contents[embedcount].set_author(name="Nullzee's cave leaderboard", icon_url=ctx.guild.icon_url)
+                    string = ''
+            else:
+                for i, e in enumerate(contents):
+                    e.set_footer(text=f"page {i + 1} of {len(contents)}")
+                msg = await ctx.send(embed=contents[0])
+                pages = Paginator(self.bot, msg, embeds=contents, timeout=180, use_extend=True, only=ctx.author)
+                await pages.start()
+                return
     @commands.command(hidden=True)
     @commands.has_guild_permissions(manage_messages=True)
     async def weeklyReset(self, ctx):
@@ -275,7 +332,7 @@ class level(commands.Cog, name="levelling"):
             if count < 225:
                 if ctx.guild.get_member(int(user["_id"])):
                     string += f'**{count}:  {str(ctx.guild.get_member(int(user["_id"])))}** - level {str(round(user["level"]))}\n'
-                count += 1
+                    count += 1
                 if count % 15 == 0:
                     contents[embedcount].add_field(name="Gain XP by chatting", value=string, inline=False)
                     contents[embedcount].set_footer(text=f"page {embedcount + 1} of 15")

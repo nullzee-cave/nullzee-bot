@@ -12,7 +12,7 @@ async def get_user(user):
     if not await userColl.find_one({"_id": str(user.id)}):
         await userColl.insert_one(
             {"_id": str(user.id), "experience": 0, "weekly": 0, "level": 1, "last_message": 0, "points": 0,
-             "last_points": 0, "embed_colour": "#00FF00"})
+             "last_points": 0, "embed_colour": "#00FF00", "vc_minutes": 0})
     return await userColl.find_one({"_id": str(user.id)})
 
 
