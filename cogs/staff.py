@@ -262,6 +262,21 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         embed.description = string
         await ctx.send(embed=embed)
 
+    @commands.group(invoke_without_command=True)
+    @commands.has_guild_permissions(manage_messages=True)
+    async def blacklist(self, ctx):
+        pass
+    @blacklist.command(name="add")
+    async def blist_add(self, ctx, member: discord.Member, command: str):
+        command = command.replace(ctx.prefix, '')
+        await userColl.update_one({"_id": str(member.id)}, {"$addToSet": {"command_blacklist": command}})
+        await ctx.send(f"blacklisted `{member}` from using `{ctx.prefix}{command}`")
+    @blacklist.command(name="remove")
+    async def blist_remove(self, ctx, member: discord.Member, command: str):
+        command = command.replace(ctx.prefix, '')
+        await userColl.update_one({"_id": str(member.id)}, {"$pull": {"command_blacklist": command}})
+        await ctx.send(f"unblacklisted `{member}` from using `{ctx.prefix}{command}`")
+
     @commands.group(aliases=["-c"])
     @commands.has_guild_permissions(manage_messages=True)
     async def config(self, ctx):

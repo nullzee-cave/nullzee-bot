@@ -8,6 +8,7 @@ import random
 import string
 from discord.ext import commands
 
+
 async def get_user(user):
     if not await userColl.find_one({"_id": str(user.id)}):
         await userColl.insert_one(
@@ -17,14 +18,19 @@ async def get_user(user):
 
 
 def nanoId(length=20):
-    return ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(length))
+    return ''.join(
+        random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(length))
+
 
 def getFileJson(filename):
     with open(f"{filename}.json") as f:
         return json.load(f)
+
+
 def saveFileJson(data, filename):
     with open(f"{filename}.json", 'w') as f:
         json.dump(data, f)
+
 
 class Embed(discord.Embed):
     def __init__(self, user: discord.User, **kwargs):
@@ -46,10 +52,12 @@ class Embed(discord.Embed):
         self.timestamp = datetime.datetime.now()
         return self
 
+
 def min_level(level: int):
     async def predicate(ctx):
         if 706285767898431500 in (
-        roles := [z.id for z in ctx.author.roles]) or 668724083718094869 in roles or 668736363297898506 in roles:
+                roles := [z.id for z in
+                          ctx.author.roles]) or 668724083718094869 in roles or 668736363297898506 in roles:
             return True
         user = await userColl.find_one({"_id": str(ctx.author.id)})
         if not user:
@@ -71,6 +79,7 @@ class TimeConverter(commands.Converter):
         else:
             raise commands.UserInputError
 
+
 def stringToSeconds(_string):
     regex = "(\d+)(.)"
     d = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
@@ -79,4 +88,3 @@ def stringToSeconds(_string):
         return None
     else:
         return int(match.group(1)) * d[match.group(2)] if match.group(2) in d else None
-
