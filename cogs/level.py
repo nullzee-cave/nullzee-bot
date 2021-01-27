@@ -218,7 +218,7 @@ class level(commands.Cog, name="levelling"):
     @commands.guild_only()
     async def vcleaderboard(self, ctx):
         """View the server's weekly XP leaderboard"""
-        embed = discord.Embed(color=0x00FF00).set_author(name="Nullzee's cave leaderboard", icon_url=ctx.guild.icon_url)
+        embed = discord.Embed(color=0x00FF00).set_author(name="Nullzee's cave vc leaderboard", icon_url=ctx.guild.icon_url)
         count = 1
         contents = [embed]
         string = ''
@@ -235,7 +235,7 @@ class level(commands.Cog, name="levelling"):
                     embedcount += 1
                     if embedcount < 15:
                         contents.append(discord.Embed(color=0x00FF00))
-                        contents[embedcount].set_author(name="Nullzee's cave leaderboard", icon_url=ctx.guild.icon_url)
+                        contents[embedcount].set_author(name="Nullzee's cave vc leaderboard", icon_url=ctx.guild.icon_url)
                     string = ''
             else:
                 for i, e in enumerate(contents):
@@ -244,6 +244,7 @@ class level(commands.Cog, name="levelling"):
                 pages = Paginator(self.bot, msg, embeds=contents, timeout=180, use_extend=True, only=ctx.author)
                 await pages.start()
                 return
+    
     @commands.command(hidden=True)
     @commands.has_guild_permissions(manage_messages=True)
     async def weeklyReset(self, ctx):
