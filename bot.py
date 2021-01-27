@@ -11,7 +11,7 @@ import math
 from api_key import token, prefix
 from perks.perkSystem import PerkError
 import traceback
-from helpers.utils import get_user, get_blacklist
+from helpers.utils import get_user
 
 
 intents = discord.Intents.default()
