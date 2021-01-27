@@ -237,13 +237,12 @@ class level(commands.Cog, name="levelling"):
                         contents.append(discord.Embed(color=0x00FF00))
                         contents[embedcount].set_author(name="Nullzee's cave vc leaderboard", icon_url=ctx.guild.icon_url)
                     string = ''
-            else:
-                for i, e in enumerate(contents):
-                    e.set_footer(text=f"page {i + 1} of {len(contents)}")
-                msg = await ctx.send(embed=contents[0])
-                pages = Paginator(self.bot, msg, embeds=contents, timeout=180, use_extend=True, only=ctx.author)
-                await pages.start()
-                return
+        for i, e in enumerate(contents):
+            e.set_footer(text=f"page {i + 1} of {len(contents)}")
+        msg = await ctx.send(embed=contents[0])
+        pages = Paginator(self.bot, msg, embeds=contents, timeout=180, use_extend=True, only=ctx.author)
+        await pages.start()
+        return
     
     @commands.command(hidden=True)
     @commands.has_guild_permissions(manage_messages=True)
