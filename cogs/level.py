@@ -189,7 +189,7 @@ class level(commands.Cog, name="levelling"):
     @commands.guild_only()
     async def weekly(self, ctx):
         """View the server's weekly XP leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('weekly', pymongo.DESCENDING)], suffix=" XP")
+        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('weekly', pymongo.DESCENDING)], key="weekly", suffix=" XP")
         msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
@@ -197,7 +197,7 @@ class level(commands.Cog, name="levelling"):
     @commands.guild_only()
     async def vcleaderboard(self, ctx):
         """View the server's weekly XP leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('vc_minutes', pymongo.DESCENDING)], suffix=" minutes",
+        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('vc_minutes', pymongo.DESCENDING)], key="vc_minutes", suffix=" minutes",
                                    title="Voice Activity leaderboard", field_name="Talk in a voice channel to gain time")
         msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
