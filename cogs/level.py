@@ -31,12 +31,11 @@ class level(commands.Cog, name="levelling"):
             channel: discord.VoiceChannel
             for member in channel.members:
                 member: discord.Member
-                if member.voice.afk or member.bot:
-                    continue
-                user_data = await get_user(member)
-                await userColl.update_one({"_id": str(member.id)}, {"$inc": {"vc_minutes": 1}})
-                await member.add_roles(
-                    *[guild.get_role(timed_roles[z]) for z in timed_roles if user_data["vc_minutes"] > int(z)])
+                if not member.bot:
+                    user_data = await get_user(member)
+                    await userColl.update_one({"_id": str(member.id)}, {"$inc": {"vc_minutes": 1}})
+                    await member.add_roles(
+                        *[guild.get_role(timed_roles[z]) for z in timed_roles if user_data["vc_minutes"] > int(z)])
 
     @commands.command()
     async def linkTwitch(self, ctx, username: str):
