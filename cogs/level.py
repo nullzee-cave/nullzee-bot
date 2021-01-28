@@ -143,7 +143,7 @@ class level(commands.Cog, name="levelling"):
                                                                                                                  "last_points"] + 100))}})
             await ctx.channel.send(f":tada: Congrats {user.mention}, you levelled up to level {lvl_start + 1}!")
             with open('levelroles.json') as f:
-                levelroles = json.load(f)
+                levelroles = json.load(f)["levels"]
             if str(lvl_start + 1) in levelroles:
                 role = ctx.guild.get_role(int(levelroles[str(lvl_start + 1)]))
                 await user.add_roles(role)
@@ -201,8 +201,8 @@ class level(commands.Cog, name="levelling"):
                 if count % 15 == 0:
                     contents[embedcount].add_field(name="Gain XP by chatting", value=string, inline=False)
                     contents[embedcount].set_footer(text=f"page {embedcount + 1} of 15")
-                    embedcount += 1
                     if embedcount < 15:
+                        embedcount += 1
                         contents.append(discord.Embed(color=0x00FF00))
                         contents[embedcount].set_author(name="Nullzee's cave leaderboard", icon_url=ctx.guild.icon_url)
                     string = ''
@@ -232,8 +232,8 @@ class level(commands.Cog, name="levelling"):
                 if count % 15 == 0:
                     contents[embedcount].add_field(name="Talk in a voice channel to gain time", value=string, inline=False)
                     contents[embedcount].set_footer(text=f"page {embedcount + 1} of 15")
-                    embedcount += 1
                     if embedcount < 15:
+                        embedcount += 1
                         contents.append(discord.Embed(color=0x00FF00))
                         contents[embedcount].set_author(name="Nullzee's cave vc leaderboard", icon_url=ctx.guild.icon_url)
                     string = ''
@@ -336,8 +336,8 @@ class level(commands.Cog, name="levelling"):
                 if count % 15 == 0:
                     contents[embedcount].add_field(name="Gain XP by chatting", value=string, inline=False)
                     contents[embedcount].set_footer(text=f"page {embedcount + 1} of 15")
-                    embedcount += 1
                     if embedcount < 15:
+                        embedcount += 1
                         contents.append(discord.Embed(color=0x00FF00))
                         contents[embedcount].set_author(name="Nullzee's cave leaderboard", icon_url=ctx.guild.icon_url)
                     string = ''
