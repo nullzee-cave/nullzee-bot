@@ -11,7 +11,7 @@ import math
 import os
 import datetime
 from EZPaginator import Paginator
-from helpers.utils import min_level, get_user, Embed, getFileJson
+from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages
 from api_key import userColl
 import pymongo
 
@@ -189,63 +189,28 @@ class level(commands.Cog, name="levelling"):
     @commands.guild_only()
     async def weekly(self, ctx):
         """View the server's weekly XP leaderboard"""
-        embed = discord.Embed(color=0x00FF00).set_author(name="Nullzee's cave leaderboard", icon_url=ctx.guild.icon_url)
-        count = 1
-        contents = [embed]
-        string = ''
-        embedcount = 0
-        info = [z async for z in userColl.find().sort('weekly', pymongo.DESCENDING)]
-        for number, user in enumerate(info):
-            if count < 225:
-                if ctx.guild.get_member(int(user["_id"])):
-                    string += f'**{count}:  {str(ctx.guild.get_member(int(user["_id"])))}** - {str(round(user["weekly"]))} XP \n'
-                    count += 1
-                if count % 15 == 0:
-                    contents[embedcount].add_field(name="Gain XP by chatting", value=string, inline=False)
-                    contents[embedcount].set_footer(text=f"page {embedcount + 1} of 15")
-                    if embedcount < 15:
-                        embedcount += 1
-                        contents.append(discord.Embed(color=0x00FF00))
-                        contents[embedcount].set_author(name="Nullzee's cave leaderboard", icon_url=ctx.guild.icon_url)
-                    string = ''
-            else:
-                for i, e in enumerate(contents):
-                    e.set_footer(text=f"page {i + 1} of {len(contents)}")
-                msg = await ctx.send(embed=contents[0])
-                pages = Paginator(self.bot, msg, embeds=contents, timeout=180, use_extend=True, only=ctx.author)
-                await pages.start()
-                return
+        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('weekly', pymongo.DESCENDING)], suffix=" XP")
+        msg = await ctx.send(embed=embeds[0])
+        await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
     @commands.command(aliases=["vclb"])
     @commands.guild_only()
     async def vcleaderboard(self, ctx):
         """View the server's weekly XP leaderboard"""
-        embed = discord.Embed(color=0x00FF00).set_author(name="Nullzee's cave vc leaderboard", icon_url=ctx.guild.icon_url)
-        count = 1
-        contents = [embed]
-        string = ''
-        embedcount = 0
-        info = [z async for z in userColl.find().sort('vc_minutes', pymongo.DESCENDING)]
-        for number, user in enumerate(info):
-            if count < 225:
-                if ctx.guild.get_member(int(user["_id"])):
-                    string += f'**{count}:  {str(ctx.guild.get_member(int(user["_id"])))}** - {round(user["vc_minutes"]):,} minutes \n'
-                    count += 1
-                if count % 15 == 0:
-                    contents[embedcount].add_field(name="Talk in a voice channel to gain time", value=string, inline=False)
-                    contents[embedcount].set_footer(text=f"page {embedcount + 1} of 15")
-                    if embedcount < 15:
-                        embedcount += 1
-                        contents.append(discord.Embed(color=0x00FF00))
-                        contents[embedcount].set_author(name="Nullzee's cave vc leaderboard", icon_url=ctx.guild.icon_url)
-                    string = ''
-        for i, e in enumerate(contents):
-            e.set_footer(text=f"page {i + 1} of {len(contents)}")
-        msg = await ctx.send(embed=contents[0])
-        pages = Paginator(self.bot, msg, embeds=contents, timeout=180, use_extend=True, only=ctx.author)
-        await pages.start()
-        return
-    
+        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('vc_minutes', pymongo.DESCENDING)], suffix=" minutes",
+                                   title="Voice Activity leaderboard", field_name="Talk in a voice channel to gain time")
+        msg = await ctx.send(embed=embeds[0])
+        await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
+
+    @commands.command(aliases=["lb"])
+    @commands.guild_only()
+    async def leaderboard(self, ctx):
+        """View the server's XP leaderboard"""
+        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('level', pymongo.DESCENDING)], prefix="level ")
+        msg = await ctx.send(embed=embeds[0])
+        await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
+
+
     @commands.command(hidden=True)
     @commands.has_guild_permissions(manage_messages=True)
     async def weeklyReset(self, ctx):
@@ -320,36 +285,6 @@ class level(commands.Cog, name="levelling"):
             await userColl.update_one({"_id": str(user.id)}, {"$inc": {"experience": -xp}})
         await ctx.send(f"removed {xp} xp from {user.mention}")
 
-    @commands.command(aliases=["lb"])
-    @commands.guild_only()
-    async def leaderboard(self, ctx):
-        """View the server's XP leaderboard"""
-        embed = discord.Embed(color=0x00FF00).set_author(name="Nullzee's cave leaderboard", icon_url=ctx.guild.icon_url)
-        count = 1
-        contents = [embed]
-        string = ''
-        embedcount = 0
-        info = [z async for z in userColl.find().sort('level', pymongo.DESCENDING)]
-        for number, user in enumerate(info):
-            if count < 225:
-                if ctx.guild.get_member(int(user["_id"])):
-                    string += f'**{count}:  {str(ctx.guild.get_member(int(user["_id"])))}** - level {str(round(user["level"]))}\n'
-                    count += 1
-                if count % 15 == 0:
-                    contents[embedcount].add_field(name="Gain XP by chatting", value=string, inline=False)
-                    contents[embedcount].set_footer(text=f"page {embedcount + 1} of 15")
-                    if embedcount < 15:
-                        embedcount += 1
-                        contents.append(discord.Embed(color=0x00FF00))
-                        contents[embedcount].set_author(name="Nullzee's cave leaderboard", icon_url=ctx.guild.icon_url)
-                    string = ''
-            else:
-                for i, e in enumerate(contents):
-                    e.set_footer(text=f"page {i + 1} of {len(contents)}")
-                msg = await ctx.send(embed=contents[0])
-                pages = Paginator(self.bot, msg, embeds=contents, timeout=180, use_extend=True, only=ctx.author)
-                await pages.start()
-                return
 
 
 def setup(bot):

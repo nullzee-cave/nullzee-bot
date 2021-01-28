@@ -17,6 +17,31 @@ async def get_user(user):
     return await userColl.find_one({"_id": str(user.id)})
 
 
+def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="", suffix="", title="Nullzee's cave leaderboard",
+                      field_name="Gain XP by chatting"):
+    entries = []
+    lb_pos = 1
+    for i, user in enumerate(users):
+        if not (member := guild.get_member(int(user["_id"]))):
+            continue
+        entries.append(f"**{lb_pos}: {member}** - {prefix}{user[key]:,}{suffix}\n")
+        lb_pos += 1
+    embeds = [discord.Embed(colour=0x00FF00).set_author(name=title, icon_url=guild.icon_url)]
+    values = [""]
+    embed_index = 0
+    for i, entry in enumerate(entries):
+        values[embed_index] += entry
+        if not i % 15 and i != 0:
+            embeds.append(discord.Embed(colour=0x00FF00).set_author(name=title, icon_url=guild.icon_url))
+            embed_index += 1
+            values.append("")
+    embeds = embeds[:16]
+    for i, embed in enumerate(embeds):
+        embed.set_footer(text=f"page {i + 1} of {len(embeds)}").add_field(name=field_name, value=values[i], inline=False)
+    return embeds
+
+
+
 def nanoId(length=20):
     return ''.join(
         random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(length))
