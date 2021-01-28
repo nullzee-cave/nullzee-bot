@@ -31,7 +31,7 @@ class level(commands.Cog, name="levelling"):
             channel: discord.VoiceChannel
             for member in channel.members:
                 member: discord.Member
-                if member.voice.afk:
+                if member.voice.afk or member.bot:
                     continue
                 user_data = await get_user(member)
                 await userColl.update_one({"_id": str(member.id)}, {"$inc": {"vc_minutes": 1}})
