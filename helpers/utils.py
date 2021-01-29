@@ -8,6 +8,11 @@ import random
 import string
 from discord.ext import commands
 
+staff_only = commands.check(lambda ctx: ctx.guild and ctx.guild.id == 667953033929293855 and (685027474522112000 in
+                                                                     (roles := [z.id for z in ctx.author.roles]) or
+                                                                     667953757954244628 in roles or
+                                                                     675031583954173986 in roles))
+
 
 async def get_user(user):
     if not await userColl.find_one({"_id": str(user.id)}):
@@ -17,7 +22,8 @@ async def get_user(user):
     return await userColl.find_one({"_id": str(user.id)})
 
 
-def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="", suffix="", title="Nullzee's cave leaderboard",
+def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="", suffix="",
+                      title="Nullzee's cave leaderboard",
                       field_name="Gain XP by chatting"):
     entries = []
     lb_pos = 1
@@ -37,9 +43,9 @@ def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="
             values.append("")
     embeds = embeds[:16]
     for i, embed in enumerate(embeds):
-        embed.set_footer(text=f"page {i + 1} of {len(embeds)}").add_field(name=field_name, value=values[i], inline=False)
+        embed.set_footer(text=f"page {i + 1} of {len(embeds)}").add_field(name=field_name, value=values[i],
+                                                                          inline=False)
     return embeds
-
 
 
 def nanoId(length=20):

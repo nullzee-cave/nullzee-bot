@@ -1,7 +1,7 @@
 from discord.ext import commands, tasks
 import typing
 from random import randint
-from helpers.utils import stringToSeconds as sts, Embed, TimeConverter
+from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only
 import json
 import asyncio
 import discord
@@ -53,7 +53,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
         await ctx.send(embed=discord.Embed(description=f"unmuted {user}", colour=discord.Colour.green()))
 
     @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def ban(self, ctx, user: discord.Member, _time: typing.Optional[TimeConverter]=None, *, reason: str = None):
         if user.guild_permissions.manage_messages:
             return await ctx.send("You cannot ban a moderator/administrator")
@@ -71,7 +71,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
         await moderationUtils.log(self.bot, payload)
 
     @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def unban(self, ctx, member, *, reason: str = None):
         try:
             await ctx.guild.unban(moderationUtils.BannedUser(member))
@@ -92,7 +92,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
             await ctx.send("Successfully deleted warning `{}`".format(_id))
 
     @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def kick(self, ctx, user: discord.Member, *, reason: str = None):
         if user.guild_permissions.manage_messages:
             embed = discord.Embed(description="You cannot kick a moderator/administrator", color=0xff0000)
