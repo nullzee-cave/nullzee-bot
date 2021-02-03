@@ -5,7 +5,9 @@ from api_key import userColl
 from helpers.utils import get_user, Embed, getFileJson, saveFileJson
 import datetime
 import asyncio
+import time
 
+last_ping = 0
 
 @perk(name="AskNullzee", description="Ask Nullzee a question!", cost=10, aliases=["NullzeeQuestion", "askNull"],
       require_arg=True)
@@ -31,8 +33,11 @@ async def embedColour(ctx, arg):
 async def deadChat(ctx, arg):
     if ctx.channel.slowmode_delay > 5:
         raise PerkError(msg="You cannot use that here")
+    if last_ping + 1800 > time.time():
+        raise PerkError(msg="This perk is on cooldown!")
     await ctx.send("<@&749178299518943343>", embed=await Embed(ctx.author, description=arg).set_author(name=ctx.author,
                                                                                                        icon_url=ctx.author.avatar_url).user_colour())
+    last_ping = time.time()
 
 @perk(name="qotd", description="Choose today's QOTD!", cost=10, require_arg=True)
 async def qotd(ctx, arg):
