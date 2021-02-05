@@ -4,21 +4,25 @@ import random
 from helpers.utils import Embed
 
 class Useless_commands(commands.Cog, name='Useless Commands'):
-    def __init__ (self,bot,hidden):
+    def __init__ (self, bot, hidden):
         self.bot = bot
         self.hidden = hidden 
         
     @commands.command()
-    async def smh(self,ctx):
+    async def smh(self, ctx):
         embed = await Embed(ctx.author, description = f'{ctx.author.mention} shakes their head').user_colour()
         await ctx.send(embed = embed)
         await ctx.message.delete()
         
     @commands.command()
-    async def f(self,ctx):
+    async def f(self, ctx):
         embed = await Embed(ctx.author, description = f'<:press_f:709688246774267905> {ctx.author.mention} has paid their respects').user_colour()
         await ctx.send(embed = embed)
         await ctx.message.delete()
+        
+    @commands.command(aliases = ["x"])
+    async def doubt(self, ctx):
+        await ctx.send("<:Doubt:667984676744331283>")
 
     @commands.command()
     async def hug(self,ctx,member: discord.Member):
