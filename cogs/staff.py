@@ -4,7 +4,7 @@ from discord.ext import commands
 import json
 import time
 import datetime
-from helpers.utils import stringToSeconds as sts, Embed, TimeConverter
+from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only
 from helpers import moderationUtils
 import asyncio
 from api_key import moderationColl, userColl
@@ -71,7 +71,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         await ctx.send("Last QOTD time set to now")
 
     @commands.command()
-    @commands.has_permissions(manage_messages=True)
+    @staff_only
     async def slowmode(self, ctx, time="off"):
         if time.lower() == "off":
             await ctx.channel.edit(slowmode_delay=0)
@@ -85,7 +85,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
                 return await ctx.send(f"slowmode has been set to `{time}` by {ctx.author.mention}")
 
     @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def role(self, ctx, user: discord.Member, *, role: str):
         if role.lower() == "muted":
             return await ctx.send("no.")
@@ -130,7 +130,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             return
 
     @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def removerole(self, ctx, user: discord.Member, *, role: str):
         if role.lower() == "muted":
             return await ctx.send("no.")
@@ -171,7 +171,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             embed=await Embed(ctx.author, title="Added to starboard!", url=star_message.jump_url).user_colour())
 
     @commands.command()
-    @commands.has_permissions(manage_messages=True)
+    @staff_only
     async def purge(self, ctx, limit: int):
         def check(m):
             return not m.pinned

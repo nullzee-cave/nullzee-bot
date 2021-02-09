@@ -28,7 +28,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
         await moderationUtils.warn_punishments(ctx, user)
 
     @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def mute(self, ctx, user: discord.Member, _time: typing.Optional[TimeConverter] = None, *,
                    reason: str = None):
         if user.guild_permissions.manage_messages:
@@ -44,7 +44,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
             f"You were muted in {ctx.guild.name} {f'for `{time_string}`' if _time else ''} {f'for `{reason}`' if reason else ''}\nInfraction ID:`{payload['id']}`")
 
     @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def unmute(self, ctx, user: discord.Member, *, reason: str = None):
         await moderationColl.delete_many({"offender_id": user.id, "type": "mute"})
         await user.remove_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]))

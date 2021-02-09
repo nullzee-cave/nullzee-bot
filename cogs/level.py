@@ -11,12 +11,12 @@ import math
 import os
 import datetime
 from EZPaginator import Paginator
-from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages
+from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only
 from api_key import userColl
 import pymongo
 
 
-class level(commands.Cog, name="levelling"):
+class Levelling(commands.Cog, name="levelling"):
     def __init__(self, bot, hidden):
         self.hidden = hidden
         self.bot: commands.Bot = bot
@@ -71,7 +71,7 @@ class level(commands.Cog, name="levelling"):
         self.global_multiplier = config["global_multiplier"]
 
     @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def multiplier(self, ctx, channel: discord.TextChannel, value: float):
         if value < -0.5 or value > 10:
             return await ctx.send("please resign.")
@@ -84,7 +84,7 @@ class level(commands.Cog, name="levelling"):
         self.update_multipliers()
 
     @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def global_multiplier(self, ctx, value: float):
         if value < -0.5 or value > 10:
             return await ctx.send("please resign.")
@@ -211,7 +211,7 @@ class level(commands.Cog, name="levelling"):
 
 
     @commands.command(hidden=True)
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def weeklyReset(self, ctx):
         await ctx.send("resetting...")
         with open('users.json') as f:
@@ -246,7 +246,7 @@ class level(commands.Cog, name="levelling"):
     #         await self.bot.get_guild(667953033929293855).get_channel(667957285837864960).send(embed=discord.Embed(description="Weekly XP leaderboard was reset"), color=discord.Color.blue())
 
     @commands.command(hidden=True)
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def levelBackup(self, ctx):
         if ctx.author.id != 564798709045526528:
             return
@@ -259,7 +259,7 @@ class level(commands.Cog, name="levelling"):
         await ctx.send("Backup created")
 
     @commands.command(hidden=True)
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def removeweekly(self, ctx, user: discord.Member, xp: int):
         if 667953757954244628 in [z.id for z in user.roles]:
             return await ctx.send("Cannot remove XP from that user")
@@ -272,7 +272,7 @@ class level(commands.Cog, name="levelling"):
         await ctx.send(f"removed {xp} weekly xp from {user.mention}")
 
     @commands.command(hidden=True)
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def removeXP(self, ctx, user: discord.Member, xp: int):
         if 667953757954244628 in [z.id for z in user.roles]:
             return await ctx.send("Cannot remove XP from that user")
@@ -287,4 +287,4 @@ class level(commands.Cog, name="levelling"):
 
 
 def setup(bot):
-    bot.add_cog(level(bot, False))
+    bot.add_cog(Levelling(bot, False))
