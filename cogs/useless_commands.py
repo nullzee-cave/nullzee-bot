@@ -26,7 +26,7 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         
     @commands.command()
     async def gooby(self, ctx):
-        gooby = discord.Embed(author = "gooby", title = "gooby", description = "<:gooby:810130190197719050> gooby", footer = "gooby")
+        gooby = discord.Embed(title = "gooby", description = "<:gooby:810130190197719050> gooby")
         await ctx.send(embed = gooby)
 
     @commands.command()
