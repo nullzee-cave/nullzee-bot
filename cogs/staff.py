@@ -267,11 +267,14 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     async def blacklist(self, ctx):
         pass
     @blacklist.command(name="add")
+    @staff_only
     async def blist_add(self, ctx, member: discord.Member, command: str):
         command = command.replace(ctx.prefix, '')
         await userColl.update_one({"_id": str(member.id)}, {"$addToSet": {"command_blacklist": command}})
         await ctx.send(f"blacklisted `{member}` from using `{ctx.prefix}{command}`")
+    
     @blacklist.command(name="remove")
+    @staff_only
     async def blist_remove(self, ctx, member: discord.Member, command: str):
         command = command.replace(ctx.prefix, '')
         await userColl.update_one({"_id": str(member.id)}, {"$pull": {"command_blacklist": command}})
