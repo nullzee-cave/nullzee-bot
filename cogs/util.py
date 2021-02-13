@@ -356,62 +356,62 @@ class util(commands.Cog, name="Other"):
         embed.set_footer(text="Innacurate? Make sure all API settings are enabled", icon_url="https://cdn.discordapp.com/icons/667953033929293855/a_76e58197f9e2e51b8280aa70e31fbbe5.gif?size=1024")
         await ctx.send(embed=embed)
 
-    @commands.check(min_level(15))
-    @commands.cooldown(600, 1, BucketType.user)
-    @commands.guild_only()
-    @commands.command()
-    async def apply(self, ctx):
-        answers = {}
-        # questions = ["What level are you in Nullzee's Cave + state your time zone?",
-        #              "How long will you spend in the server + how old are you? (can reply with N/A)",
-        #              "Do you have any prior staffing experiences? How would you respond to someone 1. Spamming, 2. DM advertising, 3. Abusing power?",
-        #              "Why do you want to be a staff member?"
-        #              ]
-        questions = [
-            "What level are you in Nullzee's Cave and how many times have you been warned?",
-            "What timezone are you and how old are you?",
-            "How did you find Nullzee?",
-            "How many hours are you active a day?",
-            "Why do you want to be staff?",
-            "Have you had any previous experience as staff or own your own server? If so, please provide an invite link",
-            "If someone is spamming in general, how would you punish them?",
-            "If another staff member has done something you think is wrong, what would you do?",
-            "Someone has reported a DM Advertiser, what would you do?",
-            "What would you say your biggest weakness is when talking with people? (eg: staying interested, being formal, etc...)"
+#     @commands.check(min_level(15))
+#     @commands.cooldown(600, 1, BucketType.user)
+#     @commands.guild_only()
+#     @commands.command()
+#     async def apply(self, ctx):
+#         answers = {}
+#         # questions = ["What level are you in Nullzee's Cave + state your time zone?",
+#         #              "How long will you spend in the server + how old are you? (can reply with N/A)",
+#         #              "Do you have any prior staffing experiences? How would you respond to someone 1. Spamming, 2. DM advertising, 3. Abusing power?",
+#         #              "Why do you want to be a staff member?"
+#         #              ]
+#         questions = [
+#             "What level are you in Nullzee's Cave and how many times have you been warned?",
+#             "What timezone are you and how old are you?",
+#             "How did you find Nullzee?",
+#             "How many hours are you active a day?",
+#             "Why do you want to be staff?",
+#             "Have you had any previous experience as staff or own your own server? If so, please provide an invite link",
+#             "If someone is spamming in general, how would you punish them?",
+#             "If another staff member has done something you think is wrong, what would you do?",
+#             "Someone has reported a DM Advertiser, what would you do?",
+#             "What would you say your biggest weakness is when talking with people? (eg: staying interested, being formal, etc...)"
 
-        ]
-        try:
-            first_message = await ctx.author.send("Welcome to the staff application process!")
-        except discord.Forbidden:
-            ctx.command.reset_cooldown(ctx)
-            return await ctx.send("I can't DM you! make sure you allow DMs for server members and that you haven't blocked me")
-        await ctx.send(f"{ctx.author.mention}, application started in DM!")
-        message_check = lambda message: message.channel == first_message.channel and message.author.id == ctx.author.id
-        for question in questions:
-            await ctx.author.send(question)
-            try:
-                answers[question] = (await self.bot.wait_for('message', check=message_check, timeout=600.0)).content
-            except asyncio.TimeoutError:
-                ctx.command.reset_cooldown(ctx)
-                return await ctx.author.send("application timed out")
-        confirmation_message = await ctx.author.send("Please confirm that the above information is correct and that you wish for this to be submitted as your staff application in Nullzee's cave discord server.")
-        await confirmation_message.add_reaction("✅")
-        await confirmation_message.add_reaction("❎")
-        try:
-            reaction, user = await self.bot.wait_for('reaction_add', check=lambda reaction, user: user.id == ctx.author.id and reaction.message.id == confirmation_message.id)
-        except asyncio.TimeoutError:
-            ctx.command.reset_cooldown(ctx)
-            return await ctx.author.send("application timed out")
-        if reaction.emoji == "❎":
-            ctx.command.reset_cooldown(ctx)
-            return await ctx.author.send("Application cancelled")
-        elif reaction.emoji == "✅":
-            embed = discord.Embed(title="Staff application", color=discord.Color.green()).set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-            embed.timestamp = datetime.datetime.now()
-            for answer in answers:
-                embed.add_field(name=answer, value=answers[answer], inline=False)
-            await ctx.guild.get_channel(700267342482898965).send(embed=embed)
-            await ctx.author.send("Application submitted, good luck!")
+#         ]
+#         try:
+#             first_message = await ctx.author.send("Welcome to the staff application process!")
+#         except discord.Forbidden:
+#             ctx.command.reset_cooldown(ctx)
+#             return await ctx.send("I can't DM you! make sure you allow DMs for server members and that you haven't blocked me")
+#         await ctx.send(f"{ctx.author.mention}, application started in DM!")
+#         message_check = lambda message: message.channel == first_message.channel and message.author.id == ctx.author.id
+#         for question in questions:
+#             await ctx.author.send(question)
+#             try:
+#                 answers[question] = (await self.bot.wait_for('message', check=message_check, timeout=600.0)).content
+#             except asyncio.TimeoutError:
+#                 ctx.command.reset_cooldown(ctx)
+#                 return await ctx.author.send("application timed out")
+#         confirmation_message = await ctx.author.send("Please confirm that the above information is correct and that you wish for this to be submitted as your staff application in Nullzee's cave discord server.")
+#         await confirmation_message.add_reaction("✅")
+#         await confirmation_message.add_reaction("❎")
+#         try:
+#             reaction, user = await self.bot.wait_for('reaction_add', check=lambda reaction, user: user.id == ctx.author.id and reaction.message.id == confirmation_message.id)
+#         except asyncio.TimeoutError:
+#             ctx.command.reset_cooldown(ctx)
+#             return await ctx.author.send("application timed out")
+#         if reaction.emoji == "❎":
+#             ctx.command.reset_cooldown(ctx)
+#             return await ctx.author.send("Application cancelled")
+#         elif reaction.emoji == "✅":
+#             embed = discord.Embed(title="Staff application", color=discord.Color.green()).set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+#             embed.timestamp = datetime.datetime.now()
+#             for answer in answers:
+#                 embed.add_field(name=answer, value=answers[answer], inline=False)
+#             await ctx.guild.get_channel(700267342482898965).send(embed=embed)
+#             await ctx.author.send("Application submitted, good luck!")
 
 
 
