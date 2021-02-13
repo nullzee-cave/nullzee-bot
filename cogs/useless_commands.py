@@ -23,6 +23,11 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
     @commands.command(aliases = ["x"])
     async def doubt(self, ctx):
         await ctx.send("<:Doubt:667984676744331283>")
+        
+    @commands.command()
+    async def gooby(self, ctx):
+        gooby = discord.Embed(author = "gooby", title = "gooby", description = "<:gooby:810130190197719050> gooby", footer = "gooby")
+        await ctx.send(embed = gooby)
 
     @commands.command()
     async def hug(self,ctx,member: discord.Member):
