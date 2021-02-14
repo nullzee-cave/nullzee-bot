@@ -12,6 +12,7 @@ import time
 import datetime
 from api_key import moderationColl, hypixel_api_key
 from helpers.utils import Embed
+from helpers.events import Emitter
 
 class util(commands.Cog, name="Other"):
     def __init__(self, bot, hidden):
@@ -81,6 +82,12 @@ class util(commands.Cog, name="Other"):
                 karma = upvotes[0] - downvotes[0]
                 if karma > 15:
                     await self.bot.get_guild(667953033929293855).get_channel(738506620098576434).send(embed=msg.embeds[0])
+                    try:
+                        ctx = await self.bot.get_context(msg)
+                        ctx.author = await commands.MemberConverter().convert(ctx, msg.embeds[0].author.name)
+                        await Emitter().emit("suggestion_stage_2", ctx)
+                    except commands.BadArgument:
+                        pass
                     killList.append(i)
                 elif downvotes > 8:
                     killList.append(i)

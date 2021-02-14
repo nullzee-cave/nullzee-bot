@@ -12,6 +12,7 @@ import os
 import datetime
 from EZPaginator import Paginator
 from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only
+from helpers.events import Emitter
 from api_key import userColl
 import pymongo
 
@@ -112,42 +113,46 @@ class Levelling(commands.Cog, name="levelling"):
                 multiplier = 1
             multiplier *= self.global_multiplier
             if message.attachments:
-                number = math.trunc(30 * multiplier)
+                exp = math.trunc(30 * multiplier)
             elif len("".join(message.content)) > 150:
-                number = math.trunc(50 * multiplier)
+                exp = math.trunc(50 * multiplier)
             else:
-                number = math.trunc(25 * multiplier)
-            userData = await self.add_experience(userData, message.author, number)
-            await self.level_up(message, userData, message.author)
+                exp = math.trunc(25 * multiplier)
 
-    async def add_experience(self, userData, user, exp):
-        if time.time() - userData["last_message"] > 30:
-            points_bonus = 1 if userData["experience"] > userData["last_points"] + 1000 else 0
-            await userColl.update_one({"_id": str(user.id)},
-                                      {"$inc": {"experience": exp, "weekly": exp, "points": points_bonus},
-                                       "$set": {"last_message": time.time(),
-                                                "last_points": userData["experience"] + exp if points_bonus else
-                                                userData["last_points"]}})
-            return await userColl.find_one({"_id": str(user.id)})
-        else:
-            return await userColl.find_one({"_id": str(user.id)})
+            if time.time() - userData["last_message"] > 30:
+                points_bonus = 1 if userData["experience"] > userData["last_points"] + 1000 else 0
+                if points_bonus:
+                    await Emitter().emit("point_earned", message, userData["points"]+1)
+                await Emitter().emit("experience_earned", message)
+                await userColl.update_one({"_id": str(message.author.id)},
+                                          {"$inc": {"experience": exp, "weekly": exp, "points": points_bonus},
+                                           "$set": {"last_message": time.time(),
+                                                    "last_points": userData["experience"] + exp if points_bonus else
+                                                    userData["last_points"]}})
+                userData = await userColl.find_one({"_id": str(message.author.id)})
+            else:
+                userData = await userColl.find_one({"_id": str(message.author.id)})
 
-    async def level_up(self, ctx, userData, user):
-        experience = userData["experience"]
-        lvl_start = userData["level"]
-        lvl_end = 50 * (lvl_start ** 1.5)
-        if experience > lvl_end:
-            await userColl.update_one({"_id": str(user.id)}, {"$inc": {"level": 1}, "$set": {"experience": 0,
-                                                                                             "last_points": 0 - (
+            experience = userData["experience"]
+            lvl_start = userData["level"]
+            lvl_end = 50 * (lvl_start ** 1.5)
+            if experience > lvl_end:
+                await Emitter().emit("level_up", message, lvl_start + 1)
+                await userColl.update_one({"_id": str(message.author.id)}, {"$inc": {"level": 1}, "$set": {"experience": 0,
+                                                                                                 "last_points": 0 - (
                                                                                                          experience - (
-                                                                                                             userData[
-                                                                                                                 "last_points"] + 100))}})
-            await ctx.channel.send(f":tada: Congrats {user.mention}, you levelled up to level {lvl_start + 1}!")
-            with open('levelroles.json') as f:
-                levelroles = json.load(f)["levels"]
-            if str(lvl_start + 1) in levelroles:
-                role = ctx.guild.get_role(int(levelroles[str(lvl_start + 1)]))
-                await user.add_roles(role)
+                                                                                                         userData[
+                                                                                                             "last_points"] + 100))}})
+                await message.channel.send(f":tada: Congrats {message.author.mention}, you levelled up to level {lvl_start + 1}!")
+                with open('levelroles.json') as f:
+                    levelroles = json.load(f)["levels"]
+                if str(lvl_start + 1) in levelroles:
+                    role = message.guild.get_role(int(levelroles[str(lvl_start + 1)]))
+                    await message.author.add_roles(role)
+
+
+
+
 
     @commands.command(aliases=['level', "lvl"])
     async def rank(self, ctx, user: discord.Member = None):

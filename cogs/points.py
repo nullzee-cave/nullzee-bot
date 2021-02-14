@@ -3,6 +3,7 @@ import discord
 from api_key import userColl
 from helpers.utils import get_user, getFileJson, saveFileJson, Embed
 from perks.perkSystem import PerkConverter, perk_list
+from helpers.events import Emitter
 from perks import perks
 
 
@@ -37,6 +38,7 @@ class Points(commands.Cog):
             await item.on_buy(ctx, arg)
             await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": {"points": -item.cost}})
             await ctx.send(f"successfully bought `{item.name}` for `{item.cost}` points")
+            await Emitter().emit("points_spent", ctx, item.name)
         else:
             return await ctx.send("You cannot afford this!")
 
