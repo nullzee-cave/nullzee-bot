@@ -178,7 +178,7 @@ async def restrict_command_usage(ctx):
     user = await get_user(ctx.author)
     not_blacklist = not("command_blacklist" in user and ctx.command.name in user["command_blacklist"])
     user_bypass = ctx.author.guild_permissions.manage_messages or user["level"] >= 50
-    booster_bypass = (roles := [z.id for z in ctx.author.roles]) and 706285767898431500 in roles or 668724083718094869 in roles
+    role_bypass = (roles := [z.id for z in ctx.author.roles]) and 706285767898431500 in roles or 668724083718094869 in roles or 668736363297898506 in roles
     channel_allowed = ctx.channel.id in [668914397531602944]
     command_bypass = ctx.command.name in ["stab", "hug", "f", "claimroles", "purchase", "report", "sbinfo", "smh", "bonk"]
     cog_bypass = ctx.command.cog.qualified_name in ["Useless Commands"] if ctx.command.cog else False
