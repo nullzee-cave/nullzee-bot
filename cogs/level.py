@@ -198,9 +198,18 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.command(aliases=["vclb"])
     @commands.guild_only()
     async def vcleaderboard(self, ctx):
-        """View the server's weekly XP leaderboard"""
+        """View the server's vc minute leaderboard"""
         embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('vc_minutes', pymongo.DESCENDING)], key="vc_minutes", suffix=" minutes",
                                    title="Voice Activity leaderboard", field_name="Talk in a voice channel to gain time")
+        msg = await ctx.send(embed=embeds[0])
+        await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
+    
+    @commands.command(aliases=["plb"])
+    @commands.guild_only()
+    async def pointsleaderboard(self, ctx):
+        """View the server's points leaderboard"""
+        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('points', pymongo.DESCENDING)], key="pointss", suffix=" points",
+                                   title="Points leaderboard", field_name="Gain 1 point every 1000 XP")
         msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
