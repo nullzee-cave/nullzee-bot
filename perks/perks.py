@@ -75,7 +75,10 @@ async def staffNickChange(ctx, arg):
         await ctx.send('get banned nerd')
     else:
         try:
-            await member.edit(nick=f'✰ {content}')
+            if ctx.guild.get_role(667953757954244628) in member.roles:
+                await member.edit(nick=f'✰ {content}')
+            else:
+                await member.edit(nick=f'{content}')
             await member.send(f'{ctx.author} changed your nick to {content} btw')
         except discord.Forbidden:
             raise PerkError(msg="I can't change an admin's nick!")
