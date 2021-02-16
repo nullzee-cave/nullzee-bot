@@ -208,7 +208,7 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.guild_only()
     async def pointsleaderboard(self, ctx):
         """View the server's points leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('points', pymongo.DESCENDING)], key="pointss", suffix=" points",
+        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('points', pymongo.DESCENDING)], key="points", suffix=" points",
                                    title="Points leaderboard", field_name="Gain 1 point every 1000 XP")
         msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
