@@ -182,9 +182,9 @@ class Levelling(commands.Cog, name="levelling"):
                 return round(50*(x**1.5))
             desiredTotalXP = level_xp(wantedLevel)
             embed = await Embed(user, title = "XP Calculator").user_colour()
-            embed.add_field(name = "Desired Level", value = f"XP until desired level: {sum([round(50*z**1.5) for z in range(level, wantedLevel)])-xp}\nXP of desired level: {level_xp(wantedLevel)}")
-            embed.add_field(name = "Total XP Stats", value = f"Total XP of desired level: {total_xp(wantedLevel)}\nYour total XP: {total_xp(level)}", inline = False)
-            embed.add_field(name = "Next Level", value = f"XP until next level: {level_xp(level+1)-xp}\nXP of next level: {level_xp(level+1)}", inline = False)
+            embed.add_field(name = "Desired Level", value = f"XP until desired level: {(sum([round(50*z**1.5) for z in range(level, wantedLevel)])-xp):,}\nXP of desired level: {(level_xp(wantedLevel)):,}")
+            embed.add_field(name = "Total XP Stats", value = f"Total XP of desired level: {(total_xp(wantedLevel)):,}\nYour total XP: {(total_xp(level)):,}", inline = False)
+            embed.add_field(name = "Next Level", value = f"XP until next level: {(level_xp(level+1)-xp):,}\nXP of next level: {(level_xp(level+1)):,}", inline = False)
             await ctx.send(embed = embed)
 
     @commands.command(aliases=["wk"])
