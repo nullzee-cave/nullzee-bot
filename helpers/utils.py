@@ -37,7 +37,7 @@ def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="
     embed_index = 0
     for i, entry in enumerate(entries):
         values[embed_index] += entry
-        if not i % 15 and i != 0:
+        if not ((i+1) % 15) and i != 0:
             embeds.append(discord.Embed(colour=0x00FF00).set_author(name=title, icon_url=guild.icon_url))
             embed_index += 1
             values.append("")
