@@ -80,7 +80,7 @@ def chatEmbed(ctx, payload):
 
 async def end_log(bot, payload, *, moderator, reason):
     user = bot.get_user(payload["offender_id"])
-    embed = discord.Embed(title=f"Un{payload['type']}", colour=discord.Colour.green()).set_author(name=(user or "not found"), icon_url=(user.avatar_url or ""))
+    embed = discord.Embed(title=f"Un{payload['type']}", colour=discord.Colour.green()).set_author(name=(user or "not found"), icon_url=(user.avatar_url if hasattr(user, "avatar_url") else ""))
     embed.add_field(name="Reason", value=reason, inline=False)
     embed.add_field(name="Moderator", value=moderator, inline=False)
     await bot.get_guild(GUILD_ID).get_channel(LOG_CHANNEL_ID).send(embed=embed)
