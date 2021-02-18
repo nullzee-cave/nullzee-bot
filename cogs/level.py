@@ -22,6 +22,9 @@ class Levelling(commands.Cog, name="levelling"):
         self.bot: commands.Bot = bot
         self.update_multipliers()
         self.vc_tracker.start()
+    
+    def cog_unload(self):
+        self.vc_tracker.cancel()
 
     @tasks.loop(minutes=1)
     async def vc_tracker(self):
