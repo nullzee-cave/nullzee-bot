@@ -192,7 +192,10 @@ class util(commands.Cog, name="Other"):
 
     @commands.command()
     async def report(self, ctx, message: discord.Message, *, reason:str=None):
-        await ctx.message.delete()
+        try:
+            await ctx.message.delete()
+        except:
+            pass
         embed = discord.Embed(title="New report", colour=discord.Color.red(), url=message.jump_url, description=f"reason: {reason}" if reason else "").add_field(name="Message Content", value=message.content, inline=False).add_field(name="reported by", value=f"{ctx.author.mention} ({ctx.author})", inline=False).set_author(name=message.author, icon_url=message.author.avatar_url)
         if message.attachments:
             embed.set_image(url=message.attachments[0].url)
