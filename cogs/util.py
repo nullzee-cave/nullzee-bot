@@ -162,9 +162,8 @@ class util(commands.Cog, name="Other"):
         embed.add_field(name="`For Nitro Boosting You Can Get`", value="""- Access to <#674311689738649600>
 - A message posted in <#714073835791712267>
 - The Nitro Booster (rich) role
-- Role is positioned under @Null
 - Access to all level restricted commands
-- Access to all giveaways
+- The ability to use commands in all channels
 """, inline=False)
         embed.set_thumbnail(url="https://images-ext-1.discordapp.net/external/PbC_AHw6x6OR_5a6hpvuLTP6nBEnpc5e-ftbgOx9oks/https/i.ytimg.com/vi/ZyX7U78keu0/maxresdefault.jpg?width=960&height=540")
         await ctx.send(embed=embed)
