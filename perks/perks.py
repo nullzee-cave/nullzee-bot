@@ -64,6 +64,8 @@ async def staffNickChange(ctx, arg):
     await ctx.send("What do you want to change their nick to?")
     if not member.guild_permissions.manage_messages:
         raise PerkError(msg="That user is not a staff member!")
+    if member.bot:
+        raise PerkError(msg="You cannot rename a bot!")
     try:
         nickChange = await ctx.bot.wait_for('message', check=lambda msg: msg.channel.id == ctx.channel.id and msg.author.id == ctx.author.id)
     except asyncio.TimeoutError:
