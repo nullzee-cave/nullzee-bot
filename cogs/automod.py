@@ -50,7 +50,7 @@ class Automod(commands.Cog): # this is for timed punishments, removing warns etc
                 else:
                     continue
                 await ctx.invoke(self.bot.get_command("report"), message,
-                                 reason=f"{moderationUtils.PAST_PARTICIPLES[config['badWords'][word]]} by automod for this message")
+                                 reason=f"{moderationUtils.PAST_PARTICIPLES[config['badWords'][word]]} by automod for this message in {ctx.channel.mention}")
 
 
     @tasks.loop(minutes=1)
