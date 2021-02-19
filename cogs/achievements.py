@@ -21,7 +21,7 @@ class ShallowContext:
     async def send(self, *args, **kwargs):
         return await self.channel.send(*args, **kwargs)
 
-class Achivements(commands.Cog):
+class Achievements(commands.Cog):
 
     def __init__(self, bot):
         self.hidden = True
@@ -43,4 +43,4 @@ class Achivements(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Achivements(bot))
+    bot.add_cog(Achievements(bot))
