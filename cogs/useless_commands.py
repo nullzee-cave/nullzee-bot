@@ -71,7 +71,7 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
     
     @commands.command()
     async def crikey(self, ctx):
-        await ctx.send(embed = discord.Embed(description = "crikey", footer = "pls dm qwerety#2929 a good crikey emote so the command can be finished"))
+        await ctx.send(embed = discord.Embed(title = "crikey", description = "<:crikey:812430464785580062> crikey"))
         
     @commands.command()
     async def boop(self, ctx, member: discord.Member):
