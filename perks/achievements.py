@@ -3,7 +3,7 @@ from helpers.events import Subscriber
 from helpers.utils import get_user
 from helpers.constants import Role
 
-ACHIEVEMENTS = {
+achievements = {
     "Hello, World!": {
         "listeners": {
             "message": lambda msg: not msg.author.bot
@@ -118,22 +118,22 @@ ACHIEVEMENTS = {
 async def award_achievement(ctx, data, name):
     if name in data["achievements"]:
         return
-    if "cb" in ACHIEVEMENTS[name]:
-        await ACHIEVEMENTS[name]["cb"](ctx)
-    if "response" in ACHIEVEMENTS[name]:
-        await ctx.send(ACHIEVEMENTS[name]["response"].format(ctx))
+    if "cb" in achievements[name]:
+        await achievements[name]["cb"](ctx)
+    if "response" in achievements[name]:
+        await ctx.send(achievements[name]["response"].format(ctx))
     else:
         await ctx.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`!")
     await userColl.update_one({"_id": str(ctx.author.id)}, {"$push": {"achievements": name}})
 
 
 def listeners_for(event):
-    return [z for z in ACHIEVEMENTS if "listeners" in ACHIEVEMENTS[z] and event in ACHIEVEMENTS[z]["listeners"]]
+    return [z for z in achievements if "listeners" in achievements[z] and event in achievements[z]["listeners"]]
 
 
 @Subscriber().listen_all()
 async def listen(event, ctx, *args, **kwargs):
     user_data = kwargs.get("user_data", await get_user(ctx.author))
     for achievement in listeners_for(event):
-        if ACHIEVEMENTS[achievement]["listeners"][event](ctx, *args, **kwargs):
+        if achievements[achievement]["listeners"][event](ctx, *args, **kwargs):
             await award_achievement(ctx, user_data, achievement)
