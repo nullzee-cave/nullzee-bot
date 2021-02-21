@@ -62,7 +62,7 @@ achievements = {
         "listeners": {
             "points_spent": lambda _, name: name == "staffNickChange"
         },
-        "description": "Purchase `staffNickChange` from `-shop`"
+        "description": "Purchase staffNickChange from -shop"
     },
     "Frugal I": {
         "listeners": {
@@ -86,7 +86,7 @@ achievements = {
         "listeners": {
             "points_spent": lambda _, name: name == "deadChatPing"
         },
-        "description": "Purchase `deadChatPing` from `-shop`"
+        "description": "Purchase deadChatPing from -shop"
     },
     "Up to date": {
         "listeners": {
