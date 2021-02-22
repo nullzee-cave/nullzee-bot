@@ -53,8 +53,8 @@ class Levelling(commands.Cog, name="levelling"):
         if before.pending and not after.pending:
             with open('levelroles.json') as f:
                 levelroles = json.load(f)["levels"]
-            roles = []
-            userData = await userColl.find_one({"_id": str(member.id)})
+            roles = [after.guild.get_role(738080587000184923)]
+            userData = await userColl.find_one({"_id": str(after.id)})
             if not userData:
                 return
             level = userData["level"]
@@ -62,16 +62,16 @@ class Levelling(commands.Cog, name="levelling"):
                 if int(lr) > level:
                     break
                 else:
-                    roles.append(member.guild.get_role(int(levelroles[str(lr)])))
+                    roles.append(after.guild.get_role(int(levelroles[str(lr)])))
             if not roles:
                 return
-            await member.add_roles(*roles)
+            await after.add_roles(*roles)
 
-        def update_multipliers(self):
-            with open('config.json') as f:
-                config = json.load(f)
-            self.multipliers = config["multipliers"]
-            self.global_multiplier = config["global_multiplier"]
+    def update_multipliers(self):
+        with open('config.json') as f:
+            config = json.load(f)
+        self.multipliers = config["multipliers"]
+        self.global_multiplier = config["global_multiplier"]
 
     @commands.command()
     @staff_only

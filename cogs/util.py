@@ -174,9 +174,7 @@ class util(commands.Cog, name="Other"):
     async def on_member_join(self, member):
         if member.guild.id == 667953033929293855:
             channel = member.guild.get_channel(667955504651304999)
-            await channel.send(f"Welcome to Nullzee's Cave, {member.mention}, You will be able to talk after 10mins, please use this time to look at the <#667966078596546580> and ensure you understand them. :heart: :wave:")
-            await asyncio.sleep(600)
-            await member.add_roles(member.guild.get_role(738080587000184923))
+            await channel.send(f"Welcome to Nullzee's Cave, {member.mention}, Make sure to read <#667966078596546580> carefully and ensure you understand them. We hope you enjoy your time here! :heart: :wave:")
 
 
     @tasks.loop(minutes=30)
