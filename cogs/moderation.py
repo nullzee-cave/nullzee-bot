@@ -52,7 +52,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
                                       reason=reason)
         await ctx.send(embed=discord.Embed(description=f"unmuted {user}", colour=discord.Colour.green()))
 
-    @commands.command()
+    @commands.command(aliases=["yeet"])
     @staff_only
     async def ban(self, ctx, user: discord.Member, _time: typing.Optional[TimeConverter]=None, *, reason: str = None):
         if user.guild_permissions.manage_messages:
