@@ -6,6 +6,7 @@ import json
 import datetime
 import random
 import string
+import collections
 from discord.ext import commands
 
 staff_only = commands.check(lambda ctx: ctx.guild and ctx.guild.id == 667953033929293855 and (685027474522112000 in
@@ -48,6 +49,13 @@ def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="
                                                                           inline=False)
     return embeds
 
+def deep_update_dict(d, u):
+    for k, v in u.items():
+        if isinstance(v, collections.abc.Mapping):
+            d[k] = deep_update_dict(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d
 
 def nanoId(length=20):
     return ''.join(

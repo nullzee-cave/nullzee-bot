@@ -1,10 +1,31 @@
-from achievements.achievements import achievements
+from achievements.achievements import achievements, ACHIEVEMENT_BORDERS
+from helpers.utils import deep_update_dict
 
-from PIL import Image, ImageDraw, ImageFont
+from collections import OrderedDict
+import discord
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from math import ceil
+import aiohttp
+import datetime
+import io
+import os
+import json
+import time
 
 font_0 = ImageFont.truetype('Roboto-Medium.ttf', 20)
 font_1 = ImageFont.truetype('Roboto-thin.ttf', 15)
+
+
+def mask_circle_transparent(pil_img, blur_radius, offset=0):
+    offset = blur_radius * 2 + offset
+    mask = Image.new("L", pil_img.size, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((offset, offset, pil_img.size[0] - offset, pil_img.size[1] - offset), fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(blur_radius))
+
+    result = pil_img.copy()
+    result.putalpha(mask)
+    return result
 
 
 def achievement_box(image, x: int, y: int, name: str, definition: str):
@@ -34,3 +55,78 @@ def achievement_page(page, filename="image.png"):
     else:
         add_page(image, page, 3)
     return image.save(filename, format='PNG')
+
+
+def timeline_card(image, draw, achievement, timestamp, x, y):
+    draw.rectangle([(x, y), (x + 400, y + 75)], 'white', 'black')
+    draw.text((x + 10, y + 10), achievement, 'gold', font=font_0)
+    draw.text((x + 10, y + 45),
+              f"achieved at {datetime.datetime.fromtimestamp(timestamp).strftime('%d/%m/%y %H:%M')}",
+              'black', font=font_1)
+    return image
+
+
+async def achievement_timeline(user: discord.User, payload, page=1):
+
+    # constants
+    achieved = OrderedDict([(z, payload["achievements"][z])
+                            for z in sorted(list(payload["achievements"].keys()),
+                                            key=lambda x: payload["achievements"][x])])
+    last_page = ceil(len(payload["achievements"]) / 4)
+    mod = len(payload["achievements"]) % 4
+    slice_start, slice_end = (-mod or -4, None) if page == last_page else (4 * (page-1), 4 * (page-1) + 4)
+    achieved_page = {k: v for k, v in list(achieved.items())[slice_start:slice_end]}
+    user_page_path = f"assets/user_achievements/{user.id}"
+
+    if page < 0 or page > last_page:
+        raise ValueError
+
+    # serve from cache
+    json_cache = {}
+    if f"{user.id}.json" in os.listdir("assets/user_achievements"):
+        with open(f"{user_page_path}.json") as f:
+            json_cache = json.load(f)
+        if str(page) in json_cache["achievements"]\
+                and json_cache["achievements"][str(page)] == list(achieved_page.keys())\
+                and json_cache["uname"] == str(user)\
+                and json_cache["avatar"] == str(user.avatar_url):
+            return
+
+    # generation
+    image = Image.open(f"assets/achievement_backgrounds/{payload['background']}")
+    async with aiohttp.ClientSession() as session:
+        async with session.get(str(user.avatar_url).replace('gif', 'png')) as resp:
+            avatar = Image.open(io.BytesIO(await resp.content.read()))
+    x, y = 50, 100
+    draw = ImageDraw.Draw(image)
+    draw.rectangle([(x, y - 50), (x + 400, y + 10)])
+    avatar = mask_circle_transparent(avatar, 4)
+    avatar = avatar.resize((50, 50))
+    image.paste(avatar, (60, 55), mask=avatar)
+    draw.text((x + 80, 70), str(user), 'black', font=font_0)
+    percentage_achieved = len(payload["achievements"]) / len(achievements)
+    border = None
+    for i, kv in enumerate(ACHIEVEMENT_BORDERS.items()):
+        milestone, border_type = kv
+        if percentage_achieved >= milestone:
+            border = border_type
+    if border:
+        border = Image.open(f"assets/achievement_borders/{border}.png").convert("RGBA")
+        image.paste(border, (0, 0), border)
+
+    for i, achievement in enumerate(achieved_page, 1):
+        image = timeline_card(image, draw, achievement, achieved_page[achievement], x, y * i + 50)
+
+    # save to cache
+    json_cache = deep_update_dict(json_cache, {
+            "image_files": [f"{user_page_path}_{page}.png"],
+            "uname": str(user),
+            "avatar": str(user.avatar_url),
+            "achievements": {
+              str(page): list(achieved_page.keys())
+            },
+            "last_called": time.time()
+    })
+    with open(f"{user_page_path}.json", "w") as f:
+        json.dump(json_cache, f)
+    return image.save(f"{user_page_path}_{page}.png", format="PNG")

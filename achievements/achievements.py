@@ -3,6 +3,12 @@ from helpers.events import Subscriber
 from helpers.utils import get_user
 from helpers.constants import Role
 
+ACHIEVEMENT_BORDERS = {
+    0.2: "bronze",
+    0.5: "silver",
+    0.8: "gold"
+}
+
 achievements = {
     "Hello, World!": {
         "listeners": {
