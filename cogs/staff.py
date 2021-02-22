@@ -41,7 +41,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         await guild.leave()
         await self.bot.get_user(564798709045526528).send(embed=embed)
     
-    @commands.command
+    @commands.command()
     @staff_only
     async def pending(self, ctx, user: discord.Member=None):
         if user = None:
