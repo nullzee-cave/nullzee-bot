@@ -49,29 +49,29 @@ class Levelling(commands.Cog, name="levelling"):
             colour=0x00ff00))
 
     @commands.Cog.listener()
-    async def on_member_join(self, member):
-        with open('levelroles.json') as f:
-            levelroles = json.load(f)["levels"]
-        roles = []
-        userData = await userColl.find_one({"_id": str(member.id)})
-        if not userData:
-            return
-        level = userData["level"]
-        for lr in levelroles:
-            if int(lr) > level:
-                break
-            else:
-                roles.append(member.guild.get_role(int(levelroles[str(lr)])))
-        if not roles:
-            return
-        await asyncio.sleep(600)
-        await member.add_roles(*roles)
+    async def on_member_update(self, before, after):
+        if before.pending and not after.pending:
+            with open('levelroles.json') as f:
+                levelroles = json.load(f)["levels"]
+            roles = []
+            userData = await userColl.find_one({"_id": str(member.id)})
+            if not userData:
+                return
+            level = userData["level"]
+            for lr in levelroles:
+                if int(lr) > level:
+                    break
+                else:
+                    roles.append(member.guild.get_role(int(levelroles[str(lr)])))
+            if not roles:
+                return
+            await member.add_roles(*roles)
 
-    def update_multipliers(self):
-        with open('config.json') as f:
-            config = json.load(f)
-        self.multipliers = config["multipliers"]
-        self.global_multiplier = config["global_multiplier"]
+        def update_multipliers(self):
+            with open('config.json') as f:
+                config = json.load(f)
+            self.multipliers = config["multipliers"]
+            self.global_multiplier = config["global_multiplier"]
 
     @commands.command()
     @staff_only
