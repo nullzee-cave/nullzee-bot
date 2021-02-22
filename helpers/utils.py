@@ -9,9 +9,10 @@ import string
 from discord.ext import commands
 
 staff_only = commands.check(lambda ctx: ctx.guild and ctx.guild.id == 667953033929293855 and (685027474522112000 in
-                                                                     (roles := [z.id for z in ctx.author.roles]) or
-                                                                     667953757954244628 in roles or
-                                                                     675031583954173986 in roles))
+                                                                                              (roles := [z.id for z in
+                                                                                                         ctx.author.roles]) or
+                                                                                              667953757954244628 in roles or
+                                                                                              675031583954173986 in roles))
 
 
 async def get_user(user):
@@ -37,7 +38,7 @@ def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="
     embed_index = 0
     for i, entry in enumerate(entries):
         values[embed_index] += entry
-        if not ((i+1) % 15) and i != 0:
+        if not ((i + 1) % 15) and i != 0:
             embeds.append(discord.Embed(colour=0x00FF00).set_author(name=title, icon_url=guild.icon_url))
             embed_index += 1
             values.append("")
@@ -61,6 +62,26 @@ def getFileJson(filename):
 def saveFileJson(data, filename):
     with open(f"{filename}.json", 'w') as f:
         json.dump(data, f)
+
+
+class RoleConverter(commands.Converter):
+    abbreviations = {"vc lord": 682656964123295792, "godly giveaway donator": 681900556788301843}
+
+    async def convert(self, ctx, argument) -> discord.Role:
+        role = None
+        try:
+            role = await commands.RoleConverter().convert(ctx, argument)
+        except commands.RoleNotFound:
+            if argument in self.abbreviations:
+                role = ctx.guild.get_role(self.abbreviations[argument])
+            else:
+                role_list_lower = {z.name.lower(): z for z in ctx.guild.roles}
+                if argument in role_list_lower:
+                    role = role_list_lower[argument]
+        finally:
+            if role:
+                return role
+            raise commands.RoleNotFound(argument)
 
 
 class Embed(discord.Embed):

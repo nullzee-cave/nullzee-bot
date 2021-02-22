@@ -2,6 +2,7 @@ api_key.py
 backups/*
 *.json
 .idea/*
+venv/*
 __pycache__/*
 cogs/__pycache__/*
 helpers/__pycache__/*

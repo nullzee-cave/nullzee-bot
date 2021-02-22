@@ -4,7 +4,7 @@ from discord.ext import commands
 import json
 import time
 import datetime
-from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only
+from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only, RoleConverter
 from helpers import moderationUtils
 import asyncio
 from api_key import moderationColl, userColl
@@ -86,77 +86,34 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
 
     @commands.command()
     @staff_only
-    async def role(self, ctx, user: discord.Member, *, role: str):
-        if role.lower() == "muted":
-            return await ctx.send("no.")
-        rolelist = {z.name.lower(): z.id for z in ctx.guild.roles}
-        abbreviations = {"vc lord": 682656964123295792, "godly giveaway donator": 681900556788301843}
-        if role.lower() in rolelist:
-            role = ctx.guild.get_role(rolelist[role.lower()])
-            if role.permissions.manage_messages or role.permissions.administrator:
-                await ctx.send("You are not allowed to give that role")
-                return
-            try:
-                await user.add_roles(role)
-            except discord.Forbidden:
-                await ctx.send("I am not allowed to assign that role to that user")
-                return
-            chatembed = discord.Embed(title="Role added :scroll:",
+    async def role(self, ctx, user: discord.Member, *, role: RoleConverter):
+
+        if role.permissions.manage_messages or role.permissions.administrator or role.name.lower() == "muted":
+            return await ctx.send("You are not allowed to give that role")
+        try:
+            await user.add_roles(role, reason=f"Given by {ctx.author}")
+            await ctx.send(embed=discord.Embed(title="Role added :scroll:",
                                       description=f":white_check_mark: Gave {role.mention} to {user.mention}",
-                                      color=0xfb00fd)
-            # chatembed.set_thumbnail(url="https://media1.tenor.com/images/ff7606164243cc6032f5769b5c5b76cd/tenor.gif?itemid=16266330")
-            # role = discord.utils.get(ctx.guild.roles, name=role)
-            await ctx.send(embed=chatembed)
+                                      colour=0xfb00fd))
             await ctx.message.delete()
-            return
-        elif role.lower() in abbreviations:
-            role = ctx.guild.get_role(abbreviations[role])
-            try:
-                await user.add_roles(role)
-            except discord.Forbidden:
-                await ctx.send("I am not allowed to assign that role to that user")
-                return
-            chatembed = discord.Embed(title="Role added :scroll:",
-                                      description=f":white_check_mark: Gave {role.mention} to {user.mention}",
-                                      color=0xfb00fd)
-            await ctx.send(embed=chatembed)
-            await ctx.message.delete()
-            return
-        else:
-            embed = discord.Embed(title=":x: Adding role failed",
-                                  description=f"Correct Usage: `-role <@user> <rolename>`", color=0xff0000)
-            embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-            await ctx.send(embed=embed)
-            return
+        except discord.Forbidden:
+            return await ctx.send("I do not have permission to give that role to that user")
 
     @commands.command()
     @staff_only
-    async def removerole(self, ctx, user: discord.Member, *, role: str):
-        if role.lower() == "muted":
-            return await ctx.send("no.")
-        rolelist = {z.name.lower(): z.id for z in ctx.guild.roles}
-        if role.lower() in rolelist:
-            role = ctx.guild.get_role(rolelist[role.lower()])
-            if role.permissions.administrator or role.permissions.manage_messages:
-                await ctx.send("You are not allowed to remove that role")
-                return
-            try:
-                await user.remove_roles(role)
-            except discord.Forbidden:
-                await ctx.send("I am not allowed to remove that role from that user")
-                return
-            chatembed = discord.Embed(title="Role removed :scroll:",
+    async def removerole(self, ctx, user: discord.Member, *, role: RoleConverter):
+
+        if role.permissions.manage_messages or role.permissions.administrator or role.name.lower() == "muted":
+            return await ctx.send("You are not allowed to remove that role")
+        try:
+            await user.remove_roles(role, reason=f"Removed by {ctx.author}")
+            await ctx.send(embed=discord.Embed(title="Role removed :scroll:",
                                       description=f":white_check_mark: removed {role.mention} from {user.mention}",
-                                      color=0xfb00fd)
-            await ctx.send(embed=chatembed)
+                                      color=0xfb00fd))
             await ctx.message.delete()
-            return
-        else:
-            embed = discord.Embed(title=":x: removing role failed",
-                                  description=f"Correct Usage: `-removerole <@user> <rolename>`", color=0xff0000)
-            embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-            await ctx.send(embed=embed)
-            return
+        except discord.Forbidden:
+            return await ctx.send("I do not have permission to remove that role from that user")
+
 
     @commands.command(aliases=["star", "pin"])
     @commands.has_guild_permissions(manage_messages=True)
