@@ -54,7 +54,7 @@ class Levelling(commands.Cog, name="levelling"):
             with open('levelroles.json') as f:
                 levelroles = json.load(f)["levels"]
             roles = []
-            userData = await userColl.find_one({"_id": str(member.id)})
+            userData = await userColl.find_one({"_id": str(after.id)})
             if not userData:
                 return
             level = userData["level"]
@@ -62,10 +62,10 @@ class Levelling(commands.Cog, name="levelling"):
                 if int(lr) > level:
                     break
                 else:
-                    roles.append(member.guild.get_role(int(levelroles[str(lr)])))
+                    roles.append(after.guild.get_role(int(levelroles[str(lr)])))
             if not roles:
                 return
-            await member.add_roles(*roles)
+            await after.add_roles(*roles)
 
         def update_multipliers(self):
             with open('config.json') as f:
