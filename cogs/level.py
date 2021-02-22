@@ -51,9 +51,10 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         if before.pending and not after.pending:
+            guild = self.bot.get_guild(667953033929293855)
             with open('levelroles.json') as f:
                 levelroles = json.load(f)["levels"]
-            roles = [after.guild.get_role(738080587000184923)]
+            roles = [guild.get_role(738080587000184923)]
             userData = await userColl.find_one({"_id": str(after.id)})
             if not userData:
                 return
@@ -62,7 +63,7 @@ class Levelling(commands.Cog, name="levelling"):
                 if int(lr) > level:
                     break
                 else:
-                    roles.append(after.guild.get_role(int(levelroles[str(lr)])))
+                    roles.append(guild.get_role(int(levelroles[str(lr)])))
             if not roles:
                 return
             await after.add_roles(*roles)
