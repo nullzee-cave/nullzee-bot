@@ -1,6 +1,7 @@
 from discord.ext import commands
 import discord
-from perks.achievements import achievements
+from achievements.achievements import achievements
+from achievements.images import achievement_page
 from helpers.events import Emitter
 from PIL import Image, ImageDraw, ImageFont
 from math import ceil
@@ -23,46 +24,17 @@ class ShallowContext:
     async def send(self, *args, **kwargs):
         return await self.channel.send(*args, **kwargs)
 
-font_0 = ImageFont.truetype('Roboto-Medium.ttf', 20)
-font_1 = ImageFont.truetype('Roboto-thin.ttf', 15)
-
-names = []
-descriptions = []
-for achievement in achievements:
-    names.append(achievement)
-    descriptions.append(achievements[achievement]["description"])
-
-def achievement_box(image, x: int, y: int, name: str, definition: str):
-    draw = ImageDraw.Draw(image)
-    draw.rectangle([(x, y), (x + 300, y + 100)], 'white', 'black')
-    draw.text((x + 10, y + 10), name, 'black', font=font_0)
-    draw.text((x + 10, y + 40), definition, 'black', font=font_1)
-
-def addPage(image, page: int, repeat: int):
-    xPos = 100
-    yPos = 100
-    loop = range(0, repeat)
-    for i in loop:
-        pageNum = ((page - 1) * 3) + i
-        achievement_box(image, xPos, yPos, names[pageNum], descriptions[pageNum])
-        yPos += 150
-
-def achievement_page(page):
-    lastPage = ceil(len(achievements) / 3)
-    mod = len(achievements) % 3
-    image = Image.new('RGBA', (500, 600), (0, 0, 0, 0))
-    if page == lastPage:
-        addPage(image, page, mod)
-    else:
-        addPage(image, page, 3)
-    return image.save('image.png', format='PNG')
-
 class Achievements(commands.Cog):
 
     def __init__(self, bot):
         self.hidden = True
         self.bot: commands.Bot = bot
         self.emitter = Emitter()
+        self.generate_static_pages()
+
+    def generate_static_pages(self):
+        for i in range(ceil(len(achievements)/3)):
+            achievement_page(i, f"assets/static_achievements/page_{i}.png")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -79,8 +51,9 @@ class Achievements(commands.Cog):
 
     @commands.command()
     async def achievement(self, ctx, page: int):
-        achievement_page(page)
-        await ctx.send(file=discord.File("image.png"))
+        achievement_page(page-1)
+        # await ctx.send(file=discord.File("image.png"))
+        await ctx.send(file=discord.File(f"assets/static_achievements/page_{page+1}.png"))
 
 
 def setup(bot):
