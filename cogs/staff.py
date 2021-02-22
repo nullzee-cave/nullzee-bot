@@ -40,6 +40,18 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             pass
         await guild.leave()
         await self.bot.get_user(564798709045526528).send(embed=embed)
+    
+    @commands.command
+    @staff_only
+    async def pending(self, ctx, user: discord.Member=None):
+        if user = None:
+            user = ctx.author
+        if user.pending:
+            return await ctx.send(f"{user.mention} is pending")
+        elif not user.pending:
+            return await ctx.send(f"{user.mention} is not pending")
+        else:
+            return await("If youre seeing this then idk what the heck happened, youve somehow managed to make a binary value not be true or false, congrats")
 
     @commands.command(aliases=["say"])
     @commands.has_guild_permissions(manage_messages=True)
