@@ -37,7 +37,9 @@ class util(commands.Cog, name="Other"):
     async def maths(self, ctx, *, expr:str):
         try:
             await ctx.send(f"{ctx.author.mention}: ```\n{mathterpreter.interpret(expr)}\n```")
-        except mathterpreter.MathSyntaxError as e:
+        except (mathterpreter.MathSyntaxError, OverflowError) as e:
+            if isinstance(e, OverflowError):
+                return await ctx.send(f"{ctx.author.mention}, an error occurred! Result too large")
             await ctx.send(f"{ctx.author.mention}, an error occurred! ```\n{e.reason}\n``` ```\n{e.visualisation}\n```")
 
     @commands.command()
