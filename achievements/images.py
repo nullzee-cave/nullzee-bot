@@ -35,31 +35,34 @@ def achievement_box(image, x: int, y: int, name: str, definition: str):
     draw.text((x + 10, y + 40), definition, 'black', font=font_1)
 
 
-def add_page(image, page: int, repeat: int):
+def add_page(image, page: int, repeat: int, total_pages):
     x_pos = 100
     y_pos = 100
     loop = range(0, repeat)
     for i in loop:
         page_num = ((page - 1) * 3) + i
-        name = list(achievements.keys())[page_num]
+        name = [k for k in achievements if "hidden" not in achievements[k]][page_num]
+        ImageDraw.Draw(image).text((x_pos, 540), f"page {page} of {total_pages}", 'black', font=font_1)
         achievement_box(image, x_pos, y_pos, name, achievements[name]["description"])
         y_pos += 150
 
 
 def achievement_page(page, filename="image.png"):
-    last_page = ceil(len(achievements) / 3)
-    mod = len(achievements) % 3
-    image = Image.new('RGBA', (500, 600), (0, 0, 0, 0))
+    visible_achievements = {k:v for k, v in achievements.items() if "hidden" not in v}
+    last_page = ceil(len(visible_achievements) / 3)
+    mod = len(visible_achievements) % 3
+    # image = Image.new('RGBA', (500, 600), (0, 0, 0, 0))
+    image = Image.open("assets/achievement_backgrounds/default_background.png")
     if page == last_page:
-        add_page(image, page, mod)
+        add_page(image, page, mod, last_page)
     else:
-        add_page(image, page, 3)
+        add_page(image, page, 3, last_page)
     return image.save(filename, format='PNG')
 
 
 def timeline_card(image, draw, achievement, timestamp, x, y):
     draw.rectangle([(x, y), (x + 400, y + 75)], 'white', 'black')
-    draw.text((x + 10, y + 10), achievement, 'gold', font=font_0)
+    draw.text((x + 10, y + 10), achievement, 'green', font=font_0)
     draw.text((x + 10, y + 45),
               f"achieved at {datetime.datetime.fromtimestamp(timestamp).strftime('%d/%m/%y %H:%M')}",
               'black', font=font_1)
@@ -85,7 +88,7 @@ async def achievement_timeline(user: discord.User, payload, page=1):
         if percentage_achieved >= milestone:
             border = border_type
 
-    if page < 0 or page > last_page:
+    if page < 1 or page > last_page:
         raise ValueError
 
     # serve from cache
@@ -107,15 +110,16 @@ async def achievement_timeline(user: discord.User, payload, page=1):
         async with session.get(str(user.avatar_url).replace('gif', 'png')) as resp:
             avatar = Image.open(io.BytesIO(await resp.content.read()))
     x, y = 50, 100
+    if border:
+        border_image = Image.open(f"assets/achievement_borders/{border}.png").convert("RGBA")
+        image.paste(border_image, (0, 0), border_image)
     draw = ImageDraw.Draw(image)
     draw.rectangle([(x, y - 50), (x + 400, y + 10)])
     avatar = mask_circle_transparent(avatar, 4)
     avatar = avatar.resize((50, 50))
     image.paste(avatar, (60, 55), mask=avatar)
     draw.text((x + 80, 70), str(user), 'black', font=font_0)
-    if border:
-        border_image = Image.open(f"assets/achievement_borders/{border}.png").convert("RGBA")
-        image.paste(border_image, (0, 0), border_image)
+    draw.text((x, 540), f"page {page} of {last_page}", 'black', font=font_1)
 
     for i, achievement in enumerate(achieved_page, 1):
         image = timeline_card(image, draw, achievement, achieved_page[achievement], x, y * i + 50)

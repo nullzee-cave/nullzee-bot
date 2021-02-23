@@ -3,7 +3,7 @@ import discord
 from achievements.achievements import achievements
 from achievements.images import achievement_page, achievement_timeline
 from helpers.events import Emitter
-from helpers.utils import get_user
+from helpers.utils import get_user, ShallowContext
 from math import ceil
 import typing
 import os
@@ -11,22 +11,7 @@ import json
 import time
 
 
-class ShallowContext:
-    def __init__(self):
-        self.channel = None
-        self.author = None
-        self.guild = None
 
-    @classmethod
-    async def create(cls, member: discord.Member):
-        self = cls()
-        self.channel = (member.dm_channel or await member.create_dm())
-        self.author = member
-        self.guild = member.guild
-        return self
-
-    async def send(self, *args, **kwargs):
-        return await self.channel.send(*args, **kwargs)
 
 
 class Achievements(commands.Cog):
@@ -43,7 +28,7 @@ class Achievements(commands.Cog):
 
     @tasks.loop(minutes=1)
     async def clear_image_cache(self):
-        for filename in os.listdir("assets/user_achievements"):
+        for filename in os.listdir("image_cache/user_achievements"):
             if filename.endswith(".json"):
                 with open(filename) as f:
                     cached_data = json.load(f)
@@ -53,12 +38,18 @@ class Achievements(commands.Cog):
                     os.remove(filename)
 
     def generate_static_pages(self):
-        for i in range(ceil(len(achievements) / 3)):
-            achievement_page(i, f"assets/static_achievements/page_{i}.png")
+        print(len({k:v for k, v in achievements.items() if "hidden" not in v}))
+        for i in range(ceil(len({k:v for k, v in achievements.items() if "hidden" not in v}) / 3)):
+            print(i)
+            achievement_page(i, f"image_cache/static_achievements/page_{i}.png")
 
     @commands.Cog.listener()
-    async def on_message(self, message):
-        await self.emitter.emit("message", await self.bot.get_context(message))
+    async def on_message(self, message: discord.Message):
+        ctx = await self.bot.get_context(message)
+        await self.emitter.emit("message", ctx)
+        if message.is_system() and "pinned a message to this channel" in message.system_content:
+            ctx.author = (await message.channel.pins())[-1].author
+            await self.emitter.emit("pinned_starred", ctx)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
@@ -71,8 +62,10 @@ class Achievements(commands.Cog):
 
     @commands.command()
     async def achievement(self, ctx, page: int):
-        achievement_page(page - 1)
-        await ctx.send(file=discord.File(f"assets/static_achievements/page_{page-1}.png"))
+        try:
+            await ctx.send(file=discord.File(f"image_cache/static_achievements/page_{page-1}.png"))
+        except FileNotFoundError:
+            await ctx.send("There aren't that many pages!")
 
     @commands.command()
     async def myachievements(self, ctx, user: typing.Optional[discord.Member]=None, page=1):

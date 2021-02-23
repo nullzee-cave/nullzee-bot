@@ -1,7 +1,7 @@
 from api_key import userColl
 from helpers.events import Subscriber
 from helpers.utils import get_user
-from helpers.constants import Role
+from helpers.constants import Role, Channel
 
 ACHIEVEMENT_BORDERS = {
     0.2: "bronze",
@@ -107,17 +107,43 @@ achievements = {
         },
         "description": "Get 15 more upvotes than downvotes on one of your suggestions"
     },
+    "Generous I": {
+        "listeners": {
+            "giveaway_create[donor]": lambda _, payload: payload["channel"] == Channel.MINI_GIVEAWAY
+        },
+        "description": "Donate for a mini-giveaway"
+    },
+    "Generous II": {
+        "listeners": {
+            "giveaway_create[donor]": lambda _, payload: payload["channel"] == Channel.GIVEAWAY
+        },
+        "description": "Donate for a large giveaway"
+    },
+    "Lucky!": {
+        "listeners": {
+            "giveaway_win": lambda ctx: ctx.channel.id == Channel.GIVEAWAY
+        },
+        "description": "Win a large giveaway"
+    },
+    "Funny": {
+        "listeners": {
+            "pinned_starred": lambda _: True
+        },
+        "description": "Have one of your messages pinned or starred"
+    },
+    "Establising Connections": {
+        "listeners": {},
+        "description": "Send a message in twitch chat after linking your twitch to your discord"
+    },
+    "Twitch Main": {
+        "listeners": {},
+        "description": "",
+        "hidden": True
+    }
+
     # TODO:
     #   Establishing Connections (*)
     #   Twitch Main (*)
-    #   funny
-    #   hilarious
-    #   helpful
-    #   leader
-    #   creative
-    #   Generous I
-    #   Generous II
-    #   Lucky!
 }
 
 

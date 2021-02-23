@@ -72,6 +72,25 @@ def saveFileJson(data, filename):
         json.dump(data, f)
 
 
+class ShallowContext:
+    def __init__(self):
+        self.channel = None
+        self.author = None
+        self.guild = None
+        self.__send_channel = None
+
+    @classmethod
+    async def create(cls, member: discord.Member):
+        self = cls()
+        self.channel = None
+        self.__send_channel = (member.dm_channel or await member.create_dm())
+        self.author = member
+        self.guild = member.guild
+        return self
+
+    async def send(self, *args, **kwargs):
+        return await self.__send_channel.send(*args, **kwargs)
+
 class Embed(discord.Embed):
     def __init__(self, user: discord.User, **kwargs):
         self.user = user

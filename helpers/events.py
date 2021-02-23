@@ -15,6 +15,9 @@ EVENTS = [
     "level_up", "command",
     "points_spent",
     "suggestion_stage_2",
+    "giveaway_start[donor]",
+    "giveaway_win",
+    "pinned_starred"
 ]
 
 

@@ -4,6 +4,8 @@ from discord.ext import commands
 import json
 import time
 import datetime
+
+from helpers.events import Emitter
 from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only
 from helpers import moderationUtils
 import asyncio
@@ -169,6 +171,8 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         star_message = await ctx.guild.get_channel(770316631829643275).send(embed=embed)
         await ctx.send(
             embed=await Embed(ctx.author, title="Added to starboard!", url=star_message.jump_url).user_colour())
+        ctx.author = msg.author
+        await Emitter().emit("pinned_starred", ctx)
 
     @commands.command()
     @staff_only
