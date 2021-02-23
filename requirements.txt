@@ -1,8 +1,8 @@
 discord.py
-discord
 dnspython
 motor
 requests
 aiohttp
 EZPaginator
 Pillow
+mathterpreter

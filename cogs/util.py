@@ -12,6 +12,7 @@ import time
 import datetime
 from api_key import moderationColl, hypixel_api_key
 from helpers.utils import Embed
+import mathterpreter
 
 class util(commands.Cog, name="Other"):
     def __init__(self, bot, hidden):
@@ -31,6 +32,13 @@ class util(commands.Cog, name="Other"):
     async def subcount(self, ctx):
         await ctx.send(embed=discord.Embed(title="Nullzee's YouTube stats", description=f"Subscribers: {int(self.sub_count['subscriberCount']):,}\nTotal Views: {int(self.sub_count['viewCount']):,}\nVideo count: {int(self.sub_count['videoCount']):,}", color=0x00FF00, url="https://youtube.com/nullzee").set_thumbnail(url="https://cdn.discordapp.com/avatars/165629105541349376/2d7ff05116b8930a2fa2bf22bdb119c7.webp?size=1024"))
         self.updateSubCount()
+
+    @commands.command(aliases=["calc", "math"])
+    async def maths(self, ctx, *, expr:str):
+        try:
+            await ctx.send(f"{ctx.author.mention}: ```\n{mathterpreter.interpret(expr)}\n```")
+        except mathterpreter.MathSyntaxError as e:
+            await ctx.send(f"{ctx.author.mention}, an error occurred! ```\n{e.reason}\n``` ```\n{e.visualisation}\n```")
 
     @commands.command()
     async def appeal(self, ctx, _id: str, *, reason:str=None):
