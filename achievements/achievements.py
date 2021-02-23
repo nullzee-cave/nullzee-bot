@@ -34,6 +34,24 @@ achievements = {
         },
         "description": "Reach level 50"
     },
+    "Role collector I": {
+        "listeners": {
+            "update_roles": lambda _, roles: len(roles) > 10
+        },
+        "description": "Have 10 roles"
+    },
+    "Role collector II": {
+        "listeners": {
+            "update_roles": lambda _, roles: len(roles) > 25
+        },
+        "description": "Have 25 roles"
+    },
+    "Role collector III": {
+        "listeners": {
+            "update_roles": lambda _, roles: len(roles) > 50
+        },
+        "description": "Have 50 roles"
+    },
     "Rich": {
         "listeners": {
             "update_roles": lambda ctx, roles: Role.BOOSTER in [z.id for z in roles]
