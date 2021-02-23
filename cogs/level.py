@@ -51,21 +51,17 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         if before.pending and not after.pending:
-            guild = self.bot.get_guild(667953033929293855)
             with open('levelroles.json') as f:
                 levelroles = json.load(f)["levels"]
-            roles = [guild.get_role(738080587000184923)]
-            userData = await userColl.find_one({"_id": str(after.id)})
-            if not userData:
-                return
-            level = userData["level"]
-            for lr in levelroles:
-                if int(lr) > level:
-                    break
-                else:
-                    roles.append(guild.get_role(int(levelroles[str(lr)])))
-            if not roles:
-                return
+            roles = [after.guild.get_role(738080587000184923)]
+            user_data = await userColl.find_one({"_id": str(after.id)})
+            if user_data:
+                level = user_data["level"]
+                for lr in levelroles:
+                    if int(lr) > level:
+                        break
+                    else:
+                        roles.append(after.guild.get_role(int(levelroles[str(lr)])))
             await after.add_roles(*roles)
 
     def update_multipliers(self):
