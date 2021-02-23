@@ -76,20 +76,29 @@ async def achievement_timeline(user: discord.User, payload, page=1):
     mod = len(payload["achievements"]) % 4
     slice_start, slice_end = (-mod or -4, None) if page == last_page else (4 * (page-1), 4 * (page-1) + 4)
     achieved_page = {k: v for k, v in list(achieved.items())[slice_start:slice_end]}
-    user_page_path = f"assets/user_achievements/{user.id}"
+    user_page_path = f"image_cache/user_achievements/{user.id}"
+
+    percentage_achieved = len(payload["achievements"]) / len(achievements)
+    border = None
+    for i, kv in enumerate(ACHIEVEMENT_BORDERS.items()):
+        milestone, border_type = kv
+        if percentage_achieved >= milestone:
+            border = border_type
 
     if page < 0 or page > last_page:
         raise ValueError
 
     # serve from cache
     json_cache = {}
-    if f"{user.id}.json" in os.listdir("assets/user_achievements"):
+    if f"{user.id}.json" in os.listdir("image_cache/user_achievements"):
         with open(f"{user_page_path}.json") as f:
             json_cache = json.load(f)
         if str(page) in json_cache["achievements"]\
                 and json_cache["achievements"][str(page)] == list(achieved_page.keys())\
                 and json_cache["uname"] == str(user)\
-                and json_cache["avatar"] == str(user.avatar_url):
+                and json_cache["avatar"] == str(user.avatar_url)\
+                and json_cache["border_type"] == border\
+                and json_cache["background_image"] == payload["background"]:
             return
 
     # generation
@@ -104,15 +113,9 @@ async def achievement_timeline(user: discord.User, payload, page=1):
     avatar = avatar.resize((50, 50))
     image.paste(avatar, (60, 55), mask=avatar)
     draw.text((x + 80, 70), str(user), 'black', font=font_0)
-    percentage_achieved = len(payload["achievements"]) / len(achievements)
-    border = None
-    for i, kv in enumerate(ACHIEVEMENT_BORDERS.items()):
-        milestone, border_type = kv
-        if percentage_achieved >= milestone:
-            border = border_type
     if border:
-        border = Image.open(f"assets/achievement_borders/{border}.png").convert("RGBA")
-        image.paste(border, (0, 0), border)
+        border_image = Image.open(f"assets/achievement_borders/{border}.png").convert("RGBA")
+        image.paste(border_image, (0, 0), border_image)
 
     for i, achievement in enumerate(achieved_page, 1):
         image = timeline_card(image, draw, achievement, achieved_page[achievement], x, y * i + 50)
@@ -122,6 +125,8 @@ async def achievement_timeline(user: discord.User, payload, page=1):
             "image_files": [f"{user_page_path}_{page}.png"],
             "uname": str(user),
             "avatar": str(user.avatar_url),
+            "border_type": border,
+            "background_image": payload["background"],
             "achievements": {
               str(page): list(achieved_page.keys())
             },

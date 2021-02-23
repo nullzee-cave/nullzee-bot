@@ -83,7 +83,7 @@ class Achievements(commands.Cog):
             await achievement_timeline(user, user_data, page)
         except ValueError:
             return await ctx.send("You don't have that many pages!")
-        await ctx.send(file=discord.File(f"assets/user_achievements/{user.id}_{page}.png"))
+        await ctx.send(file=discord.File(f"image_cache/user_achievements/{user.id}_{page}.png"))
 
 
 def setup(bot):

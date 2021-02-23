@@ -6,3 +6,5 @@ __pycache__/*
 cogs/__pycache__/*
 helpers/__pycache__/*
 perks/__pycache__/*
+/venv/
+/image_cache/
