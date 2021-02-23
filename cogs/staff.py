@@ -47,11 +47,13 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         if user == None:
             user = ctx.author
         if user.pending:
-            return await ctx.send(f"{user.name} is pending")
+            embed = discord.Embed(title="True", description=f"{user.mention} is pending", colour=auser.colour).set_author(name=user, icon_url=user.avatar_url)
+            return await ctx.send(embed=embed)
         elif not user.pending:
-            return await ctx.send(f"{user.name} is not pending")
+            embed = discord.Embed(title="False", description=f"{user.mention} is not pending", colour=user.colour).set_author(name=user, icon_url=user.avatar_url)
+            return await ctx.send(embed=embed)
         else:
-            return await ctx.send("If youre seeing this then idk what the heck happened, youve somehow managed to make a binary value not be true or false, congrats")
+            return await ctx.send("you've somehow managed to make a binary value not be true or false, congrats")
 
     @commands.command(aliases=["say"])
     @commands.has_guild_permissions(manage_messages=True)
