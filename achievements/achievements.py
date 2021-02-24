@@ -1,3 +1,5 @@
+import time
+
 from api_key import userColl
 from helpers.events import Subscriber
 from helpers.utils import get_user
@@ -44,7 +46,7 @@ achievements = {
         "listeners": {
             "update_roles": lambda _, roles: len(roles) > 25
         },
-        "description": "Have 25 roles"
+        "description": "Have 25 roles",
     },
     "Role collector III": {
         "listeners": {
@@ -168,13 +170,16 @@ achievements = {
 async def award_achievement(ctx, data, name):
     if name in data["achievements"]:
         return
+    string = ""
     if "cb" in achievements[name]:
         await achievements[name]["cb"](ctx)
     if "response" in achievements[name]:
         await ctx.send(achievements[name]["response"].format(ctx))
-    else:
-        await ctx.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`!")
-    await userColl.update_one({"_id": str(ctx.author.id)}, {"$push": {"achievements": name}})
+    if "db_rewards" in achievements[name]:
+        await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": achievements[name]["db_rewards"]})
+        string += f" and earned {','.join(f'{v} {k}' for k, v in achievements[name]['db_rewards'])}"
+    await ctx.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
+    await userColl.update_one({"_id": str(ctx.author.id)}, {"set": {f"achievements.{name}": time.time()}})
 
 
 def listeners_for(event):

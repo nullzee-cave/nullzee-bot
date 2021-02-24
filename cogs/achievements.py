@@ -1,7 +1,7 @@
 from discord.ext import commands, tasks
 import discord
 from achievements.achievements import achievements
-from achievements.images import achievement_page, achievement_timeline
+from achievements.images import achievement_page, achievement_timeline, achievement_timeline_animated
 from helpers.events import Emitter
 from helpers.utils import get_user, ShallowContext
 from math import ceil
@@ -10,7 +10,7 @@ import os
 import json
 import time
 
-
+import imageio
 
 
 
@@ -38,10 +38,13 @@ class Achievements(commands.Cog):
                     os.remove(filename)
 
     def generate_static_pages(self):
-        print(len({k:v for k, v in achievements.items() if "hidden" not in v}))
         for i in range(ceil(len({k:v for k, v in achievements.items() if "hidden" not in v}) / 3)):
-            print(i)
             achievement_page(i, f"image_cache/static_achievements/page_{i}.png")
+        images = []
+        for page in sorted(os.listdir("image_cache/static_achievements/")):
+            file_path = os.path.join("image_cache/static_achievements/", page)
+            images.append(imageio.imread(file_path))
+        imageio.mimsave(f'image_cache/static_achievements/animated.gif', images, fps=0.5)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -61,22 +64,36 @@ class Achievements(commands.Cog):
         await self.emitter.emit("command", ctx, ctx.command.name)
 
     @commands.command()
-    async def achievement(self, ctx, page: int):
+    async def achievements(self, ctx, page: int=None):
         try:
-            await ctx.send(file=discord.File(f"image_cache/static_achievements/page_{page-1}.png"))
+            file_loc = "image_cache/static_achievements/" + (f"page_{page-1}.png" if page else "animated.gif")
+            await ctx.send(file=discord.File(file_loc))
         except FileNotFoundError:
             await ctx.send("There aren't that many pages!")
 
+
     @commands.command()
-    async def myachievements(self, ctx, user: typing.Optional[discord.Member]=None, page=1):
+    async def myachievements(self, ctx, user: typing.Optional[discord.Member]=None, page:int=None):
         user = user if user else ctx.author
         user_data = await get_user(user)
         user_data["background"] = user_data["background"] if "background" in user_data else "default_background.png"
-        try:
-            await achievement_timeline(user, user_data, page)
-        except ValueError:
-            return await ctx.send("You don't have that many pages!")
-        await ctx.send(file=discord.File(f"image_cache/user_achievements/{user.id}_{page}.png"))
+        if not page:
+            await achievement_timeline_animated(user, user_data)
+            await ctx.send(file=discord.File(f"image_cache/user_achievements/{user.id}_animated.gif"))
+        else:
+            try:
+                did_create = await achievement_timeline(user, user_data, page)
+            except ValueError:
+                return await ctx.send("You don't have that many pages!")
+            user_page_path = f"image_cache/user_achievements/{user.id}"
+            await ctx.send(file=discord.File(f"{user_page_path}_{page}.png"))
+            if not did_create:
+                return
+            with open(f"{user_page_path}.json") as f:
+                cache_data = json.load(f)
+            cache_data["regen_animated"] = True
+            with open(f"{user_page_path}.json", 'w') as f:
+                json.dump(cache_data, f)
 
 
 def setup(bot):
