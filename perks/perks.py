@@ -8,6 +8,7 @@ import asyncio
 import time
 
 last_ping = 0
+staff_nick_changes = {}
 
 @perk(name="AskNullzee", description="Ask Nullzee a question!", cost=10, aliases=["NullzeeQuestion", "askNull"],
       require_arg=True)
@@ -49,9 +50,40 @@ async def qotd(ctx, arg):
     embed = discord.Embed(description=arg, color=discord.Color.orange()).set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
     await ctx.guild.get_channel(668723004213166080).send(embed=embed)
 
-@perk(name="waste", description="Waste your hard earned points!", cost=1)
+@perk(name="waste", description="Waste your hard earned points!", cost=-1, require_arg=True)
 async def waste(ctx, arg):
-    await ctx.send(f"{ctx.author.mention} is a dumbass")
+    try:
+        val = int(arg)
+    except ValueError as e:
+        raise commands.UserInputError() from e
+    if val < 1:
+        raise PerkError(msg="Nope, you can't give yourself points.")
+    exact_funnies = {
+        69: "nice.",
+        420: "NIIIIIIIIIIIIICE"
+    }
+    idiocy_scale = {
+        1: "{} is dumb",
+        5: "{} is stupid",
+        10: "{} is an idiot",
+        25: "{} has some brain damage",
+        50: "{} has a deep fried brain",
+        100: "{} is still a fetus",
+        150: "disabled people feel sorry for {}",
+        300: "{} is a danger to society",
+        500: "{} cannot read for their life",
+        1000: "WHERE DID {} GET THIS MANY POINTS"
+    }
+    if val in exact_funnies:
+        await ctx.send(exact_funnies[val])
+        return val
+    idiocy_level = 1
+    for idiocy_milestone in idiocy_scale:
+        if val < idiocy_milestone:
+            break
+        idiocy_level = idiocy_milestone
+    await ctx.send(idiocy_scale[idiocy_level].format(ctx.author.mention))
+    return val
 
 @perk(name="staffNickChange", description = "Change a Staff's nick!", cost= 12, require_arg = True, aliases = ["bullyStaff","snc"])
 async def staffNickChange(ctx, arg):
@@ -61,11 +93,13 @@ async def staffNickChange(ctx, arg):
         raise e
     if not member:
         raise commands.UserInputError()
-    await ctx.send("What do you want to change their nick to?")
     if not member.guild_permissions.manage_messages:
         raise PerkError(msg="That user is not a staff member!")
     if member.bot:
         raise PerkError(msg="You cannot rename a bot!")
+    if member.id in staff_nick_changes and staff_nick_changes[member.id]+600>time.time():
+        raise PerkError(msg="You cannot change this staff member's nick yet, they are on cooldown.")
+    await ctx.send("What do you want to change their nick to?")
     try:
         nickChange = await ctx.bot.wait_for('message', check=lambda msg: msg.channel.id == ctx.channel.id and msg.author.id == ctx.author.id)
     except asyncio.TimeoutError:
@@ -81,7 +115,7 @@ async def staffNickChange(ctx, arg):
                 await member.edit(nick=f'✰ {content}')
             else:
                 await member.edit(nick=f'{content}')
+            staff_nick_changes[member.id] = time.time()
             await member.send(f'{ctx.author} changed your nick to {content} btw')
         except discord.Forbidden:
             raise PerkError(msg="I can't change an admin's nick!")
-        #await ctx.send(f"{member.mention}'s nick has been changed to ✰ {content}")
