@@ -39,6 +39,14 @@ class util(commands.Cog, name="Other"):
             url="https://cdn.discordapp.com/avatars/165629105541349376/2d7ff05116b8930a2fa2bf22bdb119c7.webp?size=1024"))
         self.updateSubCount()
 
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        before_ids = [z.id for z in before.roles]
+        after_ids = [z.id for z in after.roles]
+        if (668736363297898506 in before_ids and 668736363297898506 not in after_ids) or (668724083718094869 in before_ids and 668724083718094869 not in after_ids):
+            await after.add_roles(after.guild.get_role(706285767898431500))
+
+
     @commands.command(aliases=["calc", "math", "m"])
     async def maths(self, ctx, *, expr: str):
         try:
