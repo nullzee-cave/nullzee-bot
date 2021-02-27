@@ -30,10 +30,10 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
     @commands.command()
     async def kiss(self, ctx, member: discord.Member):
         if member == ctx.author:
-            embed = await Embed(ctx.author, description = f"{ctx.author} tried to kiss themself").user_colour()
+            embed = await Embed(ctx.author, description = f"{ctx.author.mention} tried to kiss themself").user_colour()
             await ctx.send(embed = embed)
         else:
-            embed = await Embed(ctx.author, description=f"{ctx.author} smooched {member.mention} on the cheek").user_colour()
+            embed = await Embed(ctx.author, description=f"{ctx.author.mention} smooched {member.mention} on the cheek").user_colour()
         await ctx.send(embed = embed)
 
     @commands.command()
