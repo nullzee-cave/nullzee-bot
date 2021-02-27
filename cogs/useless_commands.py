@@ -34,7 +34,7 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
             await ctx.send(embed = embed)
         else:
             embed = await Embed(ctx.author, description=f"{ctx.author.mention} smooched {member.mention} on the cheek").user_colour()
-        await ctx.send(embed = embed)
+            await ctx.send(embed = embed)
 
     @commands.command()
     async def hug(self,ctx,member: discord.Member):
