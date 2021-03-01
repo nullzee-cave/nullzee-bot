@@ -191,7 +191,7 @@ async def restrict_command_usage(ctx):
     channel_allowed = ctx.channel.id in [668914397531602944]
     command_bypass = ctx.command.name in ["stab", "hug", "f", "claimroles", "purchase", "report", "sbinfo", "smh", "bonk"]
     cog_bypass = ctx.command.cog.qualified_name in ["Useless Commands"] if ctx.command.cog else False
-    return staff_bypass or (not_blacklist and not_on_cooldown (level_bypass or channel_allowed or command_bypass or role_bypass or cog_bypass))
+    return staff_bypass or (not_blacklist and not_on_cooldown and (level_bypass or channel_allowed or command_bypass or role_bypass or cog_bypass))
 
 bot.add_check(restrict_command_usage)
 
