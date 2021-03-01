@@ -188,7 +188,10 @@ async def restrict_command_usage(ctx):
     if ctx.channel.id in cooldowns and ctx.channel.id in cooldown:
         if ctx.command.name in cooldown[ctx.channel.id]:
             not_on_cooldown = cooldown[ctx.channel.id][ctx.command.name]+cooldowns[ctx.channel.id] < time.time()
-        cooldown[ctx.channel.id][ctx.command.name] = time.time()
+            if not_on_cooldown:
+                cooldown[ctx.channel.id][ctx.command.name] = time.time()
+        else:
+            cooldown[ctx.channel.id][ctx.command.name] = time.time()
     else:
         cooldown[ctx.channel.id] = {}
     level_bypass = user["level"] >= 50
