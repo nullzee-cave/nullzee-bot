@@ -184,8 +184,13 @@ async def restrict_command_usage(ctx):
     user = await get_user(ctx.author)
     not_blacklist = not("command_blacklist" in user and ctx.command.name in user["command_blacklist"])
     staff_bypass = ctx.author.guild_permissions.manage_messages
-    not_on_cooldown = ctx.channel.id not in cooldown or ctx.channel.id not in cooldowns or cooldown[ctx.channel.id]+cooldowns[ctx.channel.id] < time.time()
-    cooldown[ctx.channel.id] = time.time()
+    not_on_cooldown = True
+    if ctx.channel.id not in cooldowns:
+        cooldown[ctx.channel.id] = {}
+    elif ctx.channel.id in cooldown:
+        if ctx.command.name in cooldown[ctx.channel.id]:
+            not_on_cooldown = cooldown[ctx.channel.id][ctx.command.name]+cooldowns[ctx.channel.id] < time.time()
+        cooldown[ctx.channel.id][ctx.command.name] = time.time()
     level_bypass = user["level"] >= 50
     role_bypass = (roles := [z.id for z in ctx.author.roles]) and 706285767898431500 in roles or 668724083718094869 in roles or 668736363297898506 in roles
     channel_allowed = ctx.channel.id in [668914397531602944]
