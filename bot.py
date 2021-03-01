@@ -11,8 +11,7 @@ import math
 from api_key import token, prefix
 from perks.perkSystem import PerkError
 import traceback
-from helpers.utils import get_user
-
+from helpers.utils import get_user, staff_only, TimeConverter
 
 intents = discord.Intents.default()
 intents.members = True
@@ -32,7 +31,7 @@ red = color.RED
 yellow = color.YELLOW
 
 
-# endregion 
+# endregion
 
 
 def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill="█", printEnd="\r"):
@@ -46,6 +45,8 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
     else:
         print(f'\r{purple}{prefix} |{bar}| {percent}%  {suffix}{endc}', end=printEnd)
 
+cooldown = {}
+cooldowns = {}
 
 bot = commands.Bot(command_prefix=prefix, case_insensitive=True, intents=intents)
 bot.remove_command('help')
@@ -162,6 +163,11 @@ async def reload(ctx):
     print(f'{green}Cogs loaded... Bot is now ready and waiting for prefix "."{endc}')
     await ctx.send(f"`Cogs reloaded by:` <@{user.id}>")
 
+@bot.command()
+@staff_only
+async def command_cooldown(ctx, _time: TimeConverter):
+    cooldowns[ctx.channel.id] = _time
+    await ctx.send(f"Set command cooldown for {ctx.channel.mention} to {_time:,} seconds")
 
 @bot.event
 async def on_command(ctx):
@@ -177,12 +183,15 @@ async def restrict_command_usage(ctx):
         return True
     user = await get_user(ctx.author)
     not_blacklist = not("command_blacklist" in user and ctx.command.name in user["command_blacklist"])
-    user_bypass = ctx.author.guild_permissions.manage_messages or user["level"] >= 50
+    staff_bypass = ctx.author.guild_permissions.manage_messages
+    not_on_cooldown = ctx.channel.id not in cooldown or ctx.channel.id not in cooldowns or cooldown[ctx.channel.id]+cooldowns[ctx.channel.id] < time.time()
+    cooldown[ctx.channel.id] = time.time()
+    level_bypass = user["level"] >= 50
     role_bypass = (roles := [z.id for z in ctx.author.roles]) and 706285767898431500 in roles or 668724083718094869 in roles or 668736363297898506 in roles
     channel_allowed = ctx.channel.id in [668914397531602944]
     command_bypass = ctx.command.name in ["stab", "hug", "f", "claimroles", "purchase", "report", "sbinfo", "smh", "bonk"]
     cog_bypass = ctx.command.cog.qualified_name in ["Useless Commands"] if ctx.command.cog else False
-    return not_blacklist and (user_bypass or channel_allowed or command_bypass or role_bypass or cog_bypass)
+    return staff_bypass or (not_blacklist and not_on_cooldown (level_bypass or channel_allowed or command_bypass or role_bypass or cog_bypass))
 
 bot.add_check(restrict_command_usage)
 
