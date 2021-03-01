@@ -185,7 +185,7 @@ async def restrict_command_usage(ctx):
     not_blacklist = not("command_blacklist" in user and ctx.command.name in user["command_blacklist"])
     staff_bypass = ctx.author.guild_permissions.manage_messages
     not_on_cooldown = True
-    if ctx.channel.id not in cooldowns and ctx.channel.id in cooldown:
+    if ctx.channel.id in cooldowns and ctx.channel.id in cooldown:
         if ctx.command.name in cooldown[ctx.channel.id]:
             not_on_cooldown = cooldown[ctx.channel.id][ctx.command.name]+cooldowns[ctx.channel.id] < time.time()
         cooldown[ctx.channel.id][ctx.command.name] = time.time()
