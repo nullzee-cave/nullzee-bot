@@ -33,7 +33,11 @@ class Points(commands.Cog):
         user = await get_user(ctx.author)
         if item.require_arg and not arg:
             return await ctx.send(embed=discord.Embed(title="Error!", description="You need to specify an argument for this perk!", colour=0xFF0000))
-        if user["points"] >= item.cost:
+        try:
+            inital_cost = item.cost if isinstance(item.cost, int) else int(arg)
+        except ValueError as e:
+            raise commands.UserInputError from e
+        if user["points"] >= inital_cost:
             returned = await item.on_buy(ctx, arg)
             cost = item.cost if item.cost > 0 else returned
             await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": {"points": -cost}})

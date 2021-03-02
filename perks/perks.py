@@ -50,7 +50,7 @@ async def qotd(ctx, arg):
     embed = discord.Embed(description=arg, color=discord.Color.orange()).set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
     await ctx.guild.get_channel(668723004213166080).send(embed=embed)
 
-@perk(name="waste", description="Waste your hard earned points!", cost=-1, require_arg=True)
+@perk(name="waste", description="Waste your hard earned points!", cost="dynamic", require_arg=True)
 async def waste(ctx, arg):
     try:
         val = int(arg)
