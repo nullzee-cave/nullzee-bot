@@ -11,6 +11,11 @@ from discord.ext import commands
 staff_only = commands.check(lambda ctx: ctx.guild and ctx.guild.id == 667953033929293855 and (685027474522112000 in
                                                                                               (roles := [z.id for z in
                                                                                                          ctx.author.roles]) or
+                                                                                              667953757954244628 in roles))
+
+staff_or_trainee = commands.check(lambda ctx: ctx.guild and ctx.guild.id == 667953033929293855 and (685027474522112000 in
+                                                                                              (roles := [z.id for z in
+                                                                                                         ctx.author.roles]) or
                                                                                               667953757954244628 in roles or
                                                                                               675031583954173986 in roles))
 

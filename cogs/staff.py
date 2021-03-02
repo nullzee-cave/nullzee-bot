@@ -4,7 +4,7 @@ from discord.ext import commands
 import json
 import time
 import datetime
-from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only, RoleConverter
+from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only, RoleConverter, staff_or_trainee
 from helpers import moderationUtils
 import asyncio
 from api_key import moderationColl, userColl
@@ -56,7 +56,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             return await ctx.send("you've somehow managed to make a binary value not be true or false, congrats")
 
     @commands.command(aliases=["say"])
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_only
     async def send(self, ctx, channel: typing.Optional[discord.TextChannel]=None, *, message:str):
         channel = channel if channel else ctx.channel
         if not ctx.author.permissions_in(channel).send_messages:
@@ -66,7 +66,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             await ctx.send(msg.jump_url)
     
     @commands.command()
-    @commands.has_permissions(manage_messages=True)
+    @staff_only
     async def reply(self, ctx, message: discord.Message, ping: typing.Optional[bool] = True, *, text: str):
         if not ctx.author.permissions_in(message.channel).send_messages:
             raise commands.MissingPermissions(["manage_messages"])
@@ -85,7 +85,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         await ctx.send("Last QOTD time set to now")
 
     @commands.command()
-    @staff_only
+    @staff_or_trainee
     async def slowmode(self, ctx, time="off"):
         if time.lower() == "off":
             await ctx.channel.edit(slowmode_delay=0)
@@ -99,7 +99,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
                 return await ctx.send(f"slowmode has been set to `{time}` by {ctx.author.mention}")
 
     @commands.command()
-    @staff_only
+    @staff_or_trainee
     async def role(self, ctx, user: discord.Member, *, role: RoleConverter):
 
         if role.permissions.manage_messages or role.permissions.administrator or role.name.lower() == "muted":
@@ -114,7 +114,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             return await ctx.send("I do not have permission to give that role to that user")
 
     @commands.command()
-    @staff_only
+    @staff_or_trainee
     async def removerole(self, ctx, user: discord.Member, *, role: RoleConverter):
 
         if role.permissions.manage_messages or role.permissions.administrator or role.name.lower() == "muted":
@@ -130,7 +130,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
 
 
     @commands.command(aliases=["star", "pin"])
-    @commands.has_guild_permissions(manage_messages=True)
+    @staff_or_trainee
     async def starboard(self, ctx: commands.Context, msg: discord.Message, *, title: str = ""):
         embed = (await Embed(msg.author, title=f"{title} | #{ctx.channel.name}", description=msg.content,
                              url=msg.jump_url).auto_author().timestamp_now().user_colour()).set_footer(
@@ -142,7 +142,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             embed=await Embed(ctx.author, title="Added to starboard!", url=star_message.jump_url).user_colour())
 
     @commands.command()
-    @staff_only
+    @staff_or_trainee
     async def purge(self, ctx, limit: int):
         def check(m):
             return not m.pinned
