@@ -52,7 +52,7 @@ class Points(commands.Cog):
     async def changePoints(self, ctx, user: discord.Member, points: int):
         '''Modify someone's points'''
         await userColl.update_one({"_id": str(user.id)}, {"$inc": {"points": points}})
-        await ctx.send(f"changed {user.mention}'s points by {points}")
+        await ctx.send(f"changed {user.mention}'s points by {points}", allowed_mentions=discord.AllowedMentions(users=False))
 
 
 def setup(bot):
