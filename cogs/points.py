@@ -43,7 +43,7 @@ class Points(commands.Cog):
             returned = await item.on_buy(ctx, arg)
             cost = item.cost if isinstance(item.cost, int) else returned
             await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": {"points": -cost}})
-            await ctx.send(f"successfully bought `{item.name}` for `{item.cost}` points")
+            await ctx.send(f"successfully bought `{item.name}` for `{cost}` points")
         else:
             return await ctx.send("You cannot afford this!")
 
