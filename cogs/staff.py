@@ -44,13 +44,14 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command()
     @staff_only
     async def pending(self, ctx, user: discord.Member=None):
+        '''Check if a user has completed member screening or not'''
         if user == None:
             user = ctx.author
         if user.pending:
-            embed = discord.Embed(title="True", description=f"{user.mention} is pending", colour=auser.colour).set_author(name=user, icon_url=user.avatar_url)
+            embed = discord.Embed(title="True", description=f"{user.mention} has not compleed member screening", colour=auser.colour).set_author(name=user, icon_url=user.avatar_url)
             return await ctx.send(embed=embed)
         elif not user.pending:
-            embed = discord.Embed(title="False", description=f"{user.mention} is not pending", colour=user.colour).set_author(name=user, icon_url=user.avatar_url)
+            embed = discord.Embed(title="False", description=f"{user.mention} has completed member screening", colour=user.colour).set_author(name=user, icon_url=user.avatar_url)
             return await ctx.send(embed=embed)
         else:
             return await ctx.send("you've somehow managed to make a binary value not be true or false, congrats")
@@ -58,6 +59,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command(aliases=["say"])
     @staff_only
     async def send(self, ctx, channel: typing.Optional[discord.TextChannel]=None, *, message:str):
+        '''Make the bot send a message'''
         channel = channel if channel else ctx.channel
         if not ctx.author.permissions_in(channel).send_messages:
             raise commands.MissingPermissions(["manage_messages"])
@@ -68,6 +70,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command()
     @staff_only
     async def reply(self, ctx, message: discord.Message, ping: typing.Optional[bool] = True, *, text: str):
+        '''Make the bot reply to a message'''
         if not ctx.author.permissions_in(message.channel).send_messages:
             raise commands.MissingPermissions(["manage_messages"])
         msg = await message.reply(content=text, mention_author=ping)
@@ -77,6 +80,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def qotd(self, ctx):
+        '''Mark todays qotd as done'''
         with open('config.json') as f:
             config = json.load(f)
         config["qotd"] = (datetime.datetime.now() - datetime.datetime.utcfromtimestamp(0)).days
