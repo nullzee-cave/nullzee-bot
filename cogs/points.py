@@ -41,7 +41,7 @@ class Points(commands.Cog):
             raise commands.UserInputError from e
         if user["points"] >= inital_cost:
             returned = await item.on_buy(ctx, arg)
-            cost = item.cost if item.cost > 0 else returned
+            cost = item.cost if isinstance(item.cost, int) else returned
             await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": {"points": -cost}})
             await ctx.send(f"successfully bought `{item.name}` for `{item.cost}` points")
         else:
