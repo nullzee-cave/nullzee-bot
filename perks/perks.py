@@ -111,7 +111,7 @@ async def staffNickChange(ctx, arg):
         await ctx.send('get banned nerd')
     else:
         try:
-            if ctx.guild.get_role(667953757954244628) in member.roles:
+            if ctx.guild.get_role(667953757954244628) in member.roles or ctx.guild.get_role(675031583954173986) in member.roles:
                 await member.edit(nick=f'✰ {content}')
             else:
                 await member.edit(nick=f'{content}')

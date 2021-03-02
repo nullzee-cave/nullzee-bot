@@ -42,6 +42,7 @@ class Levelling(commands.Cog, name="levelling"):
 
     @commands.command()
     async def linkTwitch(self, ctx, username: str):
+        '''Link your twitch to your discord to start gaining xp in twitch chat'''
         await userColl.update_one({"_id": str(ctx.author.id)},
                                   {"$set": {"twitch_name": username.lower(), "twitch_verified": False}})
         await ctx.send(embed=discord.Embed(
@@ -73,6 +74,7 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.command()
     @staff_only
     async def multiplier(self, ctx, channel: discord.TextChannel, value: float):
+        '''Change the xp multiplier of a channel'''
         if value < -0.5 or value > 10:
             return await ctx.send("please resign.")
         with open('config.json') as f:
@@ -86,6 +88,7 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.command()
     @staff_only
     async def global_multiplier(self, ctx, value: float):
+        '''Change the glbal xp multiplier for the whole server'''
         if value < -0.5 or value > 10:
             return await ctx.send("please resign.")
         with open('config.json') as f:
@@ -167,6 +170,7 @@ class Levelling(commands.Cog, name="levelling"):
 
     @commands.command(aliases = ["howFarFromLevel"])
     async def hffl(self, ctx, wantedLevel: int):
+        '''View how far from a specific level you are, along with some other information'''
         user = ctx.author
         userData = await userColl.find_one({"_id": str(user.id)})
         level = userData['level']
@@ -223,6 +227,7 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.command(hidden=True)
     @staff_only
     async def weeklyReset(self, ctx):
+        '''Reset everyones weekly xp'''
         await ctx.send("resetting...")
         with open('users.json') as f:
             users = json.load(f)
@@ -271,6 +276,7 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.command(hidden=True)
     @staff_only
     async def removeweekly(self, ctx, user: discord.Member, xp: int):
+        '''Remove weekly xp from a user'''
         if 667953757954244628 in [z.id for z in user.roles]:
             return await ctx.send("Cannot remove XP from that user")
         if xp < 0:
@@ -284,6 +290,7 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.command(hidden=True)
     @staff_only
     async def removeXP(self, ctx, user: discord.Member, xp: int):
+        '''Remove xp from someone'''
         if 667953757954244628 in [z.id for z in user.roles]:
             return await ctx.send("Cannot remove XP from that user")
         if xp < 0:
