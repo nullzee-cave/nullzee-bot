@@ -19,6 +19,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def warn(self, ctx, user: discord.Member, *, reason: str):
+        '''Give a user a warning'''
         payload = payloads.warn_payload(offender_id=user.id, mod_id=ctx.author.id, reason=reason)
         message = await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
         payload = payloads.insert_message(payload, message)
@@ -31,6 +32,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     @staff_or_trainee
     async def mute(self, ctx, user: discord.Member, _time: typing.Optional[TimeConverter] = None, *,
                    reason: str = None):
+        '''Mute a user'''
         if user.guild_permissions.manage_messages:
             return await ctx.send("You cannot mute a moderator/administrator")
         payload = payloads.mute_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason)
@@ -46,6 +48,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     @commands.command()
     @staff_or_trainee
     async def unmute(self, ctx, user: discord.Member, *, reason: str = None):
+        '''Unmute a user'''
         await moderationColl.delete_many({"offender_id": user.id, "type": "mute"})
         await user.remove_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]))
         await moderationUtils.end_log(self.bot, {"type": "mute", "offender_id": user.id}, moderator=ctx.author,
@@ -55,6 +58,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     @commands.command(aliases=["yeet"])
     @staff_or_trainee
     async def ban(self, ctx, user: discord.Member, _time: typing.Optional[TimeConverter]=None, *, reason: str = None):
+        '''Ban a user'''
         if user.guild_permissions.manage_messages:
             return await ctx.send("You cannot ban a moderator/administrator")
         payload = payloads.ban_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason)
@@ -73,6 +77,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     @commands.command()
     @staff_or_trainee
     async def unban(self, ctx, member, *, reason: str = None):
+        '''Unban a user'''
         try:
             await ctx.guild.unban(moderationUtils.BannedUser(member))
         except (discord.NotFound, discord.HTTPException):
@@ -84,6 +89,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def delwarn(self, ctx, _id: str):
+        '''Delete a warning from someone'''
         doc = await moderationColl.find_one({"id": _id})
         if not doc:
             return await ctx.send("Could not find that warning")
@@ -94,6 +100,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     @commands.command()
     @staff_or_trainee
     async def kick(self, ctx, user: discord.Member, *, reason: str = None):
+        '''Kick a user'''
         if user.guild_permissions.manage_messages:
             embed = discord.Embed(description="You cannot kick a moderator/administrator", color=0xff0000)
             return await ctx.send(embed=embed)
@@ -112,6 +119,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def punishments(self, ctx, user: discord.Member = None):
+        '''View a user's punishments'''
         user = user if user else ctx.author
         warnings = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
         embed = discord.Embed(title=f"{len(warnings)} punishments", colour=discord.Colour.green())
@@ -125,6 +133,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def warnings(self, ctx, user: discord.Member = None):
+        '''View a user's warnings'''
         user = user if user else ctx.author
         warnings = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False, "type": "warn"})]
         embed = discord.Embed(title=f"{len(warnings)} warnings", colour=discord.Colour.green())
@@ -138,6 +147,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def modlogs(self, ctx, user: discord.Member):
+        '''View all of a user's moderation logs'''
         user = user if user else ctx.author
         infractions = [z async for z in moderationColl.find({"offender_id": user.id})]
         if not infractions:
@@ -164,6 +174,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def whereiswarn(self, ctx, warn:str):
+        '''Find where someone was warned'''
         warning = await moderationColl.find_one({"id": warn})
         if not warning:
             return await ctx.send("Could not find a warning with that ID")
