@@ -50,8 +50,8 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
 bot = commands.Bot(command_prefix=prefix, case_insensitive=True, intents=intents)
 bot.remove_command('help')
 
-cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points', 'cogs.events_v2']
-# cogs = ['cogs.achievements', 'cogs.points']
+# cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points', 'cogs.events_v2']
+cogs = ['cogs.achievements', 'cogs.points']
 
 
 @bot.event
@@ -75,6 +75,11 @@ async def on_command_error(ctx, error):
         _message = 'I need the **{}** permission(s) to run this command.'.format(fmt)
         await ctx.send(_message)
         return
+    if isinstance(error, commands.MissingRole) or isinstance(error, commands.MissingAnyRole):
+        roles = error.missing_roles if isinstance(error, commands.MissingAnyRole) else [error.missing_role]
+        return await ctx.send(embed=discord.Embed(title=":x: Error! You must have one of these roles: :x:",
+                                                  description="\n".join(roles),
+                                                  colour=0xff0000))
 
     if isinstance(error, commands.DisabledCommand):
         await ctx.send('This command has been disabled.')

@@ -1,0 +1,32 @@
+{
+  "default": {
+    "text_colour": "white",
+    "box_background_colour": "lightgrey",
+    "purchasable": true
+  },
+  "chaos": {
+    "purchasable": true
+  },
+  "cubes": {
+    "purchasable": true
+  },
+  "fruit": {
+    "purchasable": true
+  },
+  "nullzee": {
+    "purchasable": true
+  },
+    "nitro": {
+      "claimable": true,
+      "role_req": [
+        "qotd_ping"
+      ]
+  },
+  "twitch": {
+    "claimable": true,
+    "role_req": [
+      "twitch_sub"
+    ]
+  }
+
+}

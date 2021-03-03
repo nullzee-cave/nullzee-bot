@@ -1,3 +1,6 @@
+
+from discord.ext import commands
+
 from achievements.achievements import achievements, ACHIEVEMENT_BORDERS
 from helpers.utils import deep_update_dict
 
@@ -16,6 +19,89 @@ import time
 font_medium = ImageFont.truetype('assets/fonts/Roboto-Medium.ttf', 20)
 font_thin = ImageFont.truetype('assets/fonts/Roboto-Thin.ttf', 15)
 font_bold = ImageFont.truetype('assets/fonts/Roboto-Bold.ttf', 15)
+font_title = ImageFont.truetype('assets/fonts/Roboto-Bold.ttf', 80)
+
+
+class BackgroundConverter(commands.Converter):
+
+    async def convert(self, ctx, argument):
+        if argument.lower() in BackgroundMeta.get():
+            return argument.lower()
+        for bg in BackgroundMeta.get():
+            if argument.lower() in BackgroundMeta.get()[bg].aliases:
+                return bg
+        raise commands.BadArgument()
+
+
+class BackgroundMeta:
+    instance = None
+    defaults = {
+        "aliases": [],
+        "text_colour": "black",
+        "box_backround_colour": "white",
+        "box_text_colour": "black",
+        "box_border_colour": "black",
+        "purchasable": False,
+        "credit": "art by aei",
+        "role_req": None,
+        "role_req_strategy": "any",
+        "claimable": False,
+        "preview": True
+    }
+
+    @classmethod
+    def get(cls):
+        if not cls.instance:
+            with open("assets/achievement_backgrounds/bg_meta.json") as f:
+                cls.instance = cls(json.load(f))
+        return cls.instance
+
+    def __init__(self, raw):
+        self.raw = raw
+
+    def __iter__(self):
+        yield from self.raw
+
+    def __getitem__(self, item):
+        if item in self.raw and self.raw[item]:
+            return BackgroundMeta(self.raw[item]) if isinstance(self.raw[item], dict) else self.raw[item]
+        return self.defaults[item] if item in self.defaults else None
+
+    def __getattr__(self, item):
+        if item in self.raw and self.raw[item]:
+            return BackgroundMeta(self.raw[item]) if isinstance(self.raw[item], dict) else self.raw[item]
+        return self.defaults[item] if item in self.defaults else None
+
+    def __contains__(self, item):
+        return item in self.raw
+
+
+def wrap_text(text: str, width, font: ImageFont.FreeTypeFont):
+    length = font.getlength(text)
+    if length <= width:
+        return text
+    cum_text = ""
+    output = ""
+    for word in text.split():
+        if font.getlength(cum_text) + font.getlength(word) > width:
+            output += "\n"
+            cum_text = ""
+        output += word + " "
+        cum_text += word + " "
+    print(output)
+    return output
+
+
+def should_regen(json_cache, *, page, user, border, background="default", achieved_page, embed_colour):
+    if str(page) not in json_cache["pages"]:
+        return True
+    page_data = json_cache["pages"][str(page)]
+    return not (page_data["achievements"] == list(achieved_page.keys())
+                and page_data["embed_colour"] == embed_colour
+                and page_data["uname"] == str(user)
+                and page_data["avatar"] == str(user.avatar_url)
+                and page_data["border_type"] == border
+                and page_data["background_image"] == background)
 
 
 def cache_for(user_id):
@@ -25,16 +111,25 @@ def cache_for(user_id):
     except FileNotFoundError:
         cache_data = {
             "image_files": [],
-            "uname": "",
-            "avatar": "",
-            "border_type": "",
-            "background_image": "",
-            "achievements": {},
+            "pages": {},
             "last_called": 0,
             "regen_animated": True
         }
     return cache_data
 
+
+def image_preview(name):
+    w, h = font_title.getsize(" ".join(name.upper()))
+    image = Image.open(f"assets/achievement_backgrounds/{name}.png").convert('RGBA')
+    border = Image.open("assets/achievement_borders/default.png").convert("RGBA")
+    image.paste(border, (0, 0), border)
+    text = Image.new('RGBA', image.size, (255, 255, 255, 0))
+    draw = ImageDraw.Draw(text)
+    draw.text(((500-w)/2, (600-h)/2), " ".join(name.upper()), font=font_title, fill=(0, 0, 0, 95))
+    save_path = f"image_cache/static_previews/{name}.png"
+    combined = Image.alpha_composite(image, text)
+    combined.save(save_path)
+    return save_path
 
 def mask_circle_transparent(pil_img, blur_radius, offset=0):
     offset = blur_radius * 2 + offset
@@ -48,35 +143,30 @@ def mask_circle_transparent(pil_img, blur_radius, offset=0):
     return result
 
 
-def achievement_box(image, x: int, y: int, name: str, definition: str):
-    draw = ImageDraw.Draw(image)
-    draw.rectangle([(x, y), (x + 300, y + 100)], 'white', 'black')
-    draw.text((x + 10, y + 10), name, 'black', font=font_medium)
-    draw.text((x + 10, y + 40), definition, 'black', font=font_thin)
-
-
-def add_page(image, page: int, repeat: int, total_pages):
-    x_pos = 100
-    y_pos = 100
-    loop = range(0, repeat)
-    for i in loop:
-        page_num = ((page - 1) * 3) + i
-        name = [k for k in achievements if "hidden" not in achievements[k]][page_num]
-        ImageDraw.Draw(image).text((x_pos, 540), f"page {page} of {total_pages}", 'black', font=font_bold)
-        achievement_box(image, x_pos, y_pos, name, achievements[name]["description"])
-        y_pos += 150
-
-
 def achievement_page(page, filename="image.png"):
     visible_achievements = {k: v for k, v in achievements.items() if "hidden" not in v}
     last_page = ceil(len(visible_achievements) / 3)
     mod = len(visible_achievements) % 3
-    # image = Image.new('RGBA', (500, 600), (0, 0, 0, 0))
-    image = Image.open("assets/achievement_backgrounds/default_background.png")
-    if page == last_page:
-        add_page(image, page, mod, last_page)
-    else:
-        add_page(image, page, 3, last_page)
+    image = Image.open("assets/achievement_backgrounds/default.png").convert('RGBA')
+    border_image = Image.open(f"assets/achievement_borders/default.png").convert("RGBA")
+    image.paste(border_image, (0, 0), border_image)
+    per_page = mod if page == last_page else 3
+    ##
+    x_pos = 100
+    y_pos = 100
+    loop = range(0, per_page)
+    draw = ImageDraw.Draw(image)
+    draw.text((x_pos - 50, 555), f"page {page + 1} of {last_page}", BackgroundMeta.get().default.text_colour,
+              font=font_bold)
+    draw.text((490 - x_pos, 555), "art by aei", BackgroundMeta.get().default.text_colour, font=font_bold)
+    for i in loop:
+        page_num = ((page - 1) * 3) + i
+        name = [k for k in achievements if "hidden" not in achievements[k]][page_num]
+        draw.rectangle([(x_pos, y_pos), (x_pos + 300, y_pos + 100)], BackgroundMeta.get().default.box_background_colour,
+                       BackgroundMeta.get().default.box_text_colour)
+        draw.text((x_pos + 10, y_pos + 10), name, 'black', font=font_medium)
+        draw.text((x_pos + 10, y_pos + 40), wrap_text(achievements[name]["description"], 280, font_thin), 'black', font=font_thin)
+        y_pos += 150
     return image.save(filename, format='PNG')
 
 
@@ -99,9 +189,11 @@ async def achievement_timeline(user: discord.User, payload, page=1):
     slice_start, slice_end = (-mod or -4, None) if page == last_page else (4 * (page - 1), 4 * (page - 1) + 4)
     achieved_page = {k: v for k, v in list(achieved.items())[slice_start:slice_end]}
     user_page_path = f"image_cache/user_achievements/{user.id}"
+    embed_colour = payload["embed_colour"]
+    background = payload["background_image"]
 
     percentage_achieved = len(payload["achievements"]) / len(achievements)
-    border = None
+    border = "default"
     for i, kv in enumerate(ACHIEVEMENT_BORDERS.items()):
         milestone, border_type = kv
         if percentage_achieved >= milestone:
@@ -115,30 +207,34 @@ async def achievement_timeline(user: discord.User, payload, page=1):
     if f"{user.id}.json" in os.listdir("image_cache/user_achievements"):
         with open(f"{user_page_path}.json") as f:
             json_cache = json.load(f)
-        if str(page) in json_cache["achievements"] \
-                and json_cache["achievements"][str(page)] == list(achieved_page.keys()) \
-                and json_cache["uname"] == str(user) \
-                and json_cache["avatar"] == str(user.avatar_url) \
-                and json_cache["border_type"] == border \
-                and json_cache["background_image"] == payload["background"]:
+        if not should_regen(json_cache, page=page, user=user, border=border, background=background,
+                            achieved_page=achieved_page, embed_colour=embed_colour):
             return
-
     # generation
-    image = Image.open(f"assets/achievement_backgrounds/{payload['background']}")
+    image = Image.open(f"assets/achievement_backgrounds/{payload['background_image']}.png").convert('RGBA')
+    if background == "cubes":
+        try:
+            layer = Image.new("RGBA", image.size, payload["embed_colour"] if payload["embed_colour"].startswith('#') else f"#{payload['embed_colour']}")
+        except (ValueError, KeyError):
+            layer = Image.new("RGBA", image.size, "#00FF00")
+        image = Image.blend(image, layer, 0.5)
     async with aiohttp.ClientSession() as session:
         async with session.get(str(user.avatar_url).replace('gif', 'png')) as resp:
             avatar = Image.open(io.BytesIO(await resp.content.read()))
     x, y = 50, 100
-    if border:
-        border_image = Image.open(f"assets/achievement_borders/{border}.png").convert("RGBA")
-        image.paste(border_image, (0, 0), border_image)
+    border_image = Image.open(f"assets/achievement_borders/{border}.png").convert("RGBA")
+    image.paste(border_image, (0, 0), border_image)
     draw = ImageDraw.Draw(image)
-    draw.rectangle([(x, y - 50), (x + 400, y + 10)])
+    draw.rectangle([(x, y - 50), (x + 400, y + 10)], BackgroundMeta.get()[background].box_backround_colour,
+                   BackgroundMeta.get()[background].box_border_colour)
     avatar = mask_circle_transparent(avatar, 4)
     avatar = avatar.resize((50, 50))
     image.paste(avatar, (60, 55), mask=avatar)
-    draw.text((x + 80, 70), str(user), 'black', font=font_medium)
-    draw.text((x, 540), f"page {page} of {last_page}", 'black', font=font_bold)
+    draw.text((x + 80, 70), str(user), BackgroundMeta.get()[background].box_text_colour, font=font_medium)
+    draw.text((x - 15, 555), f"page {page} of {last_page}", BackgroundMeta.get()[background].text_colour,
+              font=font_bold)
+    draw.text((450 - x, 555),  BackgroundMeta.get()[background].credit, BackgroundMeta.get()[background].text_colour,
+              font=font_bold)
 
     for i, achievement in enumerate(achieved_page, 1):
         image = timeline_card(image, draw, achievement, achieved_page[achievement], x, y * i + 50)
@@ -146,12 +242,15 @@ async def achievement_timeline(user: discord.User, payload, page=1):
     # save to cache
     json_cache = deep_update_dict(json_cache, {
         "image_files": [f"{user_page_path}_{page}.png"],
-        "uname": str(user),
-        "avatar": str(user.avatar_url),
-        "border_type": border,
-        "background_image": payload["background"],
-        "achievements": {
-            str(page): list(achieved_page.keys())
+        "pages": {
+            str(page): {
+                "achievements": list(achieved_page.keys()),
+                "uname": str(user),
+                "avatar": str(user.avatar_url),
+                "border_type": border,
+                "background_image": payload["background_image"],
+                "embed_colour": embed_colour,
+            }
         },
         "last_called": time.time()
     })
@@ -167,7 +266,7 @@ async def achievement_timeline_animated(user: discord.User, payload):
     has_created = []
     user_page_path = f"image_cache/user_achievements/{user.id}"
     cache_data = cache_for(user.id)
-    for page in range(1, last_page+1):
+    for page in range(1, last_page + 1):
         has_created.append(await achievement_timeline(user, payload, page))
     if True not in has_created and f"{user.id}_animated.gif" in os.listdir(image_dir) and not cache_data[
         "regen_animated"]:

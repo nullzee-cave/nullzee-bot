@@ -1,3 +1,4 @@
+from achievements.images import BackgroundMeta
 from perks.perkSystem import perk, PerkError
 from discord.ext import commands
 import discord
@@ -80,3 +81,12 @@ async def staffNickChange(ctx, arg):
         except discord.Forbidden:
             raise PerkError(msg="I can't change an admin's nick!")
         #await ctx.send(f"{member.mention}'s nick has been changed to ✰ {content}")
+
+
+@perk(name="achievementBackground", description="change the background of your achievements image", cost=12, require_arg=True)
+async def achievement_background(ctx, arg):
+    if arg.lower() not in BackgroundMeta.get():
+        raise PerkError(msg="Can't find that background")
+    elif not BackgroundMeta.get()[arg.lower()].purchasable:
+        raise PerkError(msg="This background is not purchasable")
+    await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"background_image": arg.lower()}})
