@@ -88,7 +88,6 @@ def wrap_text(text: str, width, font: ImageFont.FreeTypeFont):
             cum_text = ""
         output += word + " "
         cum_text += word + " "
-    print(output)
     return output
 
 
@@ -171,7 +170,9 @@ def achievement_page(page, filename="image.png"):
 
 
 def timeline_card(image, draw, achievement, timestamp, x, y):
-    draw.rectangle([(x, y), (x + 400, y + 75)], 'white', 'black')
+    box_border = Image.open("assets/achievement_box_borders/diamond.png")
+    draw.rectangle([(x, y), (x + 400, y + 75)], 'white')#, 'black')
+    image.paste(box_border, (x, y), box_border)
     draw.text((x + 10, y + 10), achievement, 'green', font=font_medium)
     draw.text((x + 10, y + 45),
               f"achieved at {datetime.datetime.fromtimestamp(timestamp).strftime('%d/%m/%y %H:%M')}",
@@ -222,22 +223,33 @@ async def achievement_timeline(user: discord.User, payload, page=1):
         async with session.get(str(user.avatar_url).replace('gif', 'png')) as resp:
             avatar = Image.open(io.BytesIO(await resp.content.read()))
     x, y = 50, 100
+    box_border = Image.open(
+        f"assets/achievement_box_borders/{payload['box_border'] if 'box_border' in payload else 'default'}.png")\
+        .convert("RGBA")
     border_image = Image.open(f"assets/achievement_borders/{border}.png").convert("RGBA")
     image.paste(border_image, (0, 0), border_image)
     draw = ImageDraw.Draw(image)
-    draw.rectangle([(x, y - 50), (x + 400, y + 10)], BackgroundMeta.get()[background].box_backround_colour,
-                   BackgroundMeta.get()[background].box_border_colour)
+    # draw.rectangle([(x, y - 50), (x + 400, y + 10)], BackgroundMeta.get()[background].box_backround_colour)
+    draw.rectangle([(x, y-55), (x + 400, y + 20)], BackgroundMeta.get()[background].box_backround_colour)
+    image.paste(box_border, (x-2, y-57), box_border)
     avatar = mask_circle_transparent(avatar, 4)
     avatar = avatar.resize((50, 50))
-    image.paste(avatar, (60, 55), mask=avatar)
-    draw.text((x + 80, 70), str(user), BackgroundMeta.get()[background].box_text_colour, font=font_medium)
+    image.paste(avatar, (60, 59), mask=avatar)
+    draw.text((x + 80, 75), str(user), BackgroundMeta.get()[background].box_text_colour, font=font_medium)
     draw.text((x - 15, 555), f"page {page} of {last_page}", BackgroundMeta.get()[background].text_colour,
               font=font_bold)
     draw.text((450 - x, 555),  BackgroundMeta.get()[background].credit, BackgroundMeta.get()[background].text_colour,
               font=font_bold)
 
     for i, achievement in enumerate(achieved_page, 1):
-        image = timeline_card(image, draw, achievement, achieved_page[achievement], x, y * i + 50)
+        y_pos = y * i + 50
+        # image = timeline_card(image, draw, achievement, achieved_page[achievement], x, y * i + 50)
+        draw.rectangle([(x, y_pos), (x + 400, y_pos + 75)], 'white')  # , 'black')
+        image.paste(box_border, (x-2, y_pos-2), box_border)
+        draw.text((x + 10, y_pos + 10), achievement, 'green', font=font_medium)
+        draw.text((x + 10, y_pos + 45),
+                  f"achieved at {datetime.datetime.fromtimestamp(achieved_page[achievement]).strftime('%d/%m/%y %H:%M')}",
+                  'black', font=font_thin)
 
     # save to cache
     json_cache = deep_update_dict(json_cache, {
