@@ -58,13 +58,13 @@ class util(commands.Cog, name="Other"):
                 return await ctx.send(f"{ctx.author.mention}, an error occurred! Result too large")
             await ctx.send(f"{ctx.author.mention}, an error occurred! ```\n{e.reason}\n``` ```\n{e.visualisation}\n```")
 
-    @commands.command(aliases=["color"])
-    async def colour(self, ctx, colour):
-        embed = discord.Embed(description=colour, colour=colour)
-        try:
-            await ctx.send(embed=embed)
-        except TypeError:
-            raise commands.BadArgument()
+#    @commands.command(aliases=["color"])
+#    async def colour(self, ctx, colour):
+#        embed = discord.Embed(description=colour, colour=colour)
+#        try:
+#            await ctx.send(embed=embed)
+#        except TypeError:
+#            raise commands.BadArgument()
 
     @commands.command()
     @commands.guild_only()
