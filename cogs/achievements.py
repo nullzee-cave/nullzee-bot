@@ -2,11 +2,11 @@ from discord.ext import commands, tasks
 import discord
 from achievements.achievements import achievements
 from achievements.images import achievement_page, achievement_timeline, achievement_timeline_animated, BackgroundMeta, \
-    image_preview, BackgroundConverter
+    image_preview, BackgroundConverter, BoxBorderMeta, BoxBorderConverter
 from api_key import userColl
 from helpers.constants import Role
 from helpers.events import Emitter
-from helpers.utils import get_user, ShallowContext, getFileJson
+from helpers.utils import get_user, ShallowContext, getFileJson, Embed
 from math import ceil
 import typing
 import os
@@ -127,6 +127,102 @@ class Achievements(commands.Cog):
             cache_data["regen_animated"] = True
             with open(f"{user_page_path}.json", 'w') as f:
                 json.dump(cache_data, f)
+
+    @commands.group(invoke_without_command=True)
+    async def boxBorder(self, ctx):
+        await ctx.send(embed=discord.Embed(
+            title="-boxBorder",
+            description="\n".join([f":arrow_right: `{ctx.prefix}boxBorder {z.name} {z.signature}`"
+                                   for z in self.boxBorder.commands]),
+            colour=0x00ff00
+        ))
+
+    @boxBorder.command(name="shop")
+    async def box_border_shop(self, ctx):
+        user_data = await get_user(ctx.author)
+        balance = user_data["achievement_points"]
+        backgrounds = [f"{z} - {BoxBorderMeta.get()[z].cost} achievement points" for z in BoxBorderMeta.get()
+                       if BoxBorderMeta.get()[z].purchasable]
+        embed = await Embed(ctx.author, title=f"Achievement box-border shop - {balance}",
+                            description="\n".join(backgrounds)).user_colour()
+        await ctx.send(embed=embed)
+
+    @boxBorder.command(name="inventory", aliases=["inv"])
+    async def box_border_inventory(self, ctx):
+        user_data = await get_user(ctx.author)
+        bgs = user_data["achievement_inventory"]["box_borders"]
+        embed = await Embed(ctx.author, title="Your box-border inventory", description="\n".join(bgs)).user_colour()
+        await ctx.send(embed=embed)
+
+    @boxBorder.command(name="select")
+    async def box_border_select(self, ctx, item: BoxBorderConverter):
+        user_data = await get_user(ctx.author)
+        if item not in user_data["achievement_inventory"]["box_borders"]:
+            return await ctx.send("You have not unlocked that border yet!")
+        await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"box_border": item}})
+        await ctx.send(f"Successfully set your current box-border to `{item}`")
+
+    @boxBorder.command(name="purchase", aliases=["buy"])
+    async def box_border_purchase(self, ctx, item: BoxBorderConverter):
+        user_data = await get_user(ctx.author)
+        item_data = BoxBorderMeta.get()[item]
+        if item in user_data["achievement_inventory"]["box_borders"]:
+            return await ctx.send("You have already unlocked this box-border")
+        if not item_data.purchasable:
+            return await ctx.send("This border is not purchasable")
+        if item_data.cost > user_data["achievement_points"]:
+            return await ctx.send("You cannot afford this!")
+        await userColl.update_one({"_id": str(ctx.author.id)}, {"$push": {"achievement_inventory.box_borders": item},
+                                                                "$inc": {"achievement_points": -item_data.cost}})
+        await ctx.send(f"Successfully purchased `{item}` for {item_data.cost} achievement points")
+
+    @commands.group(invoke_without_command=True, aliases=["backgrounds"])
+    async def background(self, ctx):
+        await ctx.send(embed=discord.Embed(
+            title="-background",
+            description="\n".join([f":arrow_right: `{ctx.prefix}background {z.name} {z.signature}`"
+                                   for z in self.background.commands]),
+            colour=0x00ff00
+        ))
+
+    @background.command(name="shop")
+    async def bg_shop(self, ctx):
+        user_data = await get_user(ctx.author)
+        balance = user_data["achievement_points"]
+        backgrounds = [f"{z} - {BackgroundMeta.get()[z].cost} achievement points" for z in BackgroundMeta.get()
+                       if BackgroundMeta.get()[z].purchasable]
+        embed = await Embed(ctx.author, title=f"Achievement background shop - {balance}",
+                            description="\n".join(backgrounds)).user_colour()
+        await ctx.send(embed=embed)
+
+    @background.command(name="inventory")
+    async def bg_inventory(self, ctx):
+        user_data = await get_user(ctx.author)
+        bgs = user_data["achievement_inventory"]["backgrounds"]
+        embed = await Embed(ctx.author, title="Your background inventory", description="\n".join(bgs)).user_colour()
+        await ctx.send(embed=embed)
+
+    @background.command(name="select")
+    async def bg_select(self, ctx, item: BackgroundConverter):
+        user_data = await get_user(ctx.author)
+        if item not in user_data["achievement_inventory"]["backgrounds"]:
+            return await ctx.send("You have not unlocked that background yet!")
+        await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"background_image": item}})
+        await ctx.send(f"Successfully set your current background image to `{item}`")
+
+    @background.command(name="purchase")
+    async def bg_purchase(self, ctx, item: BackgroundConverter):
+        user_data = await get_user(ctx.author)
+        item_data = BackgroundMeta.get()[item]
+        if item in user_data["achievement_inventory"]["backgrounds"]:
+            return await ctx.send("You have already unlocked this background")
+        if not item_data.purchasable:
+            return await ctx.send("This image is not purchasable")
+        if item_data.cost > user_data["achievement_points"]:
+            return await ctx.send("You cannot afford this!")
+        await userColl.update_one({"_id": str(ctx.author.id)}, {"$push": {"achievement_inventory.backgrounds": item},
+                                                                "$inc": {"achievement_points": -item_data.cost}})
+        await ctx.send(f"Successfully purchased `{item}` for {item_data.cost} achievement points")
 
 
 def setup(bot):

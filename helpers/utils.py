@@ -1,3 +1,4 @@
+import abc
 import re
 from motor.motor_asyncio import AsyncIOMotorClient
 from api_key import userColl
@@ -10,9 +11,10 @@ import collections
 from discord.ext import commands
 
 staff_only = commands.check(lambda ctx: ctx.guild and ctx.guild.id == 667953033929293855 and (685027474522112000 in
-                                                                     (roles := [z.id for z in ctx.author.roles]) or
-                                                                     667953757954244628 in roles or
-                                                                     675031583954173986 in roles))
+                                                                                              (roles := [z.id for z in
+                                                                                                         ctx.author.roles]) or
+                                                                                              667953757954244628 in roles or
+                                                                                              675031583954173986 in roles))
 
 
 async def get_user(user):
@@ -49,6 +51,7 @@ def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="
                                                                           inline=False)
     return embeds
 
+
 def deep_update_dict(d, u):
     for k, v in u.items():
         if isinstance(v, collections.abc.Mapping):
@@ -56,6 +59,7 @@ def deep_update_dict(d, u):
         else:
             d[k] = v
     return d
+
 
 def nanoId(length=20):
     return ''.join(
@@ -90,6 +94,54 @@ class ShallowContext:
 
     async def send(self, *args, **kwargs):
         return await self.__send_channel.send(*args, **kwargs)
+
+
+def jsonMetaConverter(meta):
+    class JsonMetaConverter(commands.Converter):
+        async def convert(self, ctx, argument):
+            if argument.lower() in meta.get():
+                return argument.lower()
+            for bg in meta.get():
+                if argument.lower() in meta.get()[bg].aliases:
+                    return bg
+            raise commands.BadArgument()
+    return JsonMetaConverter
+
+def jsonMeta(filepath, defaults):
+    class JsonMeta:
+
+        __filepath = filepath
+        __defaults = defaults
+        __instance = None
+
+        @classmethod
+        def get(cls):
+            if not cls.__instance:
+                with open(f"{cls.__filepath}.json") as f:
+                    cls.__instance = cls(json.load(f))
+            return cls.__instance
+
+        def __init__(self, raw):
+            self.raw = raw
+
+        def __iter__(self):
+            yield from self.raw
+
+        def __getitem__(self, item):
+            if item in self.raw and (self.raw[item] or isinstance(self.raw[item], dict)):
+                return self.__class__(self.raw[item]) if isinstance(self.raw[item], dict) else self.raw[item]
+            return self.__defaults[item] if item in self.__defaults else None
+
+        def __getattr__(self, item):
+            if item in self.raw and self.raw[item]:
+                return self.__class__(self.raw[item]) if isinstance(self.raw[item], dict) else self.raw[item]
+            return self.__defaults[item] if item in self.__defaults else None
+
+        def __contains__(self, item):
+            return item in self.raw
+
+    return JsonMeta
+
 
 class Embed(discord.Embed):
     def __init__(self, user: discord.User, **kwargs):

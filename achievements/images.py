@@ -2,7 +2,7 @@
 from discord.ext import commands
 
 from achievements.achievements import achievements, ACHIEVEMENT_BORDERS
-from helpers.utils import deep_update_dict
+from helpers.utils import deep_update_dict, jsonMeta, jsonMetaConverter
 
 from collections import OrderedDict
 import discord
@@ -21,21 +21,7 @@ font_thin = ImageFont.truetype('assets/fonts/Roboto-Thin.ttf', 15)
 font_bold = ImageFont.truetype('assets/fonts/Roboto-Bold.ttf', 15)
 font_title = ImageFont.truetype('assets/fonts/Roboto-Bold.ttf', 80)
 
-
-class BackgroundConverter(commands.Converter):
-
-    async def convert(self, ctx, argument):
-        if argument.lower() in BackgroundMeta.get():
-            return argument.lower()
-        for bg in BackgroundMeta.get():
-            if argument.lower() in BackgroundMeta.get()[bg].aliases:
-                return bg
-        raise commands.BadArgument()
-
-
-class BackgroundMeta:
-    instance = None
-    defaults = {
+BackgroundMeta = jsonMeta("assets/achievement_backgrounds/bg_meta", {
         "aliases": [],
         "text_colour": "black",
         "box_backround_colour": "white",
@@ -46,34 +32,18 @@ class BackgroundMeta:
         "role_req": None,
         "role_req_strategy": "any",
         "claimable": False,
-        "preview": True
-    }
+        "preview": True,
+        "cost": 0,
+    })
 
-    @classmethod
-    def get(cls):
-        if not cls.instance:
-            with open("assets/achievement_backgrounds/bg_meta.json") as f:
-                cls.instance = cls(json.load(f))
-        return cls.instance
+BackgroundConverter = jsonMetaConverter(BackgroundMeta)
 
-    def __init__(self, raw):
-        self.raw = raw
-
-    def __iter__(self):
-        yield from self.raw
-
-    def __getitem__(self, item):
-        if item in self.raw and self.raw[item]:
-            return BackgroundMeta(self.raw[item]) if isinstance(self.raw[item], dict) else self.raw[item]
-        return self.defaults[item] if item in self.defaults else None
-
-    def __getattr__(self, item):
-        if item in self.raw and self.raw[item]:
-            return BackgroundMeta(self.raw[item]) if isinstance(self.raw[item], dict) else self.raw[item]
-        return self.defaults[item] if item in self.defaults else None
-
-    def __contains__(self, item):
-        return item in self.raw
+BoxBorderMeta = jsonMeta("assets/achievement_box_borders/box_border_meta", {
+    "cost": 0,
+    "purchasable": False,
+    "aliases": [],
+})
+BoxBorderConverter = jsonMetaConverter(BoxBorderMeta)
 
 
 def wrap_text(text: str, width, font: ImageFont.FreeTypeFont):
@@ -91,7 +61,7 @@ def wrap_text(text: str, width, font: ImageFont.FreeTypeFont):
     return output
 
 
-def should_regen(json_cache, *, page, user, border, background="default", achieved_page, embed_colour):
+def should_regen(json_cache, *, page, user, border, background="default", achieved_page, embed_colour, box_border):
     if str(page) not in json_cache["pages"]:
         return True
     page_data = json_cache["pages"][str(page)]
@@ -100,7 +70,8 @@ def should_regen(json_cache, *, page, user, border, background="default", achiev
                 and page_data["uname"] == str(user)
                 and page_data["avatar"] == str(user.avatar_url)
                 and page_data["border_type"] == border
-                and page_data["background_image"] == background)
+                and page_data["background_image"] == background
+                and page_data["box_border"] == box_border)
 
 
 def cache_for(user_id):
@@ -169,15 +140,15 @@ def achievement_page(page, filename="image.png"):
     return image.save(filename, format='PNG')
 
 
-def timeline_card(image, draw, achievement, timestamp, x, y):
-    box_border = Image.open("assets/achievement_box_borders/diamond.png")
-    draw.rectangle([(x, y), (x + 400, y + 75)], 'white')#, 'black')
-    image.paste(box_border, (x, y), box_border)
-    draw.text((x + 10, y + 10), achievement, 'green', font=font_medium)
-    draw.text((x + 10, y + 45),
-              f"achieved at {datetime.datetime.fromtimestamp(timestamp).strftime('%d/%m/%y %H:%M')}",
-              'black', font=font_thin)
-    return image
+# def timeline_card(image, draw, achievement, timestamp, x, y):
+#     box_border = Image.open("assets/achievement_box_borders/crimson.png")
+#     draw.rectangle([(x, y), (x + 400, y + 75)], 'white')#, 'black')
+#     image.paste(box_border, (x-2, y-2), box_border)
+#     draw.text((x + 10, y + 10), achievement, 'green', font=font_medium)
+#     draw.text((x + 10, y + 45),
+#               f"achieved at {datetime.datetime.fromtimestamp(timestamp).strftime('%d/%m/%y %H:%M')}",
+#               'black', font=font_thin)
+#     return image
 
 
 async def achievement_timeline(user: discord.User, payload, page=1):
@@ -192,6 +163,7 @@ async def achievement_timeline(user: discord.User, payload, page=1):
     user_page_path = f"image_cache/user_achievements/{user.id}"
     embed_colour = payload["embed_colour"]
     background = payload["background_image"]
+    box_border_name = payload['box_border'] if 'box_border' in payload else 'default'
 
     percentage_achieved = len(payload["achievements"]) / len(achievements)
     border = "default"
@@ -209,7 +181,7 @@ async def achievement_timeline(user: discord.User, payload, page=1):
         with open(f"{user_page_path}.json") as f:
             json_cache = json.load(f)
         if not should_regen(json_cache, page=page, user=user, border=border, background=background,
-                            achieved_page=achieved_page, embed_colour=embed_colour):
+                            achieved_page=achieved_page, embed_colour=embed_colour, box_border=box_border_name):
             return
     # generation
     image = Image.open(f"assets/achievement_backgrounds/{payload['background_image']}.png").convert('RGBA')
@@ -224,14 +196,14 @@ async def achievement_timeline(user: discord.User, payload, page=1):
             avatar = Image.open(io.BytesIO(await resp.content.read()))
     x, y = 50, 100
     box_border = Image.open(
-        f"assets/achievement_box_borders/{payload['box_border'] if 'box_border' in payload else 'default'}.png")\
+        f"assets/achievement_box_borders/{box_border_name}.png")\
         .convert("RGBA")
     border_image = Image.open(f"assets/achievement_borders/{border}.png").convert("RGBA")
     image.paste(border_image, (0, 0), border_image)
     draw = ImageDraw.Draw(image)
     # draw.rectangle([(x, y - 50), (x + 400, y + 10)], BackgroundMeta.get()[background].box_backround_colour)
-    draw.rectangle([(x, y-55), (x + 400, y + 20)], BackgroundMeta.get()[background].box_backround_colour)
-    image.paste(box_border, (x-2, y-57), box_border)
+    draw.rectangle([(x, y-55), (x + 399, y + 20)], BackgroundMeta.get()[background].box_backround_colour)
+    image.paste(box_border, (x-4, y-59), box_border)
     avatar = mask_circle_transparent(avatar, 4)
     avatar = avatar.resize((50, 50))
     image.paste(avatar, (60, 59), mask=avatar)
@@ -244,8 +216,8 @@ async def achievement_timeline(user: discord.User, payload, page=1):
     for i, achievement in enumerate(achieved_page, 1):
         y_pos = y * i + 50
         # image = timeline_card(image, draw, achievement, achieved_page[achievement], x, y * i + 50)
-        draw.rectangle([(x, y_pos), (x + 400, y_pos + 75)], 'white')  # , 'black')
-        image.paste(box_border, (x-2, y_pos-2), box_border)
+        draw.rectangle([(x, y_pos), (x + 399, y_pos + 75)], 'white')  # , 'black')
+        image.paste(box_border, (x-4, y_pos-4), box_border)
         draw.text((x + 10, y_pos + 10), achievement, 'green', font=font_medium)
         draw.text((x + 10, y_pos + 45),
                   f"achieved at {datetime.datetime.fromtimestamp(achieved_page[achievement]).strftime('%d/%m/%y %H:%M')}",
@@ -261,6 +233,7 @@ async def achievement_timeline(user: discord.User, payload, page=1):
                 "avatar": str(user.avatar_url),
                 "border_type": border,
                 "background_image": payload["background_image"],
+                "box_border": box_border_name,
                 "embed_colour": embed_colour,
             }
         },

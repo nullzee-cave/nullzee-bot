@@ -47,6 +47,8 @@ class Points(commands.Cog):
     async def changePoints(self, ctx, user: discord.Member, points: int):
         await userColl.update_one({"_id": str(user.id)}, {"$inc": {"points": points}})
         await ctx.send(f"changed {user.mention}'s points by {points}")
+        ctx.author = user
+        await Emitter().emit("points_changed", ctx, points)
 
 
 def setup(bot):

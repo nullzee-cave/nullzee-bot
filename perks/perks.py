@@ -83,10 +83,3 @@ async def staffNickChange(ctx, arg):
         #await ctx.send(f"{member.mention}'s nick has been changed to ✰ {content}")
 
 
-@perk(name="achievementBackground", description="change the background of your achievements image", cost=12, require_arg=True)
-async def achievement_background(ctx, arg):
-    if arg.lower() not in BackgroundMeta.get():
-        raise PerkError(msg="Can't find that background")
-    elif not BackgroundMeta.get()[arg.lower()].purchasable:
-        raise PerkError(msg="This background is not purchasable")
-    await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"background_image": arg.lower()}})

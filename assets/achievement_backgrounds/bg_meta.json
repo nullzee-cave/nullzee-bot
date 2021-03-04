@@ -5,10 +5,12 @@
     "purchasable": true
   },
   "chaos": {
-    "purchasable": true
+    "purchasable": true,
+    "cost": 2
   },
   "cubes": {
-    "purchasable": true
+    "purchasable": true,
+    "cost": 1
   },
   "fruit": {
     "purchasable": true

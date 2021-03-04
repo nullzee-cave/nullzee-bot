@@ -4,9 +4,9 @@ class Constant(type):
     _constants = {}
 
     def __new__(mcs, *args, **kwargs):
-        super(Constant, mcs).__new__(mcs, *args, **kwargs)
+        self = super(Constant, mcs).__new__(mcs, *args, **kwargs)
         mcs._constants[mcs] = args[2]
-        return mcs._constants[mcs]
+        return self
 
     def __class_getitem__(mcs, item):
         return mcs._constants[mcs]

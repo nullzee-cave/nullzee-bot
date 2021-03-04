@@ -57,6 +57,7 @@ achievements = {
     "Rich": {
         "listeners": {
             "update_roles": lambda ctx, roles: Role.BOOSTER in [z.id for z in roles]
+            # "update_roles": lambda ctx, roles: print(Role)
         },
         "description": "Nitro boost the server"
     },
@@ -151,9 +152,30 @@ achievements = {
         },
         "description": "Have one of your messages pinned or starred"
     },
-    "Establising Connections": {
+    "Establishing Connections": {
         "listeners": {},
         "description": "Send a message in twitch chat after linking your twitch to your discord"
+    },
+    "Bad boy": {
+      "listeners": {
+          "point_change": lambda _, points: points > 0
+      },
+      "description": "Have some points refunded"
+    },
+    "Colourful": {
+        "listeners": {
+            "points_spent": lambda _, name: name == "embedColour"
+        },
+        "description": "Change your embed colour",
+    },
+
+    "Great Job": {
+        "listeners": {
+            "message": lambda msg: msg.guild and msg.author.guild_permissions.manage_messages,
+            "update_roles": lambda ctx, _: ctx.author.guild_permissions.manage_messages
+        },
+        "description": "Get any staff position",
+        "hidden": True
     },
     "Twitch Main": {
         "listeners": {},
@@ -168,6 +190,7 @@ achievements = {
 
 
 async def award_achievement(ctx, data, name):
+    return
     if name in data["achievements"]:
         return
     string = ""
@@ -179,7 +202,7 @@ async def award_achievement(ctx, data, name):
         await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": achievements[name]["db_rewards"]})
         string += f" and earned {','.join(f'{v} {k}' for k, v in achievements[name]['db_rewards'])}"
     await ctx.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
-    await userColl.update_one({"_id": str(ctx.author.id)}, {"set": {f"achievements.{name}": time.time()}})
+    await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {f"achievements.{name}": time.time()}})
 
 
 def listeners_for(event):
