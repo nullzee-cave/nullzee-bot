@@ -85,7 +85,7 @@ async def waste(ctx, arg):
     await ctx.send(idiocy_scale[idiocy_level].format(ctx.author.mention))
     return val
 
-@perk(name="staffNickChange", description = "Change a Staff's nick!", cost= 12, require_arg = True, aliases = ["bullyStaff","snc"])
+@perk(name="staffNickChange", description = "Change a Staff's nick!", cost= 15, require_arg = True, aliases = ["bullyStaff","snc"])
 async def staffNickChange(ctx, arg):
     try:
         member: discord.Member = await commands.MemberConverter().convert(ctx, arg)
