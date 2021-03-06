@@ -21,7 +21,7 @@
     "nitro": {
       "claimable": true,
       "role_req": [
-        "qotd_ping"
+        "booster"
       ]
   },
   "twitch": {

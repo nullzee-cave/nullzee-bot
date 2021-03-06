@@ -18,7 +18,8 @@ EVENTS = [
     "suggestion_stage_2",
     "giveaway_start[donor]",
     "giveaway_win",
-    "pinned_starred"
+    "pinned_starred",
+    "leaderboard_pos",
 ]
 
 

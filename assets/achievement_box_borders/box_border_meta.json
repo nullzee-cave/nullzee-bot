@@ -1,0 +1,28 @@
+{
+  "default": {
+  },
+  "corrupt": {
+    "cost": 2,
+    "purchasable": true
+  },
+  "crimson": {
+    "cost": 2,
+    "purchasable": true
+  },
+  "emerald": {
+    "cost": 2,
+    "purchasable": true
+  },
+  "ruby": {
+    "cost": 2,
+    "purchasable": true
+  },
+  "diamond": {
+    "cost": 3,
+    "purchasable": true
+  },
+  "ectoplasm": {
+    "cost": 5,
+    "purchasable": true
+  }
+}

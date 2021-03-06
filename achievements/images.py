@@ -1,4 +1,3 @@
-
 from discord.ext import commands
 
 from achievements.achievements import achievements, ACHIEVEMENT_BORDERS
@@ -22,19 +21,19 @@ font_bold = ImageFont.truetype('assets/fonts/Roboto-Bold.ttf', 15)
 font_title = ImageFont.truetype('assets/fonts/Roboto-Bold.ttf', 80)
 
 BackgroundMeta = jsonMeta("assets/achievement_backgrounds/bg_meta", {
-        "aliases": [],
-        "text_colour": "black",
-        "box_backround_colour": "white",
-        "box_text_colour": "black",
-        "box_border_colour": "black",
-        "purchasable": False,
-        "credit": "art by aei",
-        "role_req": None,
-        "role_req_strategy": "any",
-        "claimable": False,
-        "preview": True,
-        "cost": 0,
-    })
+    "aliases": [],
+    "text_colour": "black",
+    "box_backround_colour": "white",
+    "box_text_colour": "black",
+    "box_border_colour": "black",
+    "purchasable": False,
+    "credit": "art by aei",
+    "role_req": None,
+    "role_req_strategy": "any",
+    "claimable": False,
+    "preview": True,
+    "cost": 0,
+})
 
 BackgroundConverter = jsonMetaConverter(BackgroundMeta)
 
@@ -42,6 +41,9 @@ BoxBorderMeta = jsonMeta("assets/achievement_box_borders/box_border_meta", {
     "cost": 0,
     "purchasable": False,
     "aliases": [],
+    "role_req": None,
+    "role_req_strategy": "any",
+    "preview": True
 })
 BoxBorderConverter = jsonMetaConverter(BoxBorderMeta)
 
@@ -88,18 +90,34 @@ def cache_for(user_id):
     return cache_data
 
 
-def image_preview(name):
+def background_preview(name):
     w, h = font_title.getsize(" ".join(name.upper()))
     image = Image.open(f"assets/achievement_backgrounds/{name}.png").convert('RGBA')
     border = Image.open("assets/achievement_borders/default.png").convert("RGBA")
     image.paste(border, (0, 0), border)
     text = Image.new('RGBA', image.size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(text)
-    draw.text(((500-w)/2, (600-h)/2), " ".join(name.upper()), font=font_title, fill=(0, 0, 0, 95))
-    save_path = f"image_cache/static_previews/{name}.png"
+    draw.text(((500 - w) / 2, (600 - h) / 2), " ".join(name.upper()), font=font_title, fill=(0, 0, 0, 95))
+    save_path = f"image_cache/static_background_previews/{name}.png"
     combined = Image.alpha_composite(image, text)
     combined.save(save_path)
     return save_path
+
+
+def box_border_preview(bb_name):
+    bg = Image.open("assets/achievement_backgrounds/default.png").convert('RGBA')
+    bb = Image.open(f"assets/achievement_box_borders/{bb_name}.png").convert('RGBA')
+    bd = Image.open("assets/achievement_borders/default.png").convert('RGBA')
+    bg.paste(bd, (0, 0), bd)
+    draw = ImageDraw.Draw(bg)
+    draw.rectangle([(50, 263), (449, 338)], BackgroundMeta.get().default.box_backround_colour)
+    bg.paste(bb, (48, 261), bb)
+    w, h = font_title.getsize(bb_name)
+    draw.text(((500 - w) / 2, (600 - h) / 2), bb_name, BackgroundMeta.get().default.box_text_colour, font=font_title)
+    save_path = f"image_cache/static_boxborder_previews/{bb_name}.png"
+    bg.save(save_path)
+    return save_path
+
 
 def mask_circle_transparent(pil_img, blur_radius, offset=0):
     offset = blur_radius * 2 + offset
@@ -135,7 +153,8 @@ def achievement_page(page, filename="image.png"):
         draw.rectangle([(x_pos, y_pos), (x_pos + 300, y_pos + 100)], BackgroundMeta.get().default.box_background_colour,
                        BackgroundMeta.get().default.box_text_colour)
         draw.text((x_pos + 10, y_pos + 10), name, 'black', font=font_medium)
-        draw.text((x_pos + 10, y_pos + 40), wrap_text(achievements[name]["description"], 280, font_thin), 'black', font=font_thin)
+        draw.text((x_pos + 10, y_pos + 40), wrap_text(achievements[name]["description"], 280, font_thin), 'black',
+                  font=font_thin)
         y_pos += 150
     return image.save(filename, format='PNG')
 
@@ -187,7 +206,8 @@ async def achievement_timeline(user: discord.User, payload, page=1):
     image = Image.open(f"assets/achievement_backgrounds/{payload['background_image']}.png").convert('RGBA')
     if background == "cubes":
         try:
-            layer = Image.new("RGBA", image.size, payload["embed_colour"] if payload["embed_colour"].startswith('#') else f"#{payload['embed_colour']}")
+            layer = Image.new("RGBA", image.size, payload["embed_colour"] if payload["embed_colour"].startswith(
+                '#') else f"#{payload['embed_colour']}")
         except (ValueError, KeyError):
             layer = Image.new("RGBA", image.size, "#00FF00")
         image = Image.blend(image, layer, 0.5)
@@ -196,28 +216,28 @@ async def achievement_timeline(user: discord.User, payload, page=1):
             avatar = Image.open(io.BytesIO(await resp.content.read()))
     x, y = 50, 100
     box_border = Image.open(
-        f"assets/achievement_box_borders/{box_border_name}.png")\
+        f"assets/achievement_box_borders/{box_border_name}.png") \
         .convert("RGBA")
     border_image = Image.open(f"assets/achievement_borders/{border}.png").convert("RGBA")
     image.paste(border_image, (0, 0), border_image)
     draw = ImageDraw.Draw(image)
     # draw.rectangle([(x, y - 50), (x + 400, y + 10)], BackgroundMeta.get()[background].box_backround_colour)
-    draw.rectangle([(x, y-55), (x + 399, y + 20)], BackgroundMeta.get()[background].box_backround_colour)
-    image.paste(box_border, (x-4, y-59), box_border)
+    draw.rectangle([(x, y - 55), (x + 399, y + 20)], BackgroundMeta.get()[background].box_backround_colour)
+    image.paste(box_border, (x - 4, y - 59), box_border)
     avatar = mask_circle_transparent(avatar, 4)
     avatar = avatar.resize((50, 50))
     image.paste(avatar, (60, 59), mask=avatar)
     draw.text((x + 80, 75), str(user), BackgroundMeta.get()[background].box_text_colour, font=font_medium)
     draw.text((x - 15, 555), f"page {page} of {last_page}", BackgroundMeta.get()[background].text_colour,
               font=font_bold)
-    draw.text((450 - x, 555),  BackgroundMeta.get()[background].credit, BackgroundMeta.get()[background].text_colour,
+    draw.text((450 - x, 555), BackgroundMeta.get()[background].credit, BackgroundMeta.get()[background].text_colour,
               font=font_bold)
 
     for i, achievement in enumerate(achieved_page, 1):
         y_pos = y * i + 50
         # image = timeline_card(image, draw, achievement, achieved_page[achievement], x, y * i + 50)
         draw.rectangle([(x, y_pos), (x + 399, y_pos + 75)], 'white')  # , 'black')
-        image.paste(box_border, (x-4, y_pos-4), box_border)
+        image.paste(box_border, (x - 4, y_pos - 4), box_border)
         draw.text((x + 10, y_pos + 10), achievement, 'green', font=font_medium)
         draw.text((x + 10, y_pos + 45),
                   f"achieved at {datetime.datetime.fromtimestamp(achieved_page[achievement]).strftime('%d/%m/%y %H:%M')}",

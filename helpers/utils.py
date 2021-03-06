@@ -10,6 +10,8 @@ import string
 import collections
 from discord.ext import commands
 
+from helpers.events import Emitter
+
 staff_only = commands.check(lambda ctx: ctx.guild and ctx.guild.id == 667953033929293855 and (685027474522112000 in
                                                                                               (roles := [z.id for z in
                                                                                                          ctx.author.roles]) or
@@ -19,10 +21,24 @@ staff_only = commands.check(lambda ctx: ctx.guild and ctx.guild.id == 6679530339
 
 async def get_user(user):
     if not await userColl.find_one({"_id": str(user.id)}):
-        await userColl.insert_one(
-            {"_id": str(user.id), "experience": 0, "weekly": 0, "level": 1, "last_message": 0, "points": 0,
-             "last_points": 0, "embed_colour": "#00FF00", "vc_minutes": 0,
-             "achievements": {}})
+        await userColl.insert_one({
+            "_id": str(user.id),
+            # levelling data
+            "experience": 0,
+            "weekly": 0,
+            "level": 1,
+            "last_message": 0,
+            # points data
+            "points": 0,
+            "last_points": 0,
+            "embed_colour": "#00FF00",
+            # achievement data
+            "achievements": {},
+            "achievement_inventory": {"backgrounds": [], "box_borders": []},
+            "achievement_points": 0,
+            # misc data
+            "vc_minutes": 0,
+        })
     return await userColl.find_one({"_id": str(user.id)})
 
 
@@ -34,6 +50,8 @@ def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="
     for i, user in enumerate(users):
         if not (member := guild.get_member(int(user["_id"]))):
             continue
+        # FIXME: somehow make async work
+        # await Emitter().emit("leaderboard_pos", await ShallowContext.create(member), lb_pos)
         entries.append(f"**{lb_pos}: {member}** - {prefix}{user[key]:,}{suffix}\n")
         lb_pos += 1
     embeds = [discord.Embed(colour=0x00FF00).set_author(name=title, icon_url=guild.icon_url)]
@@ -105,7 +123,9 @@ def jsonMetaConverter(meta):
                 if argument.lower() in meta.get()[bg].aliases:
                     return bg
             raise commands.BadArgument()
+
     return JsonMetaConverter
+
 
 def jsonMeta(filepath, defaults):
     class JsonMeta:
