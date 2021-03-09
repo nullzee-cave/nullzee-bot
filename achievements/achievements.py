@@ -435,6 +435,8 @@ achievements = {
 
 
 async def award_achievement(ctx, data, name):
+    if ctx.author.bot:
+        return
     if name in data["achievements"]:
         return
     string = ""
