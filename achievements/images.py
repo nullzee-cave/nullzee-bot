@@ -63,11 +63,12 @@ def wrap_text(text: str, width, font: ImageFont.FreeTypeFont):
     return output
 
 
-def should_regen(json_cache, *, page, user, border, background="default", achieved_page, embed_colour, box_border):
+def should_regen(json_cache, *, page, user, border, background="default", achieved_page, embed_colour, box_border, total_pages):
     if str(page) not in json_cache["pages"]:
         return True
     page_data = json_cache["pages"][str(page)]
     return not (page_data["achievements"] == list(achieved_page.keys())
+                and json_cache["total_pages"] == total_pages
                 and page_data["embed_colour"] == embed_colour
                 and page_data["uname"] == str(user)
                 and page_data["avatar"] == str(user.avatar_url)
@@ -192,7 +193,7 @@ async def achievement_timeline(user: discord.User, payload, page=1):
         with open(f"{user_page_path}.json") as f:
             json_cache = json.load(f)
         if not should_regen(json_cache, page=page, user=user, border=border, background=background,
-                            achieved_page=achieved_page, embed_colour=embed_colour, box_border=box_border_name):
+                            achieved_page=achieved_page, embed_colour=embed_colour, box_border=box_border_name, total_pages=last_page):
             return
     # generation
     image = Image.open(f"assets/achievement_backgrounds/{payload['background_image']}.png").convert('RGBA')
@@ -240,6 +241,7 @@ async def achievement_timeline(user: discord.User, payload, page=1):
     # save to cache
     json_cache = deep_update_dict(json_cache, {
         "image_files": [f"{user_page_path}_{page}.png"],
+        "total_pages": last_page,
         "pages": {
             str(page): {
                 "achievements": list(achieved_page.keys()),
