@@ -169,7 +169,7 @@ achievements = {
     },
     "Generous I": {
         "listeners": {
-            "giveaway_create[donor]": lambda _, payload: payload["channel"] == Channel.MINI_GIVEAWAY
+            "update_roles": lambda _, roles: Role.MINI_GIVEAWAY_DONOR in role_ids(roles)
         },
         "description": "Donate for a mini-giveaway",
         "value": 5,
@@ -180,7 +180,7 @@ achievements = {
     },
     "Generous II": {
         "listeners": {
-            "giveaway_create[donor]": lambda _, payload: payload["channel"] == Channel.GIVEAWAY
+            "update_roles": lambda _, roles: Role.LARGE_GIVEAWAY_DONOR in role_ids(roles)
         },
         "description": "Donate for a large giveaway",
         "value": 10,
@@ -192,7 +192,7 @@ achievements = {
     },
     "Lucky!": {
         "listeners": {
-            "giveaway_win": lambda ctx: ctx.channel.id == Channel.GIVEAWAY
+            "giveaway_win": lambda _, roles: Role.LARGE_GIVEAWAY_WIN in role_ids(roles)
         },
         "description": "Win a large giveaway",
         "value": 5,

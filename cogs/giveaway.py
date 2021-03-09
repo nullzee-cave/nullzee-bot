@@ -9,8 +9,8 @@ from discord.ext.commands.cooldowns import BucketType
 import time
 import math
 
-from helpers.events import Emitter
-from helpers.utils import stringToSeconds as sts, ShallowContext
+from helpers.constants import Role, Channel
+from helpers.utils import stringToSeconds as sts
 from datetime import datetime
 from EZPaginator import Paginator
 
@@ -151,8 +151,10 @@ class giveaway(commands.Cog, name="giveaway"):
         with open('giveaways.json', 'w') as f:
             json.dump(giveaways, f)
         await ctx.send(f"Giveaway created!\n{msg.jump_url}")
-        ctx.author = donor
-        await Emitter().emit("giveaway_create[donor]", ctx, payload)
+        await donor.add_roles(ctx.guild.get_role(
+            Role.LARGE_GIVEAWAY_DONOR if ctx.channel.id == Channel.GIVEAWAY
+            else Role.MINI_GIVEAWAY_DONOR
+        ))
 
     async def reqcheck(self, giveaway, user):
         if "booster" in giveaway and giveaway["booster"]: 
@@ -224,9 +226,10 @@ class giveaway(commands.Cog, name="giveaway"):
         await channel.send(f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{thisGiveaway['content']}**!!")
         giveaways[id]["active"] = False
         for winner in winners:
-            ctx = await ShallowContext.create(winner)
-            ctx.channel = channel
-            await Emitter().emit("giveaway_win", ctx)
+            await winner.add_roles(message.guild.get_role(
+                Role.LARGE_GIVEAWAY_WIN if message.channel.id == Channel.GIVEAWAY
+                else Role.MINI_GIVEAWAY_WIN
+            ))
         # with open('giveaways.json', 'w') as f:
         #     json.dump(giveaways, f)
     @commands.command()
@@ -296,9 +299,10 @@ class giveaway(commands.Cog, name="giveaway"):
             await message.edit(embed=embed)
             await channel.send(f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{thisGiveaway['content']}**!!")
             for winner in winners:
-                _ctx = await ShallowContext.create(winner)
-                _ctx.channel = channel
-                await Emitter().emit("giveaway_win", _ctx)
+                await winner.add_roles(ctx.guild.get_role(
+                    Role.LARGE_GIVEAWAY_WIN if ctx.channel.id == Channel.GIVEAWAY
+                    else Role.MINI_GIVEAWAY_WIN
+                ))
         else:
             await ctx.send("Could not find that giveaway")
 
