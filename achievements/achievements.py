@@ -463,6 +463,7 @@ subscriber = Subscriber()
 @subscriber.listen_all()
 async def listen(event, ctx, *args, **kwargs):
     for achievement in listeners_for(event):
+        user_data = kwargs.pop("user_data", None)
         if achievements[achievement]["listeners"][event](ctx, *args, **kwargs):
             if ctx.author.id in award_queue:
                 if achievement in award_queue[ctx.author.id]:
@@ -471,6 +472,6 @@ async def listen(event, ctx, *args, **kwargs):
                     award_queue[ctx.author.id].append(achievement)
             else:
                 award_queue[ctx.author.id] = [achievement]
-            user_data = kwargs.get("user_data", await get_user(ctx.author))
+            user_data = user_data or await get_user(ctx.author)
             await award_achievement(ctx, user_data, achievement)
             award_queue[ctx.author.id].remove(achievement)

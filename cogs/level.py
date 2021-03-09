@@ -112,6 +112,7 @@ class Levelling(commands.Cog, name="levelling"):
         else:
             NO_WEEKLY_MULTIPLIER_CHANNELS = [674311689738649600]
             userData = await get_user(message.author)
+            await Emitter().emit('message', await self.bot.get_context(message), user_data=userData)
             if str(message.channel.id) in self.multipliers:
                 multiplier = self.multipliers[str(message.channel.id)]
             else:

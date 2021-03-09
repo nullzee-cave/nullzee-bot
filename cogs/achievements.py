@@ -85,10 +85,6 @@ class Achievements(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot:
-            return
-        ctx = await self.bot.get_context(message)
-        await self.emitter.emit("message", ctx)
         if message.is_system() and "pinned a message to this channel" in message.system_content:
             ctx.author = (await message.channel.pins())[0].author
             await self.emitter.emit("pinned_starred", ctx)
