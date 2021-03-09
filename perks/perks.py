@@ -1,3 +1,4 @@
+from helpers.events import Emitter
 from perks.perkSystem import perk, PerkError
 from discord.ext import commands
 import discord
@@ -83,6 +84,7 @@ async def waste(ctx, arg):
             break
         idiocy_level = idiocy_milestone
     await ctx.send(idiocy_scale[idiocy_level].format(ctx.author.mention))
+    await Emitter().emit("waste", ctx, val)
     return val
 
 @perk(name="staffNickChange", description = "Change a Staff's nick!", cost= 12, require_arg = True, aliases = ["bullyStaff","snc"])

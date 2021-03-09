@@ -11,7 +11,6 @@ ACHIEVEMENT_BORDERS = {
     0.5: "silver",
     0.8: "gold"
 }
-
 achievements = {
     "Hello, World!": {
         "listeners": {
@@ -299,14 +298,23 @@ achievements = {
     },
     # TODO: integrate new waste system to emit waste event with points spent
     "Waste": {
+        "listeners": {
+            "waste": lambda _, points: points >= 50
+        },
         "description": "Waste 50+ points",
         "value": 5
     },
     "Huge waste": {
+        "listeners": {
+            "waste": lambda _, points: points >= 100
+        },
         "description": "Waste 100+ points",
         "value": 10
     },
     "Largest waste": {
+        "listeners": {
+            "waste": lambda _, points: points >= 250
+        },
         "description": "Waste 250+ points",
         "value": 15
     },
@@ -442,8 +450,10 @@ async def award_achievement(ctx, data, name):
                               {"$set": {f"achievements.{name}": time.time()},
                                "$inc": {"achievement_points": achievements[name]["value"]}})
 
+
 def listeners_for(event):
     return [z for z in achievements if "listeners" in achievements[z] and event in achievements[z]["listeners"]]
+
 
 @Subscriber().listen_all()
 async def listen(event, ctx, *args, **kwargs):

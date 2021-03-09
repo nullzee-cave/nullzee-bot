@@ -22,6 +22,7 @@ EVENTS = [
     "hypixel_link",
     "vc_minute_gain",
     "bad_suggestion",
+    "waste",
 ]
 
 
