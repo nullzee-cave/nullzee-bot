@@ -11,7 +11,8 @@ import math
 import os
 import datetime
 from EZPaginator import Paginator
-from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only
+from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only, ShallowContext
+from helpers.events import Emitter
 from api_key import userColl
 import pymongo
 
@@ -22,7 +23,7 @@ class Levelling(commands.Cog, name="levelling"):
         self.bot: commands.Bot = bot
         self.update_multipliers()
         self.vc_tracker.start()
-    
+
     def cog_unload(self):
         self.vc_tracker.cancel()
 
@@ -36,6 +37,7 @@ class Levelling(commands.Cog, name="levelling"):
                 member: discord.Member
                 if not member.bot:
                     user_data = await get_user(member)
+                    await Emitter().emit("vc_minute_gain", await ShallowContext.create(member), user_data["vc_minutes"])
                     await userColl.update_one({"_id": str(member.id)}, {"$inc": {"vc_minutes": 1}})
                     await member.add_roles(
                         *[guild.get_role(timed_roles[z]) for z in timed_roles if user_data["vc_minutes"] > int(z)])
@@ -125,6 +127,8 @@ class Levelling(commands.Cog, name="levelling"):
             weekly_exp = math.trunc(self.global_multiplier*base_exp) if message.channel.id in NO_WEEKLY_MULTIPLIER_CHANNELS else exp
             if time.time() - userData["last_message"] > 30:
                 points_bonus = 1 if userData["experience"] > userData["last_points"] + 1000 else 0
+                if points_bonus:
+                    await Emitter().emit("point_earned", message, userData["points"]+1)
                 await userColl.update_one({"_id": str(message.author.id)},
                                           {"$inc": {"experience": exp, "weekly": weekly_exp, "points": points_bonus},
                                            "$set": {"last_message": time.time(),
@@ -138,6 +142,7 @@ class Levelling(commands.Cog, name="levelling"):
             lvl_start = userData["level"]
             lvl_end = 50 * (lvl_start ** 1.5)
             if experience > lvl_end:
+                await Emitter().emit("level_up", message, lvl_start + 1)
                 await userColl.update_one({"_id": str(message.author.id)}, {"$inc": {"level": 1}, "$set": {"experience": 0,
                                                                                                  "last_points": 0 - (
                                                                                                          experience - (
@@ -205,7 +210,7 @@ class Levelling(commands.Cog, name="levelling"):
                                    title="Voice Activity leaderboard", field_name="Talk in a voice channel to gain time")
         msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
-    
+
     @commands.command(aliases=["plb"])
     @commands.guild_only()
     async def pointsleaderboard(self, ctx):

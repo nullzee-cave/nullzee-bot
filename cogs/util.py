@@ -14,6 +14,7 @@ from api_key import moderationColl, hypixel_api_key
 from helpers.utils import Embed
 import mathterpreter
 
+from helpers.events import Emitter
 
 class util(commands.Cog, name="Other"):
     def __init__(self, bot, hidden):
@@ -140,10 +141,18 @@ class util(commands.Cog, name="Other"):
                 downvotes = [z.count for z in msg.reactions if str(z.emoji) == '❎']
                 karma = upvotes[0] - downvotes[0]
                 if karma > 15:
-                    await self.bot.get_guild(667953033929293855).get_channel(738506620098576434).send(
-                        embed=msg.embeds[0])
+                    try:
+                        ctx = await self.bot.get_context(msg)
+                        ctx.author = await commands.MemberConverter().convert(ctx, msg.embeds[0].author.name)
+                        await Emitter().emit("suggestion_stage_2", ctx)
+                    except commands.BadArgument:
+                        pass
                     killList.append(i)
-                elif downvotes > 8:
+                elif downvotes[0] > 14:
+                    ctx = await self.bot.get_context(msg)
+                    ctx.author = await commands.MemberConverter().convert(ctx, msg.embeds[0].author.name)
+                    await Emitter().emit("bad_suggestion", ctx)
+                elif downvotes[0] > 8:
                     killList.append(i)
             except:
                 killList.append(i)
@@ -356,6 +365,7 @@ class util(commands.Cog, name="Other"):
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://api.hypixel.net/skyblock/profiles?key={key}&uuid={uuid}") as resp:
                 player = await resp.json()
+        await Emitter().emit("hypixel_link", ctx)
         souls = []
         slayers = []
         slots = {}

@@ -3,6 +3,7 @@ import discord
 from api_key import userColl
 from helpers.utils import get_user, getFileJson, saveFileJson, Embed, staff_only
 from perks.perkSystem import PerkConverter, perk_list
+from helpers.events import Emitter
 from perks import perks
 
 
@@ -44,6 +45,7 @@ class Points(commands.Cog):
             cost = item.cost if isinstance(item.cost, int) else returned
             await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": {"points": -cost}})
             await ctx.send(f"successfully bought `{item.name}` for `{cost}` points")
+            await Emitter().emit("points_spent", ctx, item.name)
         else:
             return await ctx.send("You cannot afford this!")
 
@@ -53,6 +55,8 @@ class Points(commands.Cog):
         '''Modify someone's points'''
         await userColl.update_one({"_id": str(user.id)}, {"$inc": {"points": points}})
         await ctx.send(f"changed {user.mention}'s points by {points}")
+        ctx.author = user
+        await Emitter().emit("points_changed", ctx, points)
 
 
 def setup(bot):

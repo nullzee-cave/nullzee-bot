@@ -119,3 +119,4 @@ async def staffNickChange(ctx, arg):
             await member.send(f'{ctx.author} changed your nick to {content} btw')
         except discord.Forbidden:
             raise PerkError(msg="I can't change an admin's nick!")
+

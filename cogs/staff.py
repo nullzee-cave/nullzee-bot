@@ -4,6 +4,9 @@ from discord.ext import commands
 import json
 import time
 import datetime
+
+from helpers.events import Emitter
+from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only
 from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only, RoleConverter, staff_or_trainee
 from helpers import moderationUtils
 import asyncio
@@ -40,7 +43,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             pass
         await guild.leave()
         await self.bot.get_user(564798709045526528).send(embed=embed)
-    
+
     @commands.command()
     @staff_only
     async def pending(self, ctx, user: discord.Member=None):
@@ -140,6 +143,8 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         star_message = await ctx.guild.get_channel(770316631829643275).send(embed=embed)
         await ctx.send(
             embed=await Embed(ctx.author, title="Added to starboard!", url=star_message.jump_url).user_colour())
+        ctx.author = msg.author
+        await Emitter().emit("pinned_starred", ctx)
 
     @commands.command()
     @staff_or_trainee

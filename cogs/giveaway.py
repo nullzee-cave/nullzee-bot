@@ -8,7 +8,9 @@ import random
 from discord.ext.commands.cooldowns import BucketType
 import time
 import math
-from helpers.utils import stringToSeconds as sts
+
+from helpers.events import Emitter
+from helpers.utils import stringToSeconds as sts, ShallowContext
 from datetime import datetime
 from EZPaginator import Paginator
 
@@ -144,10 +146,13 @@ class giveaway(commands.Cog, name="giveaway"):
         await msg.add_reaction(u"\U0001F389")
         with open('giveaways.json') as f:
             giveaways = json.load(f)
-        giveaways[str(msg.id)] = {"active": True, "mod": ctx.author.id, "channel": channel.id, "ends": giveawayTime, "winnercount": winnerCount, "role": roleid, "level": level, "booster": booster, "content": content, "donor": donor.id}
+        payload = {"active": True, "mod": ctx.author.id, "channel": channel.id, "ends": giveawayTime, "winnercount": winnerCount, "role": roleid, "level": level, "booster": booster, "content": content, "donor": donor.id}
+        giveaways[str(msg.id)] = payload
         with open('giveaways.json', 'w') as f:
             json.dump(giveaways, f)
         await ctx.send(f"Giveaway created!\n{msg.jump_url}")
+        ctx.author = donor
+        await Emitter().emit("giveaway_create[donor]", ctx, payload)
 
     async def reqcheck(self, giveaway, user):
         if "booster" in giveaway and giveaway["booster"]: 
@@ -218,6 +223,10 @@ class giveaway(commands.Cog, name="giveaway"):
         await message.edit(embed=embed)
         await channel.send(f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{thisGiveaway['content']}**!!")
         giveaways[id]["active"] = False
+        for winner in winners:
+            ctx = await ShallowContext.create(winner)
+            ctx.channel = channel
+            await Emitter().emit("giveaway_win", ctx)
         # with open('giveaways.json', 'w') as f:
         #     json.dump(giveaways, f)
     @commands.command()
@@ -286,6 +295,10 @@ class giveaway(commands.Cog, name="giveaway"):
             embed.color = discord.Color.darker_grey()
             await message.edit(embed=embed)
             await channel.send(f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{thisGiveaway['content']}**!!")
+            for winner in winners:
+                _ctx = await ShallowContext.create(winner)
+                _ctx.channel = channel
+                await Emitter().emit("giveaway_win", _ctx)
         else:
             await ctx.send("Could not find that giveaway")
 

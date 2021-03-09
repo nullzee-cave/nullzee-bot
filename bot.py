@@ -11,7 +11,8 @@ import math
 from api_key import token, prefix
 from perks.perkSystem import PerkError
 import traceback
-from helpers.utils import get_user, staff_only, TimeConverter
+from helpers.utils import get_user, staff_only, TimeConverter, ItemNotFound
+
 
 intents = discord.Intents.default()
 intents.members = True
@@ -51,9 +52,8 @@ cooldowns = {}
 bot = commands.Bot(command_prefix=prefix, case_insensitive=True, intents=intents)
 bot.remove_command('help')
 
-cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points', 'cogs.events_v2']
-# cogs = ['cogs.moderation', 'cogs.staff', 'cogs.automod']
-
+cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points', 'cogs.events_v2', 'cogs.achievements']
+# cogs = ['cogs.achievements', 'cogs.points', 'cogs.level']
 
 
 @bot.event
@@ -77,6 +77,11 @@ async def on_command_error(ctx, error):
         _message = 'I need the **{}** permission(s) to run this command.'.format(fmt)
         await ctx.send(_message)
         return
+    if isinstance(error, commands.MissingRole) or isinstance(error, commands.MissingAnyRole):
+        roles = error.missing_roles if isinstance(error, commands.MissingAnyRole) else [error.missing_role]
+        return await ctx.send(embed=discord.Embed(title=":x: Error! You must have one of these roles: :x:",
+                                                  description="\n".join(roles),
+                                                  colour=0xff0000))
 
     if isinstance(error, commands.DisabledCommand):
         await ctx.send('This command has been disabled.')
@@ -89,6 +94,9 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("You do not have permission to use this command.")
         return
+
+    if isinstance(error, ItemNotFound):
+        return await ctx.send(embed=error.embed())
 
     if isinstance(error, commands.UserInputError):
         # await ctx.send("Invalid input. Correct usage:")
