@@ -444,7 +444,7 @@ async def award_achievement(ctx, data, name):
         await ctx.send(achievements[name]["response"].format(ctx))
     if "db_rewards" in achievements[name]:
         await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": achievements[name]["db_rewards"]})
-        string += f" and earned {','.join(f'{v} {k}' for k, v in achievements[name]['db_rewards'])}"
+        string += f" and earned {','.join(f'{v} {k}' for k, v in achievements[name]['db_rewards'].items())}"
     await ctx.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
     await userColl.update_one({"_id": str(ctx.author.id)},
                               {"$set": {f"achievements.{name}": time.time()},
