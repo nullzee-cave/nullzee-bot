@@ -100,14 +100,14 @@ achievements = {
     },
     "Talkative I": {
         "listeners": {
-            "update_role": lambda _, roles: Role.VC_LORD in role_ids(roles)
+            "update_roles": lambda _, roles: Role.VC_LORD in role_ids(roles)
         },
         "description": "Become a VC lord",
         "value": 5,
     },
     "Talkative II": {
         "listeners": {
-            "update_role": lambda _, roles: Role.VC_GOD in role_ids(roles)
+            "update_roles": lambda _, roles: Role.VC_GOD in role_ids(roles)
         },
         "description": "Become a VC god",
         "value": 10,
