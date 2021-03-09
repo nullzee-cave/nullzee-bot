@@ -291,7 +291,7 @@ achievements = {
     },
     "Nullzee knowledge": {
         "description": "Buy AskNullzee once",
-        "listners": {
+        "listeners": {
             "points_spent": lambda _, name: name == "AskNullzee",
         },
         "value": 5
