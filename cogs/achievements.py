@@ -134,6 +134,8 @@ class Achievements(commands.Cog):
     async def achievements(self, ctx, user: typing.Optional[discord.Member] = None, page: int = None):
         user = user if user else ctx.author
         user_data = await get_user(user)
+        if not user_data["achievements"]:
+            return await ctx.send("You haven't gained any achievements yet!")
         user_data["background_image"] = user_data["background_image"] if "background_image" in user_data else "default"
         if not page:
             await achievement_timeline_animated(user, user_data)
