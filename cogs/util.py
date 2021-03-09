@@ -34,6 +34,7 @@ class util(commands.Cog, name="Other"):
 
     @commands.command()
     async def subcount(self, ctx):
+        '''View Nullzee's YouTube stats'''
         await ctx.send(embed=discord.Embed(title="Nullzee's YouTube stats",
                                            description=f"Subscribers: {int(self.sub_count['subscriberCount']):,}\nTotal Views: {int(self.sub_count['viewCount']):,}\nVideo count: {int(self.sub_count['videoCount']):,}",
                                            color=0x00FF00, url="https://youtube.com/nullzee").set_thumbnail(
@@ -50,6 +51,7 @@ class util(commands.Cog, name="Other"):
 
     @commands.command(aliases=["calc", "math", "m"])
     async def maths(self, ctx, *, expr: str):
+        '''Get the bot to do your maths homework for you'''
         try:
             await ctx.send(f"{ctx.author.mention}: ```\n{mathterpreter.interpret(expr)}\n```")
         except (mathterpreter.MathSyntaxError, OverflowError) as e:
@@ -57,9 +59,18 @@ class util(commands.Cog, name="Other"):
                 return await ctx.send(f"{ctx.author.mention}, an error occurred! Result too large")
             await ctx.send(f"{ctx.author.mention}, an error occurred! ```\n{e.reason}\n``` ```\n{e.visualisation}\n```")
 
+#    @commands.command(aliases=["color"])
+#    async def colour(self, ctx, colour):
+#        embed = discord.Embed(description=colour, colour=colour)
+#        try:
+#            await ctx.send(embed=embed)
+#        except TypeError:
+#            raise commands.BadArgument()
+
     @commands.command()
     @commands.guild_only()
     async def whois(self, ctx, user: discord.Member = None):
+        '''View your user info (account creation date, join date, roles, etc)'''
         user = user or ctx.author
         user_data = await get_user(user)
         embed_colour = user_data["embed_colour"]
@@ -89,12 +100,14 @@ class util(commands.Cog, name="Other"):
 
     @commands.command(aliases=["av"])
     async def avatar(self, ctx, user: discord.Member = None):
+        '''View a user's avatar'''
         user = user or ctx.author
         await ctx.send(
             embed=await Embed(user, title="Avatar").set_image(url=user.avatar_url).auto_author().user_colour())
 
     @commands.command()
     async def appeal(self, ctx, _id: str, *, reason: str = None):
+        '''Appeal a punishment'''
         punishment = await moderationColl.find_one({"id": _id})
         if not punishment:
             return await ctx.send("Could not find a punishment with that ID")
@@ -230,6 +243,7 @@ class util(commands.Cog, name="Other"):
 
     @commands.command(aliases=['boost'])
     async def nitro(self, ctx):
+        '''View the perks you can get for being a server booster'''
         embed = discord.Embed(title="Considering boosting the server?", color=0xfb00fd)
         embed.add_field(name="`For Nitro Boosting You Can Get`", value="""- Access to <#674311689738649600>
 - A message posted in <#714073835791712267>
@@ -264,6 +278,7 @@ class util(commands.Cog, name="Other"):
 
     @commands.command()
     async def report(self, ctx, message: discord.Message, *, reason: str = None):
+        '''Report a message a user has sent'''
         try:
             await ctx.message.delete()
         except:
@@ -286,6 +301,7 @@ class util(commands.Cog, name="Other"):
     @commands.command(hidden=True)
     @commands.has_guild_permissions(administrator=True)
     async def manualtogglestatus(self, ctx):
+        '''Toggle the bot's status manually'''
         rand = randint(0, 10)
         watching = ["discord.gg/nullzee", "twitch.tv/nullzeelive"]
         playing = ["with -help", "with Nullzee", "Hypixel Skyblock"]
@@ -472,6 +488,7 @@ class util(commands.Cog, name="Other"):
 #     @commands.guild_only()
 #     @commands.command()
 #     async def apply(self, ctx):
+#         '''Apply for staff'''
 #         answers = {}
 #         # questions = ["What level are you in Nullzee's Cave + state your time zone?",
 #         #              "How long will you spend in the server + how old are you? (can reply with N/A)",

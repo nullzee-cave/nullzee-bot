@@ -107,8 +107,8 @@ class RoleConverter(commands.Converter):
         try:
             role = await commands.RoleConverter().convert(ctx, argument)
         except commands.RoleNotFound:
-            if argument in self.abbreviations:
-                role = ctx.guild.get_role(self.abbreviations[argument])
+            if argument.lower() in self.abbreviations:
+                role = ctx.guild.get_role(self.abbreviations[argument.lower()])
             else:
                 role_list_lower = {z.name.lower(): z for z in ctx.guild.roles}
                 if argument in role_list_lower:

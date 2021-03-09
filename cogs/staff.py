@@ -47,13 +47,14 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command()
     @staff_only
     async def pending(self, ctx, user: discord.Member=None):
+        '''Check if a user has completed member screening or not'''
         if user == None:
             user = ctx.author
         if user.pending:
-            embed = discord.Embed(title="True", description=f"{user.mention} is pending", colour=auser.colour).set_author(name=user, icon_url=user.avatar_url)
+            embed = discord.Embed(title="True", description=f"{user.mention} has not compleed member screening", colour=auser.colour).set_author(name=user, icon_url=user.avatar_url)
             return await ctx.send(embed=embed)
         elif not user.pending:
-            embed = discord.Embed(title="False", description=f"{user.mention} is not pending", colour=user.colour).set_author(name=user, icon_url=user.avatar_url)
+            embed = discord.Embed(title="False", description=f"{user.mention} has completed member screening", colour=user.colour).set_author(name=user, icon_url=user.avatar_url)
             return await ctx.send(embed=embed)
         else:
             return await ctx.send("you've somehow managed to make a binary value not be true or false, congrats")
@@ -61,6 +62,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command(aliases=["say"])
     @staff_only
     async def send(self, ctx, channel: typing.Optional[discord.TextChannel]=None, *, message:str):
+        '''Make the bot send a message'''
         channel = channel if channel else ctx.channel
         if not ctx.author.permissions_in(channel).send_messages:
             raise commands.MissingPermissions(["manage_messages"])
@@ -71,6 +73,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command()
     @staff_only
     async def reply(self, ctx, message: discord.Message, ping: typing.Optional[bool] = True, *, text: str):
+        '''Make the bot reply to a message'''
         if not ctx.author.permissions_in(message.channel).send_messages:
             raise commands.MissingPermissions(["manage_messages"])
         msg = await message.reply(content=text, mention_author=ping)
@@ -80,6 +83,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def qotd(self, ctx):
+        '''Mark todays qotd as done'''
         with open('config.json') as f:
             config = json.load(f)
         config["qotd"] = (datetime.datetime.now() - datetime.datetime.utcfromtimestamp(0)).days
@@ -90,6 +94,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command()
     @staff_or_trainee
     async def slowmode(self, ctx, time="off"):
+        '''Change the channel's slowmode'''
         if time.lower() == "off":
             await ctx.channel.edit(slowmode_delay=0)
             return await ctx.send(f"slowmode has been removed from {ctx.channel.mention} by {ctx.author.mention}")
@@ -104,7 +109,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command()
     @staff_or_trainee
     async def role(self, ctx, user: discord.Member, *, role: RoleConverter):
-
+        '''Give someone a role'''
         if role.permissions.manage_messages or role.permissions.administrator or role.name.lower() == "muted":
             return await ctx.send("You are not allowed to give that role")
         try:
@@ -119,7 +124,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command()
     @staff_or_trainee
     async def removerole(self, ctx, user: discord.Member, *, role: RoleConverter):
-
+        '''Remove a role from someone'''
         if role.permissions.manage_messages or role.permissions.administrator or role.name.lower() == "muted":
             return await ctx.send("You are not allowed to remove that role")
         try:
@@ -135,6 +140,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command(aliases=["star", "pin"])
     @staff_or_trainee
     async def starboard(self, ctx: commands.Context, msg: discord.Message, *, title: str = ""):
+        '''Add a message to the starboard'''
         embed = (await Embed(msg.author, title=f"{title} | #{ctx.channel.name}", description=msg.content,
                              url=msg.jump_url).auto_author().timestamp_now().user_colour()).set_footer(
             text=f"starred by {ctx.author}")
@@ -149,9 +155,9 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command()
     @staff_or_trainee
     async def purge(self, ctx, limit: int):
+        '''Purge messages in a channel'''
         def check(m):
             return not m.pinned
-
         await ctx.channel.purge(limit=limit + 1, check=check)
         await asyncio.sleep(1)
         chatembed = discord.Embed(description=f"Cleared {limit} messages", color=0xfb00fd)
@@ -219,12 +225,14 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
 
     @commands.command(aliases=['-he'])
     async def host_eval(self, ctx, *, args):
+        '''Eval but straight into the host machine'''
         if ctx.author.id in [564798709045526528]:
             await ctx.send(f"```\n{subprocess.check_output(args.split(' ')).decode('utf-8')[:1900]}\n```")
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def modhelp(self, ctx):
+        '''View the help menu for all moderation commands'''
         bot: commands.Bot = ctx.bot
         mod_cogs = [bot.get_cog(z) for z in bot.cogs]
         mod_cogs = filter(lambda x: x.hidden, mod_cogs)
@@ -245,6 +253,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @blacklist.command(name="add")
     @staff_only
     async def blist_add(self, ctx, member: discord.Member, command: str):
+        '''Add a user to the blacklist for a specific command'''
         command = command.replace(ctx.prefix, '')
         await userColl.update_one({"_id": str(member.id)}, {"$addToSet": {"command_blacklist": command}})
         await ctx.send(f"blacklisted `{member}` from using `{ctx.prefix}{command}`")
@@ -252,6 +261,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @blacklist.command(name="remove")
     @staff_only
     async def blist_remove(self, ctx, member: discord.Member, command: str):
+        '''Remove a user from the blacklist for a specific command'''
         command = command.replace(ctx.prefix, '')
         await userColl.update_one({"_id": str(member.id)}, {"$pull": {"command_blacklist": command}})
         await ctx.send(f"unblacklisted `{member}` from using `{ctx.prefix}{command}`")
@@ -259,6 +269,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.group(aliases=["-c"])
     @commands.has_guild_permissions(manage_messages=True)
     async def config(self, ctx):
+        '''Edit the config'''
         if not ctx.invoked_subcommand:
             await ctx.send(
                 "\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.config.commands]))
