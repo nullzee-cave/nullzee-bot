@@ -456,10 +456,20 @@ async def award_achievement(ctx, data, name):
 def listeners_for(event):
     return [z for z in achievements if "listeners" in achievements[z] and event in achievements[z]["listeners"]]
 
+
+award_queue = {}
+
 subscriber = Subscriber()
 @subscriber.listen_all()
 async def listen(event, ctx, *args, **kwargs):
     for achievement in listeners_for(event):
         if achievements[achievement]["listeners"][event](ctx, *args, **kwargs):
+            if ctx.author.id in award_queue:
+                if achievement in award_queue[ctx.author.id]:
+                    continue
+                else:
+                    award_queue[ctx.author.id].append(achievement)
+            award_queue[ctx.author.id] = [achievement]
             user_data = kwargs.get("user_data", await get_user(ctx.author))
             await award_achievement(ctx, user_data, achievement)
+            award_queue[ctx.author.id].remove(achievement)

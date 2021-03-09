@@ -82,6 +82,8 @@ class Achievements(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
         ctx = await self.bot.get_context(message)
         await self.emitter.emit("message", ctx)
         if message.is_system() and "pinned a message to this channel" in message.system_content:
@@ -98,7 +100,7 @@ class Achievements(commands.Cog):
         await self.emitter.emit("command", ctx, ctx.command.name)
 
     @commands.command()
-    async def achievements(self, ctx, page: int = None):
+    async def listachievements(self, ctx, page: int = None):
         try:
             file_loc = "image_cache/static_achievements/" + (f"page_{page - 1}.png" if page else "animated.gif")
             await ctx.send(file=discord.File(file_loc))
@@ -124,7 +126,7 @@ class Achievements(commands.Cog):
         )
 
     @commands.command()
-    async def myachievements(self, ctx, user: typing.Optional[discord.Member] = None, page: int = None):
+    async def achievements(self, ctx, user: typing.Optional[discord.Member] = None, page: int = None):
         user = user if user else ctx.author
         user_data = await get_user(user)
         user_data["background_image"] = user_data["background_image"] if "background_image" in user_data else "default"
