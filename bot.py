@@ -11,8 +11,7 @@ import math
 from api_key import token, prefix
 from perks.perkSystem import PerkError
 import traceback
-from helpers.utils import get_user
-
+from helpers.utils import get_user, ItemNotFound
 
 intents = discord.Intents.default()
 intents.members = True
@@ -50,8 +49,8 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
 bot = commands.Bot(command_prefix=prefix, case_insensitive=True, intents=intents)
 bot.remove_command('help')
 
-# cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points', 'cogs.events_v2']
-cogs = ['cogs.achievements', 'cogs.points']
+cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points', 'cogs.events_v2', 'cogs.achievements']
+# cogs = ['cogs.achievements', 'cogs.points', 'cogs.level']
 
 
 @bot.event
@@ -92,6 +91,9 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("You do not have permission to use this command.")
         return
+
+    if isinstance(error, ItemNotFound):
+        return await ctx.send(embed=error.embed())
 
     if isinstance(error, commands.UserInputError):
         # await ctx.send("Invalid input. Correct usage:")

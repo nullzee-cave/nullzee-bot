@@ -1,4 +1,3 @@
-from achievements.images import BackgroundMeta
 from perks.perkSystem import perk, PerkError
 from discord.ext import commands
 import discord
@@ -81,5 +80,4 @@ async def staffNickChange(ctx, arg):
         except discord.Forbidden:
             raise PerkError(msg="I can't change an admin's nick!")
         #await ctx.send(f"{member.mention}'s nick has been changed to ✰ {content}")
-
 

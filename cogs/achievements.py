@@ -23,13 +23,16 @@ class Achievements(commands.Cog):
         self.hidden = True
         self.bot: commands.Bot = bot
         self.emitter = Emitter()
-        self.generate_static_pages()
-        self.generate_static_background_previews()
-        self.generate_static_boxborder_previews()
         self.clear_image_cache.start()
 
     def cog_unload(self):
         self.clear_image_cache.cancel()
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.generate_static_pages()
+        self.generate_static_background_previews()
+        self.generate_static_boxborder_previews()
 
     @tasks.loop(minutes=1)
     async def clear_image_cache(self):
@@ -59,12 +62,9 @@ class Achievements(commands.Cog):
         imageio.mimsave(f"image_cache/static_boxborder_previews/animated.gif", previews, fps=0.5)
 
     def generate_static_pages(self):
-        for i in range(ceil(len({k: v for k, v in achievements.items() if "hidden" not in v}) / 3)):
-            achievement_page(i, f"image_cache/static_achievements/page_{i}.png")
         images = []
-        for page in sorted(os.listdir("image_cache/static_achievements/")):
-            file_path = os.path.join("image_cache/static_achievements/", page)
-            images.append(imageio.imread(file_path))
+        for i in range(ceil(len({k: v for k, v in achievements.items() if "hidden" not in v}) / 3)):
+            images.append(imageio.imread(achievement_page(i, f"image_cache/static_achievements/page_{i}.png")))
         imageio.mimsave(f'image_cache/static_achievements/animated.gif', images, fps=0.5)
 
     async def get_bg_inv(self, user):
@@ -114,7 +114,7 @@ class Achievements(commands.Cog):
                     role_checks = []
                     for role in cos_data.role_req:
                         role_checks.append(Role[role.upper()] in role_ids)
-                    if (cos_data.role_req_strategy == "all" and False in role_checks) or (True not in role_checks):
+                    if not ((cos_data.role_req_strategy == "all" and False in role_checks) or (True not in role_checks)):
                         new_cosmetics[cosmetic_name].append(cos)
         await userColl.update_one(
             {"_id": str(ctx.author.id)},
@@ -203,7 +203,7 @@ class Achievements(commands.Cog):
         await ctx.send(embed=embed)
 
     @box_border.command(name="preview")
-    async def bb_preview(self, ctx, image: BoxBorderConverter = None):
+    async def bb_preview(self, ctx, *, image: BoxBorderConverter = None):
         await ctx.send(file=discord.File(
             f"image_cache/static_boxborder_previews/{f'{image}.png' if image else 'animated.gif'}"
         ))
@@ -214,7 +214,7 @@ class Achievements(commands.Cog):
         await ctx.send(embed=embed)
 
     @box_border.command(name="select", aliases=["equip"])
-    async def bb_select(self, ctx, item: BoxBorderConverter):
+    async def bb_select(self, ctx, *, item: BoxBorderConverter):
         user_data = await get_user(ctx.author)
         if item not in user_data["achievement_inventory"]["box_borders"]:
             return await ctx.send("You have not unlocked that border yet!")
@@ -222,7 +222,7 @@ class Achievements(commands.Cog):
         await ctx.send(f"Successfully set your current box-border to `{item}`")
 
     @box_border.command(name="purchase", aliases=["buy"])
-    async def bb_purchase(self, ctx, item: BoxBorderConverter):
+    async def bb_purchase(self, ctx, *, item: BoxBorderConverter):
         user_data = await get_user(ctx.author)
         item_data = BoxBorderMeta.get()[item]
         if item in user_data["achievement_inventory"]["box_borders"]:
@@ -255,7 +255,7 @@ class Achievements(commands.Cog):
         await ctx.send(embed=embed)
 
     @background.command(name="preview")
-    async def bg_preview(self, ctx, image: BackgroundConverter = None):
+    async def bg_preview(self, ctx, *, image: BackgroundConverter = None):
         await ctx.send(file=discord.File(
             f"image_cache/static_background_previews/{f'{image}.png' if image else 'animated.gif'}"
         ))
@@ -266,7 +266,7 @@ class Achievements(commands.Cog):
         await ctx.send(embed=embed)
 
     @background.command(name="select", aliases=["equip"])
-    async def bg_select(self, ctx, item: BackgroundConverter):
+    async def bg_select(self, ctx, *, item: BackgroundConverter):
         user_data = await get_user(ctx.author)
         if item not in user_data["achievement_inventory"]["backgrounds"]:
             return await ctx.send("You have not unlocked that background yet!")
@@ -274,7 +274,7 @@ class Achievements(commands.Cog):
         await ctx.send(f"Successfully set your current background image to `{item}`")
 
     @background.command(name="purchase", aliases=["buy"])
-    async def bg_purchase(self, ctx, item: BackgroundConverter):
+    async def bg_purchase(self, ctx, *, item: BackgroundConverter):
         user_data = await get_user(ctx.author)
         item_data = BackgroundMeta.get()[item]
         if item in user_data["achievement_inventory"]["backgrounds"]:

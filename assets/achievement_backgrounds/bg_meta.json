@@ -4,25 +4,35 @@
     "box_background_colour": "lightgrey",
     "purchasable": true
   },
+  "gooby": {
+    "purchasable": true,
+    "cost": 25
+  },
   "chaos": {
     "purchasable": true,
-    "cost": 2
+    "cost": 35
   },
   "cubes": {
     "purchasable": true,
-    "cost": 1
+    "cost": 40
   },
   "fruit": {
-    "purchasable": true
+    "purchasable": true,
+    "cost": 45
   },
   "nullzee": {
-    "purchasable": true
+    "purchasable": true,
+    "cost": 50
   },
-    "nitro": {
-      "claimable": true,
-      "role_req": [
-        "booster"
-      ]
+  "modern art": {
+    "purchasable": true,
+    "cost": 75
+  },
+  "nitro": {
+    "claimable": true,
+    "role_req": [
+      "booster"
+    ]
   },
   "twitch": {
     "claimable": true,
@@ -30,5 +40,4 @@
       "twitch_sub"
     ]
   }
-
 }

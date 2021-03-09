@@ -11,7 +11,7 @@ import math
 import os
 import datetime
 from EZPaginator import Paginator
-from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only
+from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only, ShallowContext
 from helpers.events import Emitter
 from api_key import userColl
 import pymongo
@@ -34,6 +34,7 @@ class Levelling(commands.Cog, name="levelling"):
                 member: discord.Member
                 if not member.bot:
                     user_data = await get_user(member)
+                    await Emitter().emit("vc_minute_gain", await ShallowContext.create(member), user_data["vc_minutes"])
                     await userColl.update_one({"_id": str(member.id)}, {"$inc": {"vc_minutes": 1}})
                     await member.add_roles(
                         *[guild.get_role(timed_roles[z]) for z in timed_roles if user_data["vc_minutes"] > int(z)])

@@ -34,7 +34,9 @@ async def get_user(user):
             "embed_colour": "#00FF00",
             # achievement data
             "achievements": {},
-            "achievement_inventory": {"backgrounds": [], "box_borders": []},
+            "achievement_inventory": {
+                "backgrounds": ["default"],
+                "box_borders": ["default"]},
             "achievement_points": 0,
             # misc data
             "vc_minutes": 0,
@@ -50,8 +52,6 @@ def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="
     for i, user in enumerate(users):
         if not (member := guild.get_member(int(user["_id"]))):
             continue
-        # FIXME: somehow make async work
-        # await Emitter().emit("leaderboard_pos", await ShallowContext.create(member), lb_pos)
         entries.append(f"**{lb_pos}: {member}** - {prefix}{user[key]:,}{suffix}\n")
         lb_pos += 1
     embeds = [discord.Embed(colour=0x00FF00).set_author(name=title, icon_url=guild.icon_url)]
@@ -94,6 +94,17 @@ def saveFileJson(data, filename):
         json.dump(data, f)
 
 
+def role_ids(roles):
+    return [z.id for z in roles]
+
+
+def list_one(_list, *items):
+    for item in items:
+        if item in _list:
+            return True
+    return False
+
+
 class ShallowContext:
     def __init__(self):
         self.channel = None
@@ -114,6 +125,13 @@ class ShallowContext:
         return await self.__send_channel.send(*args, **kwargs)
 
 
+class ItemNotFound(commands.BadArgument):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def embed(self):
+        return discord.Embed(title=":x: Item not found :x:", description=self.msg, colour=0xff0000)
+
 def jsonMetaConverter(meta):
     class JsonMetaConverter(commands.Converter):
         async def convert(self, ctx, argument):
@@ -122,7 +140,7 @@ def jsonMetaConverter(meta):
             for bg in meta.get():
                 if argument.lower() in meta.get()[bg].aliases:
                     return bg
-            raise commands.BadArgument()
+            raise ItemNotFound("Check your spelling and capitalisation")
 
     return JsonMetaConverter
 

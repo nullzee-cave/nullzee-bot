@@ -2,27 +2,31 @@
   "default": {
   },
   "corrupt": {
-    "cost": 2,
+    "cost": 15,
     "purchasable": true
   },
   "crimson": {
-    "cost": 2,
+    "cost": 15,
     "purchasable": true
   },
   "emerald": {
-    "cost": 2,
+    "cost": 20,
     "purchasable": true
   },
   "ruby": {
-    "cost": 2,
+    "cost": 25,
     "purchasable": true
   },
   "diamond": {
-    "cost": 3,
+    "cost": 30,
     "purchasable": true
   },
   "ectoplasm": {
-    "cost": 5,
+    "cost": 35,
+    "purchasable": true
+  },
+  "old gold": {
+    "cost": 45,
     "purchasable": true
   }
 }

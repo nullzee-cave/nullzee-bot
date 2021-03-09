@@ -156,18 +156,9 @@ def achievement_page(page, filename="image.png"):
         draw.text((x_pos + 10, y_pos + 40), wrap_text(achievements[name]["description"], 280, font_thin), 'black',
                   font=font_thin)
         y_pos += 150
-    return image.save(filename, format='PNG')
+    image.save(filename, format='PNG')
+    return filename
 
-
-# def timeline_card(image, draw, achievement, timestamp, x, y):
-#     box_border = Image.open("assets/achievement_box_borders/crimson.png")
-#     draw.rectangle([(x, y), (x + 400, y + 75)], 'white')#, 'black')
-#     image.paste(box_border, (x-2, y-2), box_border)
-#     draw.text((x + 10, y + 10), achievement, 'green', font=font_medium)
-#     draw.text((x + 10, y + 45),
-#               f"achieved at {datetime.datetime.fromtimestamp(timestamp).strftime('%d/%m/%y %H:%M')}",
-#               'black', font=font_thin)
-#     return image
 
 
 async def achievement_timeline(user: discord.User, payload, page=1):
@@ -184,7 +175,8 @@ async def achievement_timeline(user: discord.User, payload, page=1):
     background = payload["background_image"]
     box_border_name = payload['box_border'] if 'box_border' in payload else 'default'
 
-    percentage_achieved = len(payload["achievements"]) / len(achievements)
+    percentage_achieved = sum([achievements[z]["value"] for z in payload["achievements"]]) / \
+                          sum([achievements[z]["value"] for z in achievements])
     border = "default"
     for i, kv in enumerate(ACHIEVEMENT_BORDERS.items()):
         milestone, border_type = kv
@@ -213,7 +205,7 @@ async def achievement_timeline(user: discord.User, payload, page=1):
         image = Image.blend(image, layer, 0.5)
     async with aiohttp.ClientSession() as session:
         async with session.get(str(user.avatar_url).replace('gif', 'png')) as resp:
-            avatar = Image.open(io.BytesIO(await resp.content.read()))
+            avatar_raw = Image.open(io.BytesIO(await resp.content.read())).convert("RGBA")
     x, y = 50, 100
     box_border = Image.open(
         f"assets/achievement_box_borders/{box_border_name}.png") \
@@ -224,6 +216,8 @@ async def achievement_timeline(user: discord.User, payload, page=1):
     # draw.rectangle([(x, y - 50), (x + 400, y + 10)], BackgroundMeta.get()[background].box_backround_colour)
     draw.rectangle([(x, y - 55), (x + 399, y + 20)], BackgroundMeta.get()[background].box_backround_colour)
     image.paste(box_border, (x - 4, y - 59), box_border)
+    avatar = Image.new("RGBA", avatar_raw.size, "WHITE")
+    avatar.paste(avatar_raw, (0, 0), avatar_raw)
     avatar = mask_circle_transparent(avatar, 4)
     avatar = avatar.resize((50, 50))
     image.paste(avatar, (60, 59), mask=avatar)

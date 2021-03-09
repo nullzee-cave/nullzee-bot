@@ -19,7 +19,9 @@ EVENTS = [
     "giveaway_start[donor]",
     "giveaway_win",
     "pinned_starred",
-    "leaderboard_pos",
+    "hypixel_link",
+    "vc_minute_gain",
+    "bad_suggestion",
 ]
 
 
