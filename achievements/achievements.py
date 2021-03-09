@@ -469,7 +469,8 @@ async def listen(event, ctx, *args, **kwargs):
                     continue
                 else:
                     award_queue[ctx.author.id].append(achievement)
-            award_queue[ctx.author.id] = [achievement]
+            else:
+                award_queue[ctx.author.id] = [achievement]
             user_data = kwargs.get("user_data", await get_user(ctx.author))
             await award_achievement(ctx, user_data, achievement)
             award_queue[ctx.author.id].remove(achievement)

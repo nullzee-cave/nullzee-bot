@@ -1,6 +1,8 @@
 from EZPaginator import Paginator
 from discord.ext import commands, tasks
 import discord
+from discord.ext.commands import BucketType
+
 from achievements.achievements import achievements
 from achievements.images import achievement_page, achievement_timeline, achievement_timeline_animated, BackgroundMeta, \
     background_preview, BackgroundConverter, BoxBorderMeta, BoxBorderConverter, box_border_preview
@@ -101,6 +103,7 @@ class Achievements(commands.Cog):
         await self.emitter.emit("command", ctx, ctx.command.name)
 
     @commands.command()
+    @commands.cooldown(10, 1, BucketType.user)
     async def listachievements(self, ctx, page: int = None):
         try:
             file_loc = "image_cache/static_achievements/" + (f"page_{page - 1}.png" if page else "animated.gif")
@@ -127,6 +130,7 @@ class Achievements(commands.Cog):
         )
 
     @commands.command()
+    @commands.cooldown(10, 1, BucketType.user)
     async def achievements(self, ctx, user: typing.Optional[discord.Member] = None, page: int = None):
         user = user if user else ctx.author
         user_data = await get_user(user)
@@ -208,6 +212,7 @@ class Achievements(commands.Cog):
         await ctx.send(embed=embed)
 
     @box_border.command(name="preview")
+    @commands.cooldown(10, 1, BucketType.user)
     async def bb_preview(self, ctx, *, image: BoxBorderConverter = None):
         await ctx.send(file=discord.File(
             f"image_cache/static_boxborder_previews/{f'{image}.png' if image else 'animated.gif'}"
@@ -260,6 +265,7 @@ class Achievements(commands.Cog):
         await ctx.send(embed=embed)
 
     @background.command(name="preview")
+    @commands.cooldown(10, 1, BucketType.user)
     async def bg_preview(self, ctx, *, image: BackgroundConverter = None):
         await ctx.send(file=discord.File(
             f"image_cache/static_background_previews/{f'{image}.png' if image else 'animated.gif'}"
