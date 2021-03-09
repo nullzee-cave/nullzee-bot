@@ -17,6 +17,8 @@ import time
 import imageio
 
 
+subscriber = Subscriber()
+
 class Achievements(commands.Cog):
 
     def __init__(self, bot):
@@ -104,7 +106,7 @@ class Achievements(commands.Cog):
             await ctx.send("There aren't that many pages!")
 
     @staticmethod
-    @Subscriber().listen("update_roles")
+    @subscriber.listen("update_roles")
     async def on_roles_update(ctx, roles):
         role_ids = [z.id for z in roles]
         new_cosmetics = {"backgrounds": [], "box_borders": []}

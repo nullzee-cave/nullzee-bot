@@ -454,8 +454,8 @@ async def award_achievement(ctx, data, name):
 def listeners_for(event):
     return [z for z in achievements if "listeners" in achievements[z] and event in achievements[z]["listeners"]]
 
-
-@Subscriber().listen_all()
+subscriber = Subscriber()
+@subscriber.listen_all()
 async def listen(event, ctx, *args, **kwargs):
     for achievement in listeners_for(event):
         if achievements[achievement]["listeners"][event](ctx, *args, **kwargs):
