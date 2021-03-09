@@ -159,8 +159,8 @@ class Achievements(commands.Cog):
             inline=False
         ).add_field(
             name="Commands",
-            value="`-achievements` : view a list of all non-hidden achievements\n"
-                  "`-myachievements` : view a timeline of your achievements",
+            value="`-listachievements` : view a list of all non-hidden achievements\n"
+                  "`-achievements` : view a timeline of your achievements",
             inline=False
         ).add_field(
             name="Borders",
