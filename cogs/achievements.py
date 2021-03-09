@@ -26,15 +26,16 @@ class Achievements(commands.Cog):
         self.bot: commands.Bot = bot
         self.emitter = Emitter()
         self.clear_image_cache.start()
+        self.generate_static_pages()
+        self.generate_static_background_previews()
+        self.generate_static_boxborder_previews()
 
     def cog_unload(self):
         self.clear_image_cache.cancel()
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.generate_static_pages()
-        self.generate_static_background_previews()
-        self.generate_static_boxborder_previews()
+        pass
 
     @tasks.loop(minutes=1)
     async def clear_image_cache(self):
