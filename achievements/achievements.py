@@ -212,7 +212,7 @@ achievements = {
     },
     "Bad boy": {
         "listeners": {
-            "point_change": lambda _, points: points > 0
+            "points_changed": lambda _, points: points > 0
         },
         "description": "Have some points refunded",
         "value": 3,
