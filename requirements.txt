@@ -6,3 +6,4 @@ aiohttp
 EZPaginator
 Pillow
 mathterpreter
+imageio
