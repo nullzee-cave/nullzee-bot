@@ -273,7 +273,7 @@ async def achievement_timeline_animated(user: discord.User, payload):
         "regen_animated"]:
         return
     pages = []
-    for filename in os.listdir(image_dir):
+    for filename in sorted(os.listdir(image_dir)):
         if filename.endswith(".png") and filename.startswith(str(user.id)):
             file_path = os.path.join(image_dir, filename)
             pages.append(imageio.imread(file_path))

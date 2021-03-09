@@ -128,7 +128,8 @@ class Levelling(commands.Cog, name="levelling"):
             if time.time() - userData["last_message"] > 30:
                 points_bonus = 1 if userData["experience"] > userData["last_points"] + 1000 else 0
                 if points_bonus:
-                    await Emitter().emit("point_earned", message, userData["points"]+1)
+                    ctx = await self.bot.get_context(message)
+                    await Emitter().emit("point_earned", ctx, userData["points"]+1)
                 await userColl.update_one({"_id": str(message.author.id)},
                                           {"$inc": {"experience": exp, "weekly": weekly_exp, "points": points_bonus},
                                            "$set": {"last_message": time.time(),
