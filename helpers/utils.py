@@ -43,6 +43,8 @@ async def get_user(user):
                 "backgrounds": ["default"],
                 "box_borders": ["default"]},
             "achievement_points": 0,
+            "background_image": "default",
+            "box_border": "default",
             # misc data
             "vc_minutes": 0,
         })
