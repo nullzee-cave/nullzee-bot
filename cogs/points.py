@@ -55,7 +55,6 @@ class Points(commands.Cog):
         '''Modify someone's points'''
         await userColl.update_one({"_id": str(user.id)}, {"$inc": {"points": points}})
         await ctx.send(f"changed {user.mention}'s points by {points}", allowed_mentions=discord.AllowedMentions(users=False))
-        await ctx.send(f"changed {user.mention}'s points by {points}")
         ctx.author = user
         await Emitter().emit("points_changed", ctx, points)
 
