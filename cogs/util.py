@@ -381,7 +381,6 @@ class util(commands.Cog, name="Other"):
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://api.hypixel.net/skyblock/profiles?key={key}&uuid={uuid}") as resp:
                 player = await resp.json()
-        await Emitter().emit("hypixel_link", ctx)
         souls = []
         slayers = []
         slots = {}
@@ -481,6 +480,7 @@ class util(commands.Cog, name="Other"):
         embed.set_footer(text="Innacurate? Make sure all API settings are enabled",
                          icon_url="https://cdn.discordapp.com/icons/667953033929293855/a_76e58197f9e2e51b8280aa70e31fbbe5.gif?size=1024")
         await ctx.send(embed=embed)
+        await Emitter().emit("hypixel_link", ctx)
 
 
 #     @commands.check(min_level(15))
