@@ -95,7 +95,7 @@ class Achievements(commands.Cog):
             await self.emitter.emit("update_roles", await ShallowContext.create(after), after.roles)
 
     @commands.Cog.listener()
-    async def on_command(self, ctx):
+    async def on_command_completion(self, ctx):
         await self.emitter.emit("command", ctx, ctx.command.name)
 
     @commands.command()
