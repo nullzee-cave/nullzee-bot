@@ -187,7 +187,6 @@ class giveaway(commands.Cog, name="giveaway"):
 
 
     async def rollGiveaway(self, guild, giveaways, id:str):
-        print("rolling {}".format(id))
         thisGiveaway = giveaways[id]
         channel = guild.get_channel(thisGiveaway["channel"])
         message = await channel.fetch_message(int(id))
@@ -204,16 +203,14 @@ class giveaway(commands.Cog, name="giveaway"):
         winrole = guild.get_role(672141836567183413)
         for count in range(thisGiveaway["winnercount"]):
             # print(f"{count} something here")
-            print(count)
             x = False
             attempts = 0
             while not x:
                 thisWinner = random.choice(reactionusers)
-                x = await self.reqcheck(thisGiveaway, thisWinner)
+                x = await self.reqcheck(thisGiveaway, thisWinner) and thisWinner not in winners
                 attempts += 1
                 if attempts > 50:
                     return await channel.send("Could not determine a winner.")
-                    #return await channel.send("Critical error. contact developer. note: this message means that the error has been supressed and should not cause any issues. Error code: `g-w-404-tma`")
             winners.append(thisWinner)
             await thisWinner.add_roles(winrole)
         winnerstring = "\n".join([z.mention for z in winners])
