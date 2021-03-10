@@ -99,7 +99,7 @@ class Achievements(commands.Cog):
         await self.emitter.emit("command", ctx, ctx.command.name)
 
     @commands.command()
-    @commands.cooldown(10, 1, BucketType.user)
+    @commands.cooldown(10, 1, BucketType.user, aliases=["lac"])
     async def listachievements(self, ctx, page: int = None):
         try:
             file_loc = "image_cache/static_achievements/" + (f"page_{page - 1}.png" if page else "animated.gif")
@@ -126,7 +126,7 @@ class Achievements(commands.Cog):
         )
 
     @commands.command()
-    @commands.cooldown(10, 1, BucketType.user)
+    @commands.cooldown(10, 1, BucketType.user, aliases=["ac"])
     async def achievements(self, ctx, user: typing.Optional[discord.Member] = None, page: int = None):
         user = user if user else ctx.author
         user_data = await get_user(user)
