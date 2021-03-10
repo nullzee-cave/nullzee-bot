@@ -125,8 +125,8 @@ class Achievements(commands.Cog):
             {"$addToSet": {f"achievement_inventory.{k}": {"$each": v} for k, v in new_cosmetics.items()}}
         )
 
-    @commands.command()
-    @commands.cooldown(10, 1, BucketType.user, aliases=["ac"])
+    @commands.command(aliases=["ac"])
+    @commands.cooldown(10, 1, BucketType.user)
     async def achievements(self, ctx, user: typing.Optional[discord.Member] = None, page: int = None):
         user = user if user else ctx.author
         user_data = await get_user(user)
