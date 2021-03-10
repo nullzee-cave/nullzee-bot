@@ -98,8 +98,8 @@ class Achievements(commands.Cog):
     async def on_command_completion(self, ctx):
         await self.emitter.emit("command", ctx, ctx.command.name)
 
-    @commands.command()
-    @commands.cooldown(10, 1, BucketType.user, aliases=["lac"])
+    @commands.command(aliases=["lac"])
+    @commands.cooldown(10, 1, BucketType.user)
     async def listachievements(self, ctx, page: int = None):
         try:
             file_loc = "image_cache/static_achievements/" + (f"page_{page - 1}.png" if page else "animated.gif")
