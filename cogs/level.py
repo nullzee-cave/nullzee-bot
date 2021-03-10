@@ -112,7 +112,8 @@ class Levelling(commands.Cog, name="levelling"):
         else:
             NO_WEEKLY_MULTIPLIER_CHANNELS = [674311689738649600]
             userData = await get_user(message.author)
-            await Emitter().emit('message', await self.bot.get_context(message), user_data=userData)
+            ctx = await self.bot.get_context(message),
+            await Emitter().emit('message', ctx, user_data=userData)
             if str(message.channel.id) in self.multipliers:
                 multiplier = self.multipliers[str(message.channel.id)]
             else:
@@ -129,7 +130,6 @@ class Levelling(commands.Cog, name="levelling"):
             if time.time() - userData["last_message"] > 30:
                 points_bonus = 1 if userData["experience"] > userData["last_points"] + 1000 else 0
                 if points_bonus:
-                    ctx = await self.bot.get_context(message)
                     await Emitter().emit("point_earned", ctx, userData["points"]+1)
                 await userColl.update_one({"_id": str(message.author.id)},
                                           {"$inc": {"experience": exp, "weekly": weekly_exp, "points": points_bonus},
@@ -144,7 +144,7 @@ class Levelling(commands.Cog, name="levelling"):
             lvl_start = userData["level"]
             lvl_end = 50 * (lvl_start ** 1.5)
             if experience > lvl_end:
-                await Emitter().emit("level_up", message, lvl_start + 1)
+                await Emitter().emit("level_up", ctx, lvl_start + 1)
                 await userColl.update_one({"_id": str(message.author.id)}, {"$inc": {"level": 1}, "$set": {"experience": 0,
                                                                                                  "last_points": 0 - (
                                                                                                          experience - (
