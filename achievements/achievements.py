@@ -121,22 +121,22 @@ achievements = {
     },
     "Frugal I": {
         "listeners": {
-            "point_earned": lambda _, points: points == 100
+            "point_earned": lambda _, points: points >= 100
         },
         "description": "Save up 100 points",
         "value": 10,
     },
     "Frugal II": {
         "listeners": {
-            "point_earned": lambda _, points: points == 200
+            "point_earned": lambda _, points: points >= 200
         },
         "description": "Save up 200 points",
         "value": 15,
     },
     "Frugal III": {
         "listeners": {
-            "point_earned": lambda _, points: points == 300
-        },
+        "point_earned": lambda _, points: points >= 300
+    },
         "description": "Save up 300 points",
         "value": 20,
     },
@@ -192,7 +192,7 @@ achievements = {
     },
     "Lucky!": {
         "listeners": {
-            "giveaway_win": lambda _, roles: Role.LARGE_GIVEAWAY_WIN in role_ids(roles)
+            "update_roles": lambda _, roles: Role.LARGE_GIVEAWAY_WIN in role_ids(roles)
         },
         "description": "Win a large giveaway",
         "value": 5,

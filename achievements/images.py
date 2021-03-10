@@ -68,7 +68,7 @@ def should_regen(json_cache, *, page, user, border, background="default", achiev
         return True
     page_data = json_cache["pages"][str(page)]
     return not (page_data["achievements"] == list(achieved_page.keys())
-                and json_cache["total_pages"] == total_pages
+                and page_data["total_pages"] == total_pages
                 and page_data["embed_colour"] == embed_colour
                 and page_data["uname"] == str(user)
                 and page_data["avatar"] == str(user.avatar_url)
@@ -241,10 +241,10 @@ async def achievement_timeline(user: discord.User, payload, page=1):
     # save to cache
     json_cache = deep_update_dict(json_cache, {
         "image_files": [f"{user_page_path}_{page}.png"],
-        "total_pages": last_page,
         "pages": {
             str(page): {
                 "achievements": list(achieved_page.keys()),
+                "total_pages": last_page,
                 "uname": str(user),
                 "avatar": str(user.avatar_url),
                 "border_type": border,
