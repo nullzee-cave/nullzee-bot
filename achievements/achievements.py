@@ -24,7 +24,7 @@ achievements = {
     },
     "Level Collector I": {
         "listeners": {
-            "level_up": lambda _, level: level == 10
+            "level_up": lambda _, level: level>= 10
         },
         "description": "Reach level 10",
         "value": 5,
@@ -34,7 +34,7 @@ achievements = {
     },
     "Level Collector II": {
         "listeners": {
-            "level_up": lambda _, level: level == 30
+            "level_up": lambda _, level: level >= 30
         },
         "description": "Reach level 30",
         "value": 10,
@@ -44,7 +44,7 @@ achievements = {
     },
     "Level Collector III": {
         "listeners": {
-            "level_up": lambda _, level: level == 50
+            "level_up": lambda _, level: level >= 50
         },
         "description": "Reach level 50",
         "value": 15,
