@@ -85,7 +85,7 @@ class Achievements(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.is_system() and "pinned a message to this channel" in message.system_content:
+        if message.type == discord.MessageType.pins_add:
             ctx.author = (await message.channel.pins())[0].author
             await self.emitter.emit("pinned_starred", ctx)
 
