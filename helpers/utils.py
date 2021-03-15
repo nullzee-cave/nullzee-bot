@@ -23,6 +23,17 @@ staff_or_trainee = commands.check(lambda ctx: ctx.guild and ctx.guild.id == 6679
                                                                                               667953757954244628 in roles or
                                                                                               675031583954173986 in roles))
 
+class DeltaTemplate(string.Template):
+    delimiter = "%"
+
+def strfdelta(tdelta, fmt):
+    d = {"Y": tdelta.days//365}
+    d["D"] = int(tdelta.days) % 365
+    d["H"], rem = divmod(tdelta.seconds, 3600)
+    d["M"], d["S"] = divmod(rem, 60)
+    t = DeltaTemplate(fmt)
+    return t.substitute(**d)
+
 
 async def get_user(user):
     if not await userColl.find_one({"_id": str(user.id)}):

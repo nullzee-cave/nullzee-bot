@@ -68,6 +68,28 @@ class util(commands.Cog, name="Other"):
 #            raise commands.BadArgument()
 
     @commands.command()
+    async def serverinfo(self, ctx):
+        embed = discord.Embed(colour=ctx.author.colour)
+        embed.add_field(name="Owner:", value=f"{ctx.guild.owner.name}#{ctx.guild.owner.discriminator}", inline=False)
+        embed.add_field(name="Members:", value=len(ctx.guild.members), inline=True)
+        embed.add_field(name="Roles:", value=len(ctx.guild.roles), inline=True)
+        embed.add_field(name="Moderators:", value=len([z for z in ctx.guild.members if z.guild_permissions.manage_messages or z.guild_permissions.administrator]), inline=True)
+        embed.add_field(name="Bots:", value=len([z for z in ctx.guild.members if z.bot]), inline=True)
+        embed.add_field(name="Boosts:", value=len(ctx.guild.premium_subscribers), inline=True)
+        embed.add_field(name="Region:", value=str(ctx.guild.region).capitalize(), inline=True)
+        creation_date = ctx.guild.created_at
+        current_date = datetime.datetime.now()
+        time_since_creation = current_date - creation_date
+        embed.add_field(name="Server Age:",
+                        value=utils.strfdelta(time_since_creation,
+                                              f"{f'%Y years, ' if int(utils.strfdelta(time_since_creation,'%Y')) > 1 else (f'%Y year, ' if int(utils.strfdelta(time_since_creation, '%Y')) == 1 else '')}%D days, %H hours and %M minutes"),
+                        inline=False)
+        embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
+        embed.set_footer(text=f"ID: {ctx.guild.id} | Created at")
+        embed.timestamp = creation_date
+        return await ctx.send(embed=embed)
+
+    @commands.command()
     @commands.guild_only()
     async def whois(self, ctx, user: discord.Member = None):
         '''View your user info (account creation date, join date, roles, etc)'''
