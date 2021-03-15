@@ -145,6 +145,7 @@ class giveaway(commands.Cog, name="giveaway"):
             msg = await channel.send(embed=embed)
         await msg.add_reaction(u"\U0001F389")
         payload = {"_id": msg.id, "active": True, "mod": ctx.author.id, "channel": channel.id, "ends": giveawayTime, "winnercount": winnerCount, "role": roleid, "level": level, "booster": booster, "content": content, "donor": donor.id}
+        await giveawayColl.insert_one(payload)
         await ctx.send(f"Giveaway created!\n{msg.jump_url}")
         await donor.add_roles(ctx.guild.get_role(
             Role.LARGE_GIVEAWAY_DONOR if ctx.channel.id == Channel.GIVEAWAY
