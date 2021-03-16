@@ -426,11 +426,65 @@ achievements = {
         "description": "",
         "hidden": True,
         "value": 0
+    },
+
+    "Never gonna give you up": {
+        "listeners": {
+            "message": lambda msg: list_one(msg.content, "https://youtube.com/watch?v=dQw4w9WgXcQ")
+        },
+        "description": "",
+        "hidden": True,
+        "value": 4
+    },
+    "Fairy soul imposter": {
+        "listeners": {
+            "message": lambda msg: msg.content.lower().startswith("-claimroles timedeo")
+        },
+        "description": "",
+        "hidden": True,
+        "value": 4
+    },
+    "Nullzee advertisement": {
+        "listeners": {
+            "message": lambda msg: msg.channel.id == Channel.SELF_PROMO and "discord.gg/nullzee" in msg.content.lower()
+        },
+        "description": "",
+        "hidden": True,
+        "value": 4
+    },
+    "Cute": {
+        "listeners": {
+            "message": lambda msg: msg.channel.id == Channel.PETS and msg.attachments
+        },
+        "description": "",
+        "hidden": True,
+        "value": 5
+    },
+    "Vanity": {
+        "listeners": {
+            "command": lambda _, name: name == "avatar"
+        },
+        "description": "",
+        "hidden": True,
+        "value": 3
+    },
+    "Gamer": {
+        "listeners": {
+            "level_up": lambda ctx, _: ctx.channel.id == Channel.BOT_GAMES
+        },
+        "description": "",
+        "hidden": True,
+        "value": 5
+    },
+    "Muted": {
+        "listeners": {
+            "message": lambda msg: msg.channel.id == Channel.NO_MIC and msg.author.voice and msg.author.voice.self_mute
+        },
+        "description": "",
+        "hidden": True,
+        "value": 5
     }
 
-    # TODO:
-    #   Establishing Connections (*)
-    #   Twitch Main (*)
 }
 
 
@@ -447,7 +501,8 @@ async def award_achievement(ctx, data, name):
     if "db_rewards" in achievements[name]:
         await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": achievements[name]["db_rewards"]})
         string += f" and earned {','.join(f'{v} {k}' for k, v in achievements[name]['db_rewards'].items())}"
-    await ctx.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
+    channel = ctx.author if achievements[name]["hidden"] else ctx
+    await channel.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
     await userColl.update_one({"_id": str(ctx.author.id)},
                               {"$set": {f"achievements.{name}": time.time()},
                                "$inc": {"achievement_points": achievements[name]["value"]}})
