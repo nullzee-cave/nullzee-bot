@@ -300,12 +300,13 @@ class Tickets(commands.Cog):
     @commands.command()
     async def removeuser(self, ctx: commands.Context, *, member: discord.Member):
         restrict_ticket_command_usage(ctx)
+        string = f"{ctx.author.mention} removed {member.mention} from this ticket"
         member_ctx = ctx
         member_ctx.author = member
         if restrict_ticket_command_usage(member_ctx, raise_on_false=False):
             raise commands.MissingPermissions(["manage_tickets"])
         await ctx.channel.set_permissions(member, read_messages=False)
-        await ctx.send(f"{ctx.author.mention} added {member.mention} to this ticket")
+        await ctx.send(string)
 
     @commands.command()
     async def close(self, ctx, *, reason: str = None):
