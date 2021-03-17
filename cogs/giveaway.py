@@ -70,7 +70,6 @@ class Giveaway(commands.Cog, name="giveaway"):
             if level_msg.content != "0" and level_msg.content.isdigit():
                 level = int(level_msg.content)
                 req = True
-                requirement_string += f'Must be at least level {level}\n'
             if level > 70:
                 return await ctx.send("That level is higher than the maximum allowed level requirement")
             await ctx.send("Must the winner be a current or previous financial supporter? `Y/N`")
