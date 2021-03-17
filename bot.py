@@ -13,9 +13,9 @@ from perks.perkSystem import PerkError
 import traceback
 from helpers.utils import get_user, staff_only, TimeConverter, ItemNotFound
 
-
 intents = discord.Intents.default()
 intents.members = True
+
 
 def fmtTime():
     _time = datetime.now()
@@ -46,14 +46,28 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
     else:
         print(f'\r{purple}{prefix} |{bar}| {percent}%  {suffix}{endc}', end=printEnd)
 
+
 cooldown = {}
 cooldowns = {}
 
 bot = commands.Bot(command_prefix=prefix, case_insensitive=True, intents=intents)
 bot.remove_command('help')
 
-# cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points', 'cogs.events_v2', 'cogs.achievements']
-cogs = ['cogs.tickets']
+cogs = ['cogs.level',
+        'cogs.util',
+        'cogs.moderation',
+        'cogs.staff',
+        'cogs.automod',
+        'cogs.giveaway',
+        'cogs.useless_commands',
+        'cogs.points',
+        'cogs.events_v2',
+        'cogs.achievements',
+        'cogs.tickets'
+        ]
+
+
+# cogs = ['cogs.tickets']
 
 
 @bot.event
@@ -123,7 +137,8 @@ async def on_command_error(ctx, error):
     if isinstance(error, PerkError):
         return await error.send_error(ctx)
     #     # ignore all other exception types, but print them to stderr
-    print( "EXCEPTION TRACE PRINT:\n{}".format( "".join(traceback.format_exception(type(error), error, error.__traceback__))))
+    print("EXCEPTION TRACE PRINT:\n{}".format(
+        "".join(traceback.format_exception(type(error), error, error.__traceback__))))
 
 
 @bot.event
@@ -171,11 +186,13 @@ async def reload(ctx):
     print(f'{green}Cogs loaded... Bot is now ready and waiting for prefix "."{endc}')
     await ctx.send(f"`Cogs reloaded by:` <@{user.id}>")
 
+
 @bot.command()
 @staff_only
 async def command_cooldown(ctx, _time: TimeConverter):
     cooldowns[ctx.channel.id] = _time
     await ctx.send(f"Set command cooldown for {ctx.channel.mention} to {_time:,} seconds")
+
 
 @bot.event
 async def on_command(ctx):
@@ -186,16 +203,17 @@ async def on_command(ctx):
         with open('UserCount.json', 'w') as f:
             json.dump(users, f)
 
+
 async def restrict_command_usage(ctx):
     if not ctx.guild:
         return True
     user = await get_user(ctx.author)
-    not_blacklist = not("command_blacklist" in user and ctx.command.name in user["command_blacklist"])
+    not_blacklist = not ("command_blacklist" in user and ctx.command.name in user["command_blacklist"])
     staff_bypass = ctx.author.guild_permissions.manage_messages
     not_on_cooldown = True
     if ctx.channel.id in cooldowns and ctx.channel.id in cooldown:
         if ctx.command.name in cooldown[ctx.channel.id]:
-            not_on_cooldown = cooldown[ctx.channel.id][ctx.command.name]+cooldowns[ctx.channel.id] < time.time()
+            not_on_cooldown = cooldown[ctx.channel.id][ctx.command.name] + cooldowns[ctx.channel.id] < time.time()
             if not_on_cooldown:
                 cooldown[ctx.channel.id][ctx.command.name] = time.time()
         else:
@@ -203,11 +221,15 @@ async def restrict_command_usage(ctx):
     else:
         cooldown[ctx.channel.id] = {}
     level_bypass = user["level"] >= 50
-    role_bypass = (roles := [z.id for z in ctx.author.roles]) and 706285767898431500 in roles or 668724083718094869 in roles or 668736363297898506 in roles
+    role_bypass = (roles := [z.id for z in
+                             ctx.author.roles]) and 706285767898431500 in roles or 668724083718094869 in roles or 668736363297898506 in roles
     channel_allowed = ctx.channel.id in [668914397531602944]
-    command_bypass = ctx.command.name in ["stab", "hug", "f", "claimroles", "purchase", "report", "sbinfo", "smh", "bonk"]
+    command_bypass = ctx.command.name in ["stab", "hug", "f", "claimroles", "purchase", "report", "sbinfo", "smh",
+                                          "bonk"]
     cog_bypass = ctx.command.cog.qualified_name in ["Useless Commands"] if ctx.command.cog else False
-    return staff_bypass or (not_blacklist and not_on_cooldown and (level_bypass or channel_allowed or command_bypass or role_bypass or cog_bypass))
+    return staff_bypass or (not_blacklist and not_on_cooldown and (
+                level_bypass or channel_allowed or command_bypass or role_bypass or cog_bypass))
+
 
 bot.add_check(restrict_command_usage)
 
