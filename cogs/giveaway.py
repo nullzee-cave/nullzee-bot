@@ -52,11 +52,11 @@ class Giveaway(commands.Cog, name="giveaway"):
             winner_count = int(winner_count_msg.content)
             if winner_count > 30:
                 return await ctx.send("You cannot have that many winners!")
-            await ctx.send("Which role must users have in order to win?")
+            await ctx.send("Which roles must users have in order to win? (comma-delimited list or `none`)")
             role_msg = await self.bot.wait_for('message', timeout=60.0, check=check)
             for role_string in role_msg.content:
                 try:
-                    role_reqs.append(await RoleConverter().convert(ctx, role_string))
+                    role_reqs.append(await RoleConverter().convert(ctx, role_string.strip()))
                 except commands.RoleNotFound:
                     pass
             if role_reqs:
@@ -67,7 +67,7 @@ class Giveaway(commands.Cog, name="giveaway"):
 
             await ctx.send("What is the minimum level that users must be in order to win?")
             level_msg = await self.bot.wait_for('message', timeout=60.0, check=check)
-            if level_msg.content != "0" and level_msg.isdigit():
+            if level_msg.content != "0" and level_msg.content.isdigit():
                 level = int(level_msg.content)
                 req = True
                 requirement_string += f'Must be at least level {level}\n'
