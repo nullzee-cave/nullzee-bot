@@ -79,7 +79,7 @@ def giveaway_payload(ctx, msg, *, channel, giveaway_time, winner_count, role_req
         "winner_count": winner_count,
         "requirements": {
             "role_type": role_req_strategy,
-            "roles": level,
+            "roles": roles,
             "level": level,
             "booster": booster,
         },

@@ -139,8 +139,7 @@ class Giveaway(commands.Cog, name="giveaway"):
                 level = False
         return True
 
-
-    async def rollGiveaway(self, guild, giveaway, winner_count=None):
+    async def roll_giveaway(self, guild, giveaway, winner_count=None):
         winner_count = winner_count or giveaway["winner_count"]
         channel = guild.get_channel(giveaway["channel"])
         message = await channel.fetch_message(int(giveaway["_id"]))
@@ -153,6 +152,7 @@ class Giveaway(commands.Cog, name="giveaway"):
                 reaction_users.append(user)
         reaction_users = [z for z in reaction_users if isinstance(z, discord.Member)]
         winners = []
+        await giveawayColl.update_one({"_id": giveaway["_id"]}, {"$set": {"active": False}})
         for count in range(winner_count):
             x = False
             attempts = 0
@@ -172,7 +172,6 @@ class Giveaway(commands.Cog, name="giveaway"):
         await message.edit(embed=embed)
         await message.reply(
             f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{giveaway['content']}**!!")
-        await giveawayColl.update_one({"_id": giveaway["_id"]}, {"$set": {"active": False}})
         for winner in winners:
             await winner.add_roles(message.guild.get_role(
                 Role.LARGE_GIVEAWAY_WIN if message.channel.id == Channel.GIVEAWAY
@@ -186,7 +185,7 @@ class Giveaway(commands.Cog, name="giveaway"):
         giveaway = await giveawayColl.find_one({"_id": id, "active": True})
         if giveaway:
             await ctx.send("rolling giveaway")
-            await self.rollGiveaway(ctx.guild, giveaway)
+            await self.roll_giveaway(ctx.guild, giveaway)
         else:
             await ctx.send("Could not find that giveaway")
 
@@ -212,7 +211,7 @@ class Giveaway(commands.Cog, name="giveaway"):
         "reroll one winner of a giveaway"
         giveaway = await giveawayColl.find_one({"active": False, "_id": id})
         if giveaway:
-            await self.rollGiveaway(ctx.guild, giveaway, 1)
+            await self.roll_giveaway(ctx.guild, giveaway, 1)
         else:
             await ctx.send("Could not find that giveaway")
 
@@ -242,7 +241,7 @@ class Giveaway(commands.Cog, name="giveaway"):
             if time.time() > giveaway["ends"]:
                 guild = self.bot.get_guild(667953033929293855)
                 try:
-                    await self.rollGiveaway(guild, giveaway)
+                    await self.roll_giveaway(guild, giveaway)
                 except Exception as e:
                     print("exception occurred rolling giveaway: {0.__class.__name__}\n-\n{0}--".format(e))
 
