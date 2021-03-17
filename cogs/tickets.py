@@ -247,7 +247,11 @@ class Tickets(commands.Cog):
             guild: discord.Guild = self.bot.get_guild(payload.guild_id)
             msg: discord.Message = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
             await msg.remove_reaction(payload.emoji, payload.member)
-            embed = discord.Embed(title=ticket_types[str(payload.emoji)]["name"], colour=discord.Colour.green())
+            embed = discord.Embed(title=ticket_types[str(payload.emoji)]["name"], colour=discord.Colour.green(),
+                                  description="**Commands:**\n"
+                                              "`-close [reason]` : close the ticket\n"
+                                              "`-adduser [user]` : add someone else to the ticket\n"
+                                              "`-removeuser [user] : remove someone else from the ticket")
             embed.set_author(name=payload.member, icon_url=payload.member.avatar_url)
             for question in ticket_types[str(payload.emoji)]["questions"]:
                 msg = await payload.member.send(question)
@@ -257,7 +261,7 @@ class Tickets(commands.Cog):
                                                                timeout=300.0)).content,
                                 inline=False)
             channel: discord.TextChannel = await guild.create_text_channel(
-                f"{payload.member.username}-{payload.member.discriminator}",
+                f"{payload.member.name}-{payload.member.discriminator}",
                 category=guild.get_channel(Channel.TICKETS),
                 topic=f"opened by {payload.member} ({payload.member.id}) at {datetime.datetime.now().strftime('%d/%m/%y %H:%M')}",
                 overwrites={
