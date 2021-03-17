@@ -142,6 +142,12 @@ def list_one(_list, *items):
             return True
     return False
 
+def list_every(_list, *items):
+    for item in items:
+        if item not in _list:
+            return False
+    return True
+
 
 class ShallowContext:
     def __init__(self):
