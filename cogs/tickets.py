@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 
 import discord
@@ -251,15 +252,18 @@ class Tickets(commands.Cog):
                                   description="**Commands:**\n"
                                               "`-close [reason]` : close the ticket\n"
                                               "`-adduser [user]` : add someone else to the ticket\n"
-                                              "`-removeuser [user] : remove someone else from the ticket")
+                                              "`-removeuser [user]` : remove someone else from the ticket")
             embed.set_author(name=payload.member, icon_url=payload.member.avatar_url)
             for question in ticket_types[str(payload.emoji)]["questions"]:
                 msg = await payload.member.send(question)
-                embed.add_field(name=question,
+                try:
+                    embed.add_field(name=question,
                                 value=(await self.bot.wait_for('message', check=lambda m: m.channel.id == msg.channel.id
                                                                                           and m.author.id == payload.member.id,
                                                                timeout=300.0)).content,
                                 inline=False)
+                except asyncio.TimeoutError:
+                    return await payload.member.send("Ticket creation timed out")
             channel: discord.TextChannel = await guild.create_text_channel(
                 f"{payload.member.name}-{payload.member.discriminator}",
                 category=guild.get_channel(Channel.TICKETS),
@@ -275,11 +279,10 @@ class Tickets(commands.Cog):
                         read_messages=True,
                         send_messages=True)
                 })
-            start = await channel.send(embed=embed)
+            start = await channel.send(f"<@&{Role.TICKET_PING}>", embed=embed)
             await start.pin()
             await payload.member.send(f"Ticket created! {start.jump_url}")
             await guild.get_channel(Channel.MOD_LOGS).send(
-                f"<@&{Role.TICKET_PING}>",
                 embed=Embed(
                     payload.member,
                     colour=0x00ff00,
