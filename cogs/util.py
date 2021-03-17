@@ -69,12 +69,19 @@ class util(commands.Cog, name="Other"):
 
     @commands.command()
     async def serverinfo(self, ctx):
-        embed = discord.Embed(colour=ctx.author.colour)
-        embed.add_field(name="Owner:", value=f"{ctx.guild.owner.name}#{ctx.guild.owner.discriminator}", inline=False)
-        embed.add_field(name="Members:", value=len(ctx.guild.members), inline=True)
-        embed.add_field(name="Roles:", value=len(ctx.guild.roles), inline=True)
-        embed.add_field(name="Moderators:", value=len([z for z in ctx.guild.members if z.guild_permissions.manage_messages or z.guild_permissions.administrator]), inline=True)
-        embed.add_field(name="Bots:", value=len([z for z in ctx.guild.members if z.bot]), inline=True)
+        embed = await Embed(ctx.author).user_colour()
+        embed.add_field(name="Owner:", value=f"{ctx.guild.owner}", inline=False)
+        embed.add_field(name="Members:", value=ctx.guild.member_count, inline=True)
+        embed.add_field(name="Roles:", value=len(ctx.guild.roles)-1, inline=True)
+        bots = 0
+        moderators = 0
+        for member in ctx.guild.members:
+            if member.bot:
+                bots += 1
+            if member.guild_permissions.manage_messages:
+                moderators += 1
+        embed.add_field(name="Moderators:", value=moderators, inline=True)
+        embed.add_field(name="Bots:", value=bots, inline=True)
         embed.add_field(name="Boosts:", value=len(ctx.guild.premium_subscribers), inline=True)
         embed.add_field(name="Region:", value=str(ctx.guild.region).capitalize(), inline=True)
         creation_date = ctx.guild.created_at
@@ -85,9 +92,8 @@ class util(commands.Cog, name="Other"):
                                               f"{f'%Y years, ' if int(utils.strfdelta(time_since_creation,'%Y')) > 1 else (f'%Y year, ' if int(utils.strfdelta(time_since_creation, '%Y')) == 1 else '')}%D days, %H hours and %M minutes"),
                         inline=False)
         embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
-        embed.set_footer(text=f"ID: {ctx.guild.id} | Created at")
-        embed.timestamp = creation_date
-        return await ctx.send(embed=embed)
+        embed.set_footer(text=f"ID: {ctx.guild.id}")
+        await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()
