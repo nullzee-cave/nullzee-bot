@@ -111,7 +111,7 @@ class Giveaway(commands.Cog, name="giveaway"):
         await msg.add_reaction(u"\U0001F389")
         payload = payloads.giveaway_payload(ctx, msg, channel=channel, giveaway_time=giveaway_time,
                                             winner_count=winner_count, role_req_strategy=role_req_strategy,
-                                            roles=role_reqs, level=level,
+                                            roles=role_ids(role_reqs), level=level,
                                             booster=booster, content=content, donor=donor)
         await giveawayColl.insert_one(payload)
         await ctx.send(f"Giveaway created!\n{msg.jump_url}")
@@ -120,7 +120,7 @@ class Giveaway(commands.Cog, name="giveaway"):
             else Role.MINI_GIVEAWAY_DONOR
         ))
 
-    async def reqcheck(self, giveaway, user):
+    async def check_requirements(self, giveaway, user):
         reqs = giveaway["requirements"]
         if reqs["booster"]:
             if not list_one(role_ids(user.roles), Role.BOOSTER, Role.TWITCH_SUB, Role.RETIRED):
@@ -135,8 +135,6 @@ class Giveaway(commands.Cog, name="giveaway"):
             user_data = await get_user(user)
             if user_data["level"] < reqs["level"]:
                 return False
-            else:
-                level = False
         return True
 
     async def roll_giveaway(self, guild, giveaway, winner_count=None):
@@ -158,7 +156,7 @@ class Giveaway(commands.Cog, name="giveaway"):
             attempts = 0
             while not x:
                 this_winner = random.choice(reaction_users)
-                x = await self.reqcheck(giveaway, this_winner) and this_winner not in winners
+                x = await self.check_requirements(giveaway, this_winner) and this_winner not in winners
                 attempts += 1
                 if attempts > 50:
                     return await channel.send("Could not determine a winner.")
@@ -180,9 +178,9 @@ class Giveaway(commands.Cog, name="giveaway"):
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def roll(self, ctx, id: int):
+    async def roll(self, ctx, message: discord.Message):
         "roll a giveaway early"
-        giveaway = await giveawayColl.find_one({"_id": id, "active": True})
+        giveaway = await giveawayColl.find_one({"_id": message.id, "active": True})
         if giveaway:
             await ctx.send("rolling giveaway")
             await self.roll_giveaway(ctx.guild, giveaway)
@@ -191,11 +189,11 @@ class Giveaway(commands.Cog, name="giveaway"):
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def gdelete(self, ctx, id: int):
+    async def gdelete(self, ctx, message: discord.Message):
         "delete a giveaway"
-        giveaway = await giveawayColl.find_one({"active": True, "_id": id})
+        giveaway = await giveawayColl.find_one({"active": True, "_id": message.id})
         if giveaway:
-            await giveawayColl.update_one({"_id": id}, {"$set": {"active": False}})
+            await giveawayColl.update_one({"_id": message.id}, {"$set": {"active": False}})
             await ctx.send("Stopped the giveaway")
             try:
                 msg = await ctx.guild.get_channel(int(giveaway["channel"])).fetch_message(giveaway["_id"])
@@ -207,9 +205,9 @@ class Giveaway(commands.Cog, name="giveaway"):
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def reroll(self, ctx, id: int):
+    async def reroll(self, ctx, message: discord.Message):
         "reroll one winner of a giveaway"
-        giveaway = await giveawayColl.find_one({"active": False, "_id": id})
+        giveaway = await giveawayColl.find_one({"active": False, "_id": message.id})
         if giveaway:
             await self.roll_giveaway(ctx.guild, giveaway, 1)
         else:
@@ -219,8 +217,8 @@ class Giveaway(commands.Cog, name="giveaway"):
     @commands.has_guild_permissions(manage_messages=True)
     async def start(self, ctx, timer: TimeConverter, winners: str, donor: discord.Member, *, prize: str):
         "quickly start a giveaway with limited options"
-        winners = winners.replace('w', '')
-        if int(winners) > 10:
+        winners = int(winners.replace('w', ''))
+        if winners > 10:
             return
         embed = discord.Embed(title=prize, description=f"React with :tada: to enter!\nDonated by {donor.mention}",
                               color=discord.Color.green()).set_footer(text=f"{winners} winners, ends at")
