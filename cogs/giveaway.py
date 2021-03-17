@@ -125,9 +125,9 @@ class Giveaway(commands.Cog, name="giveaway"):
             if not list_one(role_ids(user.roles), Role.BOOSTER, Role.TWITCH_SUB, Role.RETIRED):
                 return False
         if reqs["roles"]:
-            if reqs["role_type"] == 2 and not list_one(role_ids(user.roles), reqs["roles"]):
+            if reqs["role_type"] == 2 and not list_one(role_ids(user.roles), *reqs["roles"]):
                 return False
-            elif reqs["role_type"] == 1 and not list_every(role_ids(user.roles), reqs["roles"]):
+            elif reqs["role_type"] == 1 and not list_every(role_ids(user.roles), *reqs["roles"]):
                 return False
         if reqs["level"]:
             user_data = await get_user(user)
