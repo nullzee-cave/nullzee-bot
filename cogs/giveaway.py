@@ -95,7 +95,7 @@ class Giveaway(commands.Cog, name="giveaway"):
             if role_reqs:
                 if len(role_reqs) > 1:
                     requirement_string += "Must have the following roles: \n" if role_req_strategy == 1 else "Must have one of the following roles: \n"
-                    requirement_string += "\n\t-".join([z.mention for z in role_reqs])
+                    requirement_string += "\n".join([f"-{z.mention}" for z in role_reqs])
                 else:
                     requirement_string = f"- Must have the role: {role_reqs[0].mention}\n"
             if level:
