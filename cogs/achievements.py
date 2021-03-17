@@ -243,7 +243,7 @@ class Achievements(commands.Cog):
                                                                 "$inc": {"achievement_points": -item_data.cost}})
         await ctx.send(f"Successfully purchased `{item}` for {item_data.cost} achievement points")
 
-    @commands.group(invoke_without_command=True, aliases=["backgrounds"])
+    @commands.group(invoke_without_command=True, aliases=["backgrounds", "bg"])
     async def background(self, ctx):
         await ctx.send(embed=discord.Embed(
             title="-background",
