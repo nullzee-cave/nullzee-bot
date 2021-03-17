@@ -395,7 +395,8 @@ achievements = {
         "listeners": {
             "update_roles": lambda _, roles: Role.MEGA_FAN in role_ids(roles)
         },
-        "value": 3
+        "value": 3,
+
     },
     "Gooby": {
         "description": "use the -gooby command",
@@ -501,7 +502,7 @@ async def award_achievement(ctx, data, name):
     if "db_rewards" in achievements[name]:
         await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": achievements[name]["db_rewards"]})
         string += f" and earned {','.join(f'{v} {k}' for k, v in achievements[name]['db_rewards'].items())}"
-    channel = ctx.author if achievements[name]["hidden"] else ctx
+    channel = ctx.author if "hidden" in achievements[name] and achievements[name]["hidden"] else ctx
     await channel.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
     await userColl.update_one({"_id": str(ctx.author.id)},
                               {"$set": {f"achievements.{name}": time.time()},
