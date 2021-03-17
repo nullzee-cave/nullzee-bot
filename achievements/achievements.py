@@ -430,7 +430,7 @@ achievements = {
 
     "Never gonna give you up": {
         "listeners": {
-            "message": lambda msg: list_one(msg.content, "https://youtube.com/watch?v=dQw4w9WgXcQ")
+            "message": lambda ctx: list_one(ctx.message.content, "https://youtube.com/watch?v=dQw4w9WgXcQ")
         },
         "description": "",
         "hidden": True,
@@ -438,7 +438,7 @@ achievements = {
     },
     "Fairy soul imposter": {
         "listeners": {
-            "message": lambda msg: msg.content.lower().startswith("-claimroles timedeo")
+            "message": lambda ctx: ctx.message.content.lower().startswith("-claimroles timedeo")
         },
         "description": "",
         "hidden": True,
@@ -446,7 +446,7 @@ achievements = {
     },
     "Nullzee advertisement": {
         "listeners": {
-            "message": lambda msg: msg.channel.id == Channel.SELF_PROMO and "discord.gg/nullzee" in msg.content.lower()
+            "message": lambda ctx: ctx.channel.id == Channel.SELF_PROMO and "discord.gg/nullzee" in ctx.message.content.lower()
         },
         "description": "",
         "hidden": True,
@@ -454,7 +454,7 @@ achievements = {
     },
     "Cute": {
         "listeners": {
-            "message": lambda msg: msg.channel.id == Channel.PETS and msg.attachments
+            "message": lambda ctx: ctx.channel.id == Channel.PETS and ctx.message.attachments
         },
         "description": "",
         "hidden": True,
@@ -478,7 +478,7 @@ achievements = {
     },
     "Muted": {
         "listeners": {
-            "message": lambda msg: msg.channel.id == Channel.NO_MIC and msg.author.voice and msg.author.voice.self_mute
+            "message": lambda ctx: ctx.channel.id == Channel.NO_MIC and ctx.author.voice and ctx.author.voice.self_mute
         },
         "description": "",
         "hidden": True,
