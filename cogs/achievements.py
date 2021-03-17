@@ -86,7 +86,7 @@ class Achievements(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.type == discord.MessageType.pins_add:
-            ctx.author = (await message.channel.pins())[0].author
+            ctx = await self.bot.get_context((await message.channel.pins())[0])
             await self.emitter.emit("pinned_starred", ctx)
 
     @commands.Cog.listener()
