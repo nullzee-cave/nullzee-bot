@@ -52,8 +52,8 @@ cooldowns = {}
 bot = commands.Bot(command_prefix=prefix, case_insensitive=True, intents=intents)
 bot.remove_command('help')
 
-cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points', 'cogs.events_v2', 'cogs.achievements']
-# cogs = ['cogs.achievements', 'cogs.points', 'cogs.level']
+# cogs = ['cogs.level', 'cogs.util', 'cogs.moderation', 'cogs.staff', 'cogs.automod', 'cogs.giveaway','cogs.useless_commands', 'cogs.points', 'cogs.events_v2', 'cogs.achievements']
+cogs = ['cogs.tickets']
 
 
 @bot.event

@@ -61,3 +61,5 @@ class Channel(metaclass=Constant):
     PETS            = 705106181559156888
     BOT_GAMES       = 685782425502220311
     NO_MIC          = 706920230089392260
+    MOD_LOGS        = 667957285837864960
+    TICKETS         = 821454390685597696

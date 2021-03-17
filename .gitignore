@@ -10,3 +10,4 @@ perks/__pycache__/*
 achievements/__pycache__/*
 venv/
 image_cache/
+transcripts/
