@@ -54,7 +54,7 @@ class Giveaway(commands.Cog, name="giveaway"):
                 return await ctx.send("You cannot have that many winners!")
             await ctx.send("Which roles must users have in order to win? (comma-delimited list or `none`)")
             role_msg = await self.bot.wait_for('message', timeout=60.0, check=check)
-            for role_string in role_msg.content:
+            for role_string in role_msg.content.split(","):
                 try:
                     role_reqs.append(await RoleConverter().convert(ctx, role_string.strip()))
                 except commands.RoleNotFound:
