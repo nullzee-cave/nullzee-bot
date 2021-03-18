@@ -71,7 +71,7 @@ def kick_payload(*, offender_id, mod_id, reason):
 def giveaway_payload(ctx, msg, *, channel, giveaway_time, winner_count, role_req_strategy=1, roles=[], level=0,
                      booster=False, content, donor):
     return {
-        "_id": msg.id,
+        "_id": str(msg.id),
         "active": True,
         "mod": ctx.author.id,
         "channel": channel.id,

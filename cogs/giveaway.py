@@ -178,7 +178,7 @@ class Giveaway(commands.Cog, name="giveaway"):
     @commands.has_guild_permissions(manage_messages=True)
     async def roll(self, ctx, message: discord.Message):
         "roll a giveaway early"
-        giveaway = await giveawayColl.find_one({"_id": message.id, "active": True})
+        giveaway = await giveawayColl.find_one({"_id": str(message.id), "active": True})
         if giveaway:
             await ctx.send("rolling giveaway")
             await self.roll_giveaway(ctx.guild, giveaway)
@@ -189,12 +189,12 @@ class Giveaway(commands.Cog, name="giveaway"):
     @commands.has_guild_permissions(manage_messages=True)
     async def gdelete(self, ctx, message: discord.Message):
         "delete a giveaway"
-        giveaway = await giveawayColl.find_one({"active": True, "_id": message.id})
+        giveaway = await giveawayColl.find_one({"active": True, "_id": str(message.id)})
         if giveaway:
-            await giveawayColl.update_one({"_id": message.id}, {"$set": {"active": False}})
+            await giveawayColl.update_one({"_id": str(message.id)}, {"$set": {"active": False}})
             await ctx.send("Stopped the giveaway")
             try:
-                msg = await ctx.guild.get_channel(int(giveaway["channel"])).fetch_message(giveaway["_id"])
+                msg = await ctx.guild.get_channel(int(giveaway["channel"])).fetch_message(int(giveaway["_id"]))
                 await msg.edit(content="*[giveaway deleted]*", embed=None)
             except:
                 pass
@@ -205,7 +205,7 @@ class Giveaway(commands.Cog, name="giveaway"):
     @commands.has_guild_permissions(manage_messages=True)
     async def reroll(self, ctx, message: discord.Message):
         "reroll one winner of a giveaway"
-        giveaway = await giveawayColl.find_one({"active": False, "_id": message.id})
+        giveaway = await giveawayColl.find_one({"active": False, "_id": str(message.id)})
         if giveaway:
             await self.roll_giveaway(ctx.guild, giveaway, 1)
         else:
