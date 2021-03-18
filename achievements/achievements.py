@@ -395,7 +395,8 @@ achievements = {
         "listeners": {
             "update_roles": lambda _, roles: Role.MEGA_FAN in role_ids(roles)
         },
-        "value": 3
+        "value": 3,
+
     },
     "Gooby": {
         "description": "use the -gooby command",
@@ -430,7 +431,7 @@ achievements = {
 
     "Never gonna give you up": {
         "listeners": {
-            "message": lambda msg: list_one(msg.content, "https://youtube.com/watch?v=dQw4w9WgXcQ")
+            "message": lambda ctx: list_one(ctx.message.content, "https://youtube.com/watch?v=dQw4w9WgXcQ")
         },
         "description": "",
         "hidden": True,
@@ -438,7 +439,7 @@ achievements = {
     },
     "Fairy soul imposter": {
         "listeners": {
-            "message": lambda msg: msg.content.lower().startswith("-claimroles timedeo")
+            "message": lambda ctx: ctx.message.content.lower().startswith("-claimroles timedeo")
         },
         "description": "",
         "hidden": True,
@@ -446,7 +447,7 @@ achievements = {
     },
     "Nullzee advertisement": {
         "listeners": {
-            "message": lambda msg: msg.channel.id == Channel.SELF_PROMO and "discord.gg/nullzee" in msg.content.lower()
+            "message": lambda ctx: ctx.channel.id == Channel.SELF_PROMO and "discord.gg/nullzee" in ctx.message.content.lower()
         },
         "description": "",
         "hidden": True,
@@ -454,7 +455,7 @@ achievements = {
     },
     "Cute": {
         "listeners": {
-            "message": lambda msg: msg.channel.id == Channel.PETS and msg.attachments
+            "message": lambda ctx: ctx.channel.id == Channel.PETS and ctx.message.attachments
         },
         "description": "",
         "hidden": True,
@@ -478,7 +479,7 @@ achievements = {
     },
     "Muted": {
         "listeners": {
-            "message": lambda msg: msg.channel.id == Channel.NO_MIC and msg.author.voice and msg.author.voice.self_mute
+            "message": lambda ctx: ctx.channel.id == Channel.NO_MIC and ctx.author.voice and ctx.author.voice.self_mute
         },
         "description": "",
         "hidden": True,
@@ -501,7 +502,7 @@ async def award_achievement(ctx, data, name):
     if "db_rewards" in achievements[name]:
         await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": achievements[name]["db_rewards"]})
         string += f" and earned {','.join(f'{v} {k}' for k, v in achievements[name]['db_rewards'].items())}"
-    channel = ctx.author if achievements[name]["hidden"] else ctx
+    channel = ctx.author if "hidden" in achievements[name] and achievements[name]["hidden"] else ctx
     await channel.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
     await userColl.update_one({"_id": str(ctx.author.id)},
                               {"$set": {f"achievements.{name}": time.time()},

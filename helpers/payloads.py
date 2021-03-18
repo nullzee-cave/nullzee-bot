@@ -2,9 +2,11 @@ from helpers import utils
 import time
 import datetime
 
+
 def insert_message(payload, message):
     payload["message"] = f"{message.guild.id}-{message.channel.id}-{message.id}"
     return payload
+
 
 def warn_payload(*, offender_id, mod_id, reason):
     return {
@@ -16,6 +18,7 @@ def warn_payload(*, offender_id, mod_id, reason):
         "timestamp": round(time.time()),
         "expired": False
     }
+
 
 def mute_payload(*, offender_id, mod_id, reason, duration):
     return {
@@ -34,6 +37,7 @@ def mute_payload(*, offender_id, mod_id, reason, duration):
 
     }
 
+
 def ban_payload(*, offender_id, mod_id, reason, duration):
     return {
         "id": utils.nanoId(),
@@ -50,7 +54,9 @@ def ban_payload(*, offender_id, mod_id, reason, duration):
         "expired": False
 
     }
-def kick_payload(*,offender_id, mod_id,reason):
+
+
+def kick_payload(*, offender_id, mod_id, reason):
     return {
         "id": utils.nanoId(),
         "offender_id": offender_id,
@@ -59,4 +65,24 @@ def kick_payload(*,offender_id, mod_id,reason):
         "reason": reason,
         "timestamp": round(time.time()),
         "expired": False
+    }
+
+
+def giveaway_payload(ctx, msg, *, channel, giveaway_time, winner_count, role_req_strategy=1, roles=[], level=0,
+                     booster=False, content, donor):
+    return {
+        "_id": msg.id,
+        "active": True,
+        "mod": ctx.author.id,
+        "channel": channel.id,
+        "ends": giveaway_time,
+        "winner_count": winner_count,
+        "requirements": {
+            "role_type": role_req_strategy,
+            "roles": roles,
+            "level": level,
+            "booster": booster,
+        },
+        "content": content,
+        "donor": donor.id
     }

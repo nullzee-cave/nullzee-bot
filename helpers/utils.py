@@ -10,18 +10,25 @@ import string
 import collections
 from discord.ext import commands
 
+from helpers.constants import Role
 from helpers.events import Emitter
 
-staff_only = commands.check(lambda ctx: ctx.guild and ctx.guild.id == 667953033929293855 and (685027474522112000 in
-                                                                                              (roles := [z.id for z in
-                                                                                                         ctx.author.roles]) or
-                                                                                              667953757954244628 in roles))
 
-staff_or_trainee = commands.check(lambda ctx: ctx.guild and ctx.guild.id == 667953033929293855 and (685027474522112000 in
-                                                                                              (roles := [z.id for z in
-                                                                                                         ctx.author.roles]) or
-                                                                                              667953757954244628 in roles or
-                                                                                              675031583954173986 in roles))
+def staff_check(ctx):
+    if not ctx.guild or ctx.guild.id != 667953033929293855:
+        return False
+    roles = role_ids(ctx.author.roles)
+    return list_one(roles, Role.STAFF, Role.ADMIN)
+
+
+staff_only = commands.check(staff_check)
+
+staff_or_trainee = commands.check(
+    lambda ctx: ctx.guild and ctx.guild.id == 667953033929293855 and (685027474522112000 in
+                                                                      (roles := [z.id for z in
+                                                                                 ctx.author.roles]) or
+                                                                      667953757954244628 in roles or
+                                                                      675031583954173986 in roles))
 
 class DeltaTemplate(string.Template):
     delimiter = "%"
@@ -142,6 +149,12 @@ def list_one(_list, *items):
             return True
     return False
 
+def list_every(_list, *items):
+    for item in items:
+        if item not in _list:
+            return False
+    return True
+
 
 class ShallowContext:
     def __init__(self):
@@ -169,6 +182,7 @@ class ItemNotFound(commands.BadArgument):
 
     def embed(self):
         return discord.Embed(title=":x: Item not found :x:", description=self.msg, colour=0xff0000)
+
 
 def jsonMetaConverter(meta):
     class JsonMetaConverter(commands.Converter):

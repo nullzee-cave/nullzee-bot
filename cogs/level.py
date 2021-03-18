@@ -165,9 +165,9 @@ class Levelling(commands.Cog, name="levelling"):
         userData = await userColl.find_one({"_id": str(user.id)})
         if not userData:
             return await ctx.send("This user has no level")
-        string = f"XP: {str(round(userData['experience']))}/{str(round(50 * (round(userData['level']) ** 1.5)))}"
-        string += f"\nWeekly XP: {str(round(userData['weekly']))}"
-        string += f"\nPoints: {userData['points']}"
+        string = f"XP: {round(userData['experience']):,}/{round(50 * (round(userData['level']) ** 1.5)):,}"
+        string += f"\nWeekly XP: {round(userData['weekly']):,}"
+        string += f"\nPoints: {userData['points']:,}"
         string += f"\nTotal XP: {(sum([round(50 * z ** 1.5) for z in range(1, userData['level'])]) + userData['experience']):,}"
         string += f"\nMinutes in VC: {userData['vc_minutes']:,}"
         embed = await Embed(user, title=f"Level: {str(round(userData['level']))}", url="https://nullzee.ga",
