@@ -11,7 +11,7 @@ from discord.ext.commands.cooldowns import BucketType
 import time
 import datetime
 from api_key import moderationColl, hypixel_api_key
-from helpers.utils import Embed
+from helpers.utils import Embed, strfdelta
 import mathterpreter
 
 from helpers.events import Emitter
@@ -88,8 +88,8 @@ class util(commands.Cog, name="Other"):
         current_date = datetime.datetime.now()
         time_since_creation = current_date - creation_date
         embed.add_field(name="Server Age:",
-                        value=utils.strfdelta(time_since_creation,
-                                              f"{f'%Y years, ' if int(utils.strfdelta(time_since_creation,'%Y')) > 1 else (f'%Y year, ' if int(utils.strfdelta(time_since_creation, '%Y')) == 1 else '')}%D days, %H hours and %M minutes"),
+                        value=strfdelta(time_since_creation,
+                                              f"{f'%Y years, ' if int(strfdelta(time_since_creation,'%Y')) > 1 else (f'%Y year, ' if int(strfdelta(time_since_creation, '%Y')) == 1 else '')}%D days, %H hours and %M minutes"),
                         inline=False)
         embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
         embed.set_footer(text=f"ID: {ctx.guild.id}")
