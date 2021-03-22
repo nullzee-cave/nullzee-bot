@@ -166,7 +166,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
         if len(embeds) == 1:
             return
         for i, e in enumerate(embeds):
-            e.set_footer(text=f"page {i} of {len(embeds)}")
+            e.set_footer(text=f"page {i+1} of {len(embeds)}")
         pages = Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author)
         await pages.start()
                 
