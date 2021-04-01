@@ -51,7 +51,7 @@ def markdown(string):
 def transcribe(messages):
     html = "<p>"
     for message in messages:
-        html += f"{message.author} | {message.created_at.strftime('%d/%m/%y %H:%M')}: {message.content}"
+        html += f"{message.author} | {message.created_at.strftime('%d/%m/%y %H:%M')}: {message.content}\n"
     html += "</p>"
     html += "<style>"
     with open('assets/transcripts.css') as f:
