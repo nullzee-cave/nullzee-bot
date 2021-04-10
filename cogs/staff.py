@@ -130,7 +130,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         try:
             await user.remove_roles(role, reason=f"Removed by {ctx.author}")
             await ctx.send(embed=discord.Embed(title="Role removed :scroll:",
-                                      description=f":white_check_mark: removed {role.mention} from {user.mention}",
+                                      description=f":white_check_mark: Removed {role.mention} from {user.mention}",
                                       color=0xfb00fd))
             await ctx.message.delete()
         except discord.Forbidden:
