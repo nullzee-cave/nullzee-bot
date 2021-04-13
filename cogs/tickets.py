@@ -326,7 +326,7 @@ class Tickets(commands.Cog):
                 title="Ticket closed",
                 description=f"{ctx.channel.name}\nReason: {reason}"
             ).auto_author(),
-            file=discord.File(f"transcripts/{ctx.author}.html", "transcript.html")
+            file=discord.File(f"transcripts/{ctx.channel.name}.html", "transcript.html")
         )
         # await mod_logs.send(file=discord.File(f"transcripts/{ctx.author}.html", "transcript.html"))
 
