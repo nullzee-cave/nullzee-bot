@@ -49,6 +49,7 @@ def markdown(string):
 
 
 def transcribe(messages):
+    messages = [*messages]
     html = "<p>"
     for message in messages:
         html += f"{message.author} | {message.created_at.strftime('%d/%m/%y %H:%M')}: {message.content}\n"
@@ -133,7 +134,7 @@ def generate_embed(embed: discord.Embed):
                                                     {markdown(field.value)}
                                                 </div>
                                             </div>
-                """
+    """
         html += "</div>"
 
     if embed.thumbnail:
@@ -315,7 +316,7 @@ class Tickets(commands.Cog):
     @commands.command()
     async def close(self, ctx, *, reason: str = None):
         restrict_ticket_command_usage(ctx)
-        with open(f"transcripts/{ctx.author}.html", 'w', encoding="utf-8") as f:
+        with open(f"transcripts/{ctx.channel.name}.html", 'w', encoding="utf-8") as f:
             f.write(transcribe(reversed([z async for z in ctx.channel.history(limit=500)])))
         await ctx.channel.delete()
         await ctx.guild.get_channel(Channel.MOD_LOGS).send(
