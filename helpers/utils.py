@@ -282,10 +282,20 @@ class TimeConverter(commands.Converter):
 
 
 def stringToSeconds(_string):
-    regex = "(\d+)(.)"
-    d = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
-    match = re.search(regex, _string)
-    if not match:
+    _time = 0
+    times = {
+        "d": 86400,
+        "h": 3600,
+        "m": 60,
+        "s": 1,
+    }
+    regex = r" ?(?P<time>(?P<number>\d+) ?(?P<period>d|h|m|s)) ?"
+    _string = _string.lower()
+    match = re.match(regex, _string)
+    if match is None:
         return None
-    else:
-        return int(match.group(1)) * d[match.group(2)] if match.group(2) in d else None
+    while match:
+        _time += int(match.group('number')) * times[match.group('period')]
+        _string = _string[len(match.group('time')):]
+        match = re.match(regex, _string)
+    return _time
