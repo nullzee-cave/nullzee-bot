@@ -31,7 +31,7 @@ staff_or_trainee = commands.check(
                                                                       675031583954173986 in roles))
 
 class MemberUserConverter(commands.Converter):
-    async def convert(self, ctx, argument) -> "discord.Member or discord.User":
+    async def convert(self, ctx, argument) -> typing.Union[discord.Member, discord.User]:
         try:
             return await commands.MemberConverter().convert(ctx, argument)
         except commands.MemberNotFound:
