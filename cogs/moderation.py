@@ -71,7 +71,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
                 f"You were banned from {ctx.guild.name} {f'for `{time_string}`' if _time else ''} {f'for `{reason}`' if reason else ''}\nInfraction ID:`{payload['id']}`")
         except discord.Forbidden:
             pass
-        await user.ban(reason=reason)
+        await ctx.guild.ban(user, reason=reason)
         await moderationColl.insert_one(payload)
         await moderationUtils.log(self.bot, payload)
 
