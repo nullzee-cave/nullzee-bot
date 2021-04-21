@@ -1,7 +1,7 @@
 from discord.ext import commands, tasks
 import typing
 from random import randint
-from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only, staff_or_trainee
+from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only, staff_or_trainee, MemberUserConverter
 import json
 import asyncio
 import discord
@@ -57,10 +57,11 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
 
     @commands.command(aliases=["yeet"])
     @staff_or_trainee
-    async def ban(self, ctx, user: discord.Member, _time: typing.Optional[TimeConverter]=None, *, reason: str = None):
+    async def ban(self, ctx, user: MemberUserConverter, _time: typing.Optional[TimeConverter]=None, *, reason: str = None):
         '''Ban a user'''
-        if user.guild_permissions.manage_messages:
-            return await ctx.send("You cannot ban a moderator/administrator")
+        if isinstance(user, discord.Member):
+            if user.guild_permissions.manage_messages:
+                return await ctx.send("You cannot ban a moderator/administrator")
         payload = payloads.ban_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason)
         message = await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
         payload = payloads.insert_message(payload, message)
@@ -118,35 +119,35 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def punishments(self, ctx, user: discord.Member = None):
+    async def punishments(self, ctx, user: MemberUserConverter = None):
         '''View a user's punishments'''
         user = user if user else ctx.author
         warnings = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
         embed = discord.Embed(title=f"{len(warnings)} punishments", colour=discord.Colour.green())
         embed.set_author(name=user, icon_url=user.avatar_url)
         for warning in warnings:
-            embed.add_field(name=f"ID: {warning['id']} | {ctx.guild.get_member(warning['mod_id'])}",
+            embed.add_field(name=f"ID: {warning['id']} | {self.bot.get_user(warning['mod_id'])}",
                             value=f"[{warning['type']}] {warning['reason']} - {datetime.datetime.fromtimestamp(warning['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}",
                             inline=False)
         await ctx.send(embed=embed)
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def warnings(self, ctx, user: discord.Member = None):
+    async def warnings(self, ctx, user: MemberUserConverter = None):
         '''View a user's warnings'''
         user = user if user else ctx.author
         warnings = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False, "type": "warn"})]
         embed = discord.Embed(title=f"{len(warnings)} warnings", colour=discord.Colour.green())
         embed.set_author(name=user, icon_url=user.avatar_url)
         for warning in warnings:
-            embed.add_field(name=f"ID: {warning['id']} | {ctx.guild.get_member(warning['mod_id'])}",
+            embed.add_field(name=f"ID: {warning['id']} | {self.bot.get_user(warning['mod_id'])}",
                             value=f"{warning['reason']} - {datetime.datetime.fromtimestamp(warning['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}",
                             inline=False)
         await ctx.send(embed=embed)
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def modlogs(self, ctx, user: discord.Member):
+    async def modlogs(self, ctx, user: MemberUserConverter):
         '''View all of a user's moderation logs'''
         user = user if user else ctx.author
         infractions = [z async for z in moderationColl.find({"offender_id": user.id})]
@@ -156,7 +157,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
         embed_count = 0
         for i, infraction in enumerate(infractions):
             embeds[embed_count].add_field(
-                name=f"{infraction['type']} | ID: {infraction['id']} | {ctx.guild.get_member(infraction['mod_id'])}",
+                name=f"{infraction['type']} | ID: {infraction['id']} | {self.bot.get_user(infraction['mod_id'])}",
                 value=f"{infraction['reason']} - {datetime.datetime.fromtimestamp(infraction['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}",
                 inline=False)
             if not i % 5 and i != 0:

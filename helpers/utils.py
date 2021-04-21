@@ -30,6 +30,16 @@ staff_or_trainee = commands.check(
                                                                       667953757954244628 in roles or
                                                                       675031583954173986 in roles))
 
+class MemberUserConverter(commands.Converter):
+    async def convert(self, ctx, argument) -> "discord.Member or discord.User":
+        try:
+            return await commands.MemberConverter().convert(ctx, argument)
+        except commands.MemberNotFound:
+            try:
+                return await commands.UserConverter().convert(ctx, argument)
+            except commands.UserNotFound:
+                raise commands.UserInputError
+
 class DeltaTemplate(string.Template):
     delimiter = "%"
 
