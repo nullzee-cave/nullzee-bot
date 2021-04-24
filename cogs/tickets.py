@@ -9,6 +9,7 @@ import re
 from helpers.constants import Channel, Role
 from helpers.utils import staff_check, Embed, staff_only, getFileJson, saveFileJson
 
+TICKET_TOPIC_REGEX = r"opened by (?P<user>.+#\d{4}) \((?P<user_id>\d+)\) at (?P<time>.+)"
 
 def restrict_ticket_command_usage(ctx: commands.Context, raise_on_false=True):
     if ctx.channel.category.id != Channel.TICKETS:
@@ -18,7 +19,7 @@ def restrict_ticket_command_usage(ctx: commands.Context, raise_on_false=True):
             return False
     if staff_check(ctx):
         return True
-    match = re.search(r"opened by (?P<user>.+#\d{4}) \((?P<user_id>\d+)\) at (?P<time>.+)", ctx.channel.topic)
+    match = re.search(TICKET_TOPIC_REGEX, ctx.channel.topic)
     if not match:
         if raise_on_false:
             raise commands.MissingPermissions(["manage_ticket"])
@@ -318,6 +319,11 @@ class Tickets(commands.Cog):
         restrict_ticket_command_usage(ctx)
         with open(f"transcripts/{ctx.channel.name}.html", 'w', encoding="utf-8") as f:
             f.write(transcribe(reversed([z async for z in ctx.channel.history(limit=500)])))
+        user = re.search(TICKET_TOPIC_REGEX, ctx.channel.topic)
+        user = int(user.group("user_id"))
+        user = self.bot.get_user(user)
+        if user.id != ctx.author.id:
+            await user.send(f"Your ticket has been closed\nReason: `{reason}`")
         await ctx.channel.delete()
         await ctx.guild.get_channel(Channel.MOD_LOGS).send(
             embed=Embed(
