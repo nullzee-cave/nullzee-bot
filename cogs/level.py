@@ -101,11 +101,28 @@ class Levelling(commands.Cog, name="levelling"):
             json.dump(config, f)
         self.update_multipliers()
 
+    @tasks.loop(minutes=1)
+    async def boost_multiplier_end(self):
+        with open('config.json') as f:
+            config = json.load(f)
+        if config["boost_multiplier_end"] == time.time():
+            config["global_multiplier"] = 1
+        with open('config.json', 'w') as f:
+            json.dump(config, f)
+
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.type == discord.MessageType.premium_guild_subscription:
+            with open('config.json') as f:
+                config = json.load(f)
+            config["global_multiplier"] = 2
+            if time.time()>= config["boost_multiplier_end"]:
+                config["boost_multiplier_end"] = time.time()+3600
+            else:
+                config["boost_multiplier_end"] += 3600
+            with open('config.json', 'w') as f:
+                json.dump(config, f)
         if message.author.bot:
-            return
-        if message.author.id == 307468800125829120:
             return
         if not message.guild:
             return
