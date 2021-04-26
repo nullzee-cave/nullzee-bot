@@ -120,12 +120,12 @@ def nanoId(length=20):
         random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(length))
 
 
-def getFileJson(filename):
+def getFileJson(filename="config"):
     with open(f"{filename}.json") as f:
         return json.load(f)
 
 
-def saveFileJson(data, filename):
+def saveFileJson(data, filename="config"):
     with open(f"{filename}.json", 'w') as f:
         json.dump(data, f)
 

@@ -11,7 +11,8 @@ import math
 import os
 import datetime
 from EZPaginator import Paginator
-from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only, ShallowContext
+from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only, ShallowContext, \
+    saveFileJson
 from helpers.events import Emitter
 from api_key import userColl
 import pymongo
@@ -79,12 +80,10 @@ class Levelling(commands.Cog, name="levelling"):
         '''Change the xp multiplier of a channel'''
         if value < -0.5 or value > 10:
             return await ctx.send("please resign.")
-        with open('config.json') as f:
-            config = json.load(f)
+        config = getFileJson()
         config["multipliers"][str(channel.id)] = value
         await ctx.send(f"set XP multiplier for {channel.mention} to {value}")
-        with open('config.json', 'w') as f:
-            json.dump(config, f)
+        saveFileJson(config)
         self.update_multipliers()
 
     @commands.command()
@@ -93,35 +92,27 @@ class Levelling(commands.Cog, name="levelling"):
         '''Change the glbal xp multiplier for the whole server'''
         if value < -0.5 or value > 10:
             return await ctx.send("please resign.")
-        with open('config.json') as f:
-            config = json.load(f)
+        config = getFileJson()
         config["global_multiplier"] = value
+        config["manual_multiplier"] = value != 1
         await ctx.send(f"set global XP multiplier to {value}")
-        with open('config.json', 'w') as f:
-            json.dump(config, f)
+        saveFileJson(config)
         self.update_multipliers()
 
     @tasks.loop(minutes=1)
     async def boost_multiplier_end(self):
-        with open('config.json') as f:
-            config = json.load(f)
-        if config["boost_multiplier_end"] == time.time():
+        config = getFileJson()
+        if config["boost_multiplier_end"] < time.time() and not config["manual_multiplier"]:
             config["global_multiplier"] = 1
-        with open('config.json', 'w') as f:
-            json.dump(config, f)
+            saveFileJson(config)
 
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.type == discord.MessageType.premium_guild_subscription:
-            with open('config.json') as f:
-                config = json.load(f)
+            config = getFileJson()
             config["global_multiplier"] = 2
-            if time.time()>= config["boost_multiplier_end"]:
-                config["boost_multiplier_end"] = time.time()+3600
-            else:
-                config["boost_multiplier_end"] += 3600
-            with open('config.json', 'w') as f:
-                json.dump(config, f)
+            config["boost_multiplier_end"] = max(config["boost_multiplier_end"]+3600, time.time()+3600)
+            saveFileJson(config)
         if message.author.bot:
             return
         if not message.guild:
