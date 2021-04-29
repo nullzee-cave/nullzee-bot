@@ -24,6 +24,7 @@ class Levelling(commands.Cog, name="levelling"):
         self.bot: commands.Bot = bot
         self.update_multipliers()
         self.vc_tracker.start()
+        self.boost_multiplier_end.start()
 
     def cog_unload(self):
         self.vc_tracker.cancel()
