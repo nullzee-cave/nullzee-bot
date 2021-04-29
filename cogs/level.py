@@ -105,6 +105,7 @@ class Levelling(commands.Cog, name="levelling"):
         if config["boost_multiplier_end"] < time.time() and not config["manual_multiplier"]:
             config["global_multiplier"] = 1
             saveFileJson(config)
+            self.update_multipliers()
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -113,6 +114,7 @@ class Levelling(commands.Cog, name="levelling"):
             config["global_multiplier"] = 2
             config["boost_multiplier_end"] = max(config["boost_multiplier_end"]+3600, time.time()+3600)
             saveFileJson(config)
+            self.update_multipliers()
         if message.author.bot:
             return
         if not message.guild:
