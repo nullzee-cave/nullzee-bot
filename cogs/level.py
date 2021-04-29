@@ -128,7 +128,6 @@ class Levelling(commands.Cog, name="levelling"):
                 multiplier = self.multipliers[str(message.channel.id)]
             else:
                 multiplier = 1
-            multiplier *= self.global_multiplier
             if message.attachments:
                 base_exp = 30
             elif len("".join(message.content)) > 150:
