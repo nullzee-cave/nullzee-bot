@@ -24,6 +24,7 @@ class Levelling(commands.Cog, name="levelling"):
         self.bot: commands.Bot = bot
         self.update_multipliers()
         self.vc_tracker.start()
+        self.boost_multiplier_end.start()
 
     def cog_unload(self):
         self.vc_tracker.cancel()
@@ -105,6 +106,7 @@ class Levelling(commands.Cog, name="levelling"):
         if config["boost_multiplier_end"] < time.time() and not config["manual_multiplier"]:
             config["global_multiplier"] = 1
             saveFileJson(config)
+            self.update_multipliers()
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -113,6 +115,7 @@ class Levelling(commands.Cog, name="levelling"):
             config["global_multiplier"] = 2
             config["boost_multiplier_end"] = max(config["boost_multiplier_end"]+3600, time.time()+3600)
             saveFileJson(config)
+            self.update_multipliers()
         if message.author.bot:
             return
         if not message.guild:
@@ -126,7 +129,6 @@ class Levelling(commands.Cog, name="levelling"):
                 multiplier = self.multipliers[str(message.channel.id)]
             else:
                 multiplier = 1
-            multiplier *= self.global_multiplier
             if message.attachments:
                 base_exp = 30
             elif len("".join(message.content)) > 150:

@@ -143,7 +143,7 @@ class RoleConverter(commands.Converter):
             else:
                 role_list_lower = {z.name.lower(): z for z in ctx.guild.roles}
                 if argument.lower() in role_list_lower:
-                    role = role_list_lower[argument]
+                    role = role_list_lower[argument.lower()]
         finally:
             if role:
                 return role

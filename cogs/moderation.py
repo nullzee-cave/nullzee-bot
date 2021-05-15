@@ -71,7 +71,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
                 f"You were banned from {ctx.guild.name} {f'for `{time_string}`' if _time else ''} {f'for `{reason}`' if reason else ''}\nInfraction ID:`{payload['id']}`")
         except discord.Forbidden:
             pass
-        await ctx.guild.ban(user, reason=reason)
+        await ctx.guild.ban(user, reason=reason[:500])
         await moderationColl.insert_one(payload)
         await moderationUtils.log(self.bot, payload)
 
@@ -115,7 +115,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
                 f"You were kicked from {ctx.guild.name} {f'for `{reason}`' if reason else 'No reason given'}\nInfraction ID:`{payload['id']}`")
         except discord.Forbidden:
             pass
-        await user.kick(reason=reason)
+        await user.kick(reason=reason[:500])
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
