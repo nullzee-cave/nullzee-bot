@@ -1,7 +1,11 @@
 import abc
 import re
 import typing
+
+import pymongo
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import DuplicateKeyError
+
 from api_key import userColl
 import discord
 import json
@@ -54,7 +58,7 @@ def strfdelta(tdelta, fmt):
 
 
 async def get_user(user):
-    if not await userColl.find_one({"_id": str(user.id)}):
+    try:
         await userColl.insert_one({
             "_id": str(user.id),
             # levelling data
@@ -77,7 +81,8 @@ async def get_user(user):
             # misc data
             "vc_minutes": 0,
         })
-    return await userColl.find_one({"_id": str(user.id)})
+    finally:
+        return await userColl.find_one({"_id": str(user.id)})
 
 
 def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="", suffix="",
