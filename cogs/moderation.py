@@ -31,14 +31,14 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     @commands.command()
     @staff_or_trainee
     async def mute(self, ctx, user: discord.Member, _time: typing.Optional[TimeConverter] = None, *,
-                   reason: str = None):
+                   reason: str = "none"):
         '''Mute a user'''
         if user.guild_permissions.manage_messages:
             return await ctx.send("You cannot mute a moderator/administrator")
         payload = payloads.mute_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason)
         message = await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
         payload = payloads.insert_message(payload, message)
-        await user.add_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]))
+        await user.add_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]), reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
         await moderationColl.insert_one(payload)
         await moderationUtils.log(self.bot, payload)
         time_string = payload["duration_string"]
@@ -50,7 +50,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     async def unmute(self, ctx, user: discord.Member, *, reason: str = None):
         '''Unmute a user'''
         await moderationColl.delete_many({"offender_id": user.id, "type": "mute"})
-        await user.remove_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]))
+        await user.remove_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]), reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
         await moderationUtils.end_log(self.bot, {"type": "mute", "offender_id": user.id}, moderator=ctx.author,
                                       reason=reason)
         await ctx.send(embed=discord.Embed(description=f"unmuted {user}", colour=discord.Colour.green()))
@@ -71,7 +71,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
                 f"You were banned from {ctx.guild.name} {f'for `{time_string}`' if _time else ''} {f'for `{reason}`' if reason else ''}\nInfraction ID:`{payload['id']}`")
         except discord.Forbidden:
             pass
-        await ctx.guild.ban(user, reason=reason[:500])
+        await ctx.guild.ban(user, reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
         await moderationColl.insert_one(payload)
         await moderationUtils.log(self.bot, payload)
 
@@ -80,7 +80,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     async def unban(self, ctx, member, *, reason: str = None):
         '''Unban a user'''
         try:
-            await ctx.guild.unban(moderationUtils.BannedUser(member))
+            await ctx.guild.unban(moderationUtils.BannedUser(member), reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
         except (discord.NotFound, discord.HTTPException):
             return await ctx.send("Could not find a ban for that user")
         await moderationUtils.end_log(self.bot, {"type": "ban", "offender_id": member}, moderator=ctx.author,
@@ -115,7 +115,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
                 f"You were kicked from {ctx.guild.name} {f'for `{reason}`' if reason else 'No reason given'}\nInfraction ID:`{payload['id']}`")
         except discord.Forbidden:
             pass
-        await user.kick(reason=reason[:500])
+        await user.kick(reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
