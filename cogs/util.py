@@ -52,7 +52,7 @@ class util(commands.Cog, name="Other"):
             await after.add_roles(after.guild.get_role(706285767898431500))
 
     @commands.command()
-    async def rolelist(self, ctx: commands.Context, role: RoleConverter):
+    async def rolelist(self, ctx: commands.Context, *, role: RoleConverter):
         role: discord.Role
         await ctx.send(embed=discord.Embed(colour=role.colour if role.colour != discord.Colour.default() else discord.Colour.blurple(), description=f"**Role:**\n{role.mention}\n**Total Members:**\n{len(role.members)} members"))
 
