@@ -1,5 +1,7 @@
 import discord
 from discord.ext import commands
+
+from helpers import constants
 from helpers.colour import color
 import sys
 from datetime import datetime
@@ -223,7 +225,7 @@ async def restrict_command_usage(ctx):
     level_bypass = user["level"] >= 50
     role_bypass = (roles := [z.id for z in
                              ctx.author.roles]) and 706285767898431500 in roles or 668724083718094869 in roles or 668736363297898506 in roles
-    channel_allowed = ctx.channel.id in [668914397531602944]
+    channel_allowed = ctx.channel.id in [668914397531602944] or ctx.channel.category in [constants.Channel.TICKETS]
     command_bypass = ctx.command.name in ["stab", "hug", "f", "claimroles", "purchase", "report", "sbinfo", "smh",
                                           "bonk"]
     cog_bypass = ctx.command.cog.qualified_name in ["Useless Commands"] if ctx.command.cog else False

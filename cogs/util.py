@@ -1,6 +1,8 @@
 from discord.ext import commands, tasks
 from random import randint
-from helpers.utils import min_level, get_user
+
+from helpers import constants
+from helpers.utils import min_level, get_user, RoleConverter
 import json
 import asyncio
 import discord
@@ -22,6 +24,7 @@ class util(commands.Cog, name="Other"):
         self.bot = bot
         self.autotogglestatus.start()
         self.autoSuggestions.start()
+        self.update_member_counter.start()
         self.last_update = 0
         self.updateSubCount()
 
@@ -48,6 +51,10 @@ class util(commands.Cog, name="Other"):
         if (668736363297898506 in before_ids and 668736363297898506 not in after_ids) or (668724083718094869 in before_ids and 668724083718094869 not in after_ids):
             await after.add_roles(after.guild.get_role(706285767898431500))
 
+    @commands.command()
+    async def rolelist(self, ctx: commands.Context, role: RoleConverter):
+        role: discord.Role
+        await ctx.send(embed=discord.Embed(colour=role.colour if role.colour != discord.Colour.default() else discord.Colour.blurple(), description=f"**Role:**\n{role.mention}\n**Total Members:**\n{len(role.members)} members"))
 
     @commands.command(aliases=["calc", "math", "m"])
     async def maths(self, ctx, *, expr: str):
@@ -168,6 +175,12 @@ class util(commands.Cog, name="Other"):
         await ctx.send(ctx.author.mention + ", suggestion logged, check <#667959037265969171> to see its progress",
                        delete_after=5)
         await ctx.message.delete()
+
+    @tasks.loop(minutes=20)
+    async def update_member_counter(self):
+        channel: discord.VoiceChannel = self.bot.get_guild(667953033929293855).get_channel(constants.Channel.MEMBER_COUNT_VC)
+        if channel.name != f"Members: {channel.guild.member_count}":
+            await channel.edit(name=f"Members: {channel.guild.member_count}")
 
     @tasks.loop(minutes=2)
     async def autoSuggestions(self):
