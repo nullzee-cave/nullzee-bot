@@ -1,7 +1,7 @@
 from discord.ext import commands, tasks
 from random import randint
 
-from helpers import constants
+from helpers import constants, logic
 from helpers.utils import min_level, get_user, RoleConverter
 import json
 import asyncio
@@ -48,13 +48,45 @@ class util(commands.Cog, name="Other"):
     async def on_member_update(self, before, after):
         before_ids = [z.id for z in before.roles]
         after_ids = [z.id for z in after.roles]
-        if (668736363297898506 in before_ids and 668736363297898506 not in after_ids) or (668724083718094869 in before_ids and 668724083718094869 not in after_ids):
+        if (668736363297898506 in before_ids and 668736363297898506 not in after_ids) or (
+                668724083718094869 in before_ids and 668724083718094869 not in after_ids):
             await after.add_roles(after.guild.get_role(706285767898431500))
 
     @commands.command()
-    async def rolelist(self, ctx: commands.Context, *, role: RoleConverter):
-        role: discord.Role
-        await ctx.send(embed=discord.Embed(colour=role.colour if role.colour != discord.Colour.default() else discord.Colour.blurple(), description=f"**Role:**\n{role.mention}\n**Total Members:**\n{len(role.members)} members"))
+    async def rolelist(self, ctx: commands.Context, *, text: str):
+
+        special_tokens = "&|!()"
+        tokens = []
+        builder = ""
+        for char in text:
+            if char in special_tokens:
+                tokens.append(builder)
+                tokens.append(char)
+                builder = ""
+            else:
+                builder += char
+        tokens.append(builder)
+        empty = []
+        for i, item in enumerate(tokens):
+            if item == "" or item.isspace():
+                empty.append(item)
+        for i in empty:
+            tokens.remove(i)
+        for i, item in enumerate(tokens):
+            if item not in special_tokens:
+                tokens[i] = await RoleConverter().convert(ctx, item.strip())
+        count = 0
+        tree = logic.BooleanLogic.OperationBuilder(tokens, lambda item, items: item in items).build()
+        async with ctx.typing():
+            for member in ctx.guild.members:
+                if tree.evaluate(member.roles):
+                    count += 1
+        embed = discord.Embed(title="Role list search",
+                              colour=discord.Colour.blurple()).add_field(name="Query",
+                                                                         value=tree.pprint(lambda x: x.mention),
+                                                                         inline=False) \
+            .add_field(name="Member count", value=f"{count:,}", inline=False)
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=["calc", "math", "m"])
     async def maths(self, ctx, *, expr: str):
@@ -149,7 +181,6 @@ class util(commands.Cog, name="Other"):
         if punishment["offender_id"] != ctx.author.id:
             return await ctx.send("You can only appeal your own punishments")
         location = punishment["message"].split('-')
-        print(location)
         msg = f"https://discord.com/channels/{location[0]}/{location[1]}/{location[2]}"
         embed = discord.Embed(title="Punishment appeal", url=msg, description=reason, colour=discord.Colour.orange())
         embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
