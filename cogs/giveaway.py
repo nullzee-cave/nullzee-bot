@@ -157,7 +157,7 @@ class Giveaway(commands.Cog, name="giveaway"):
                 x = await self.check_requirements(giveaway, this_winner) and this_winner not in winners
                 attempts += 1
                 if attempts > 50:
-                    return await channel.send("Could not determine a winner.")
+                    return await message.reply("Could not determine a winner.")
             winners.append(this_winner)
         embed = message.embeds[0]
         embed.set_footer(text=f"ended at:")
