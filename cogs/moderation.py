@@ -47,7 +47,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
 
     @commands.command()
     @staff_or_trainee
-    async def unmute(self, ctx, user: discord.Member, *, reason: str = None):
+    async def unmute(self, ctx, user: discord.Member, *, reason: str = "none"):
         '''Unmute a user'''
         await moderationColl.delete_many({"offender_id": user.id, "type": "mute"})
         await user.remove_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]), reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
@@ -57,7 +57,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
 
     @commands.command(aliases=["yeet"])
     @staff_or_trainee
-    async def ban(self, ctx, user: MemberUserConverter, _time: typing.Optional[TimeConverter]=None, *, reason: str = None):
+    async def ban(self, ctx, user: MemberUserConverter, _time: typing.Optional[TimeConverter]=None, *, reason: str = "none"):
         '''Ban a user'''
         if isinstance(user, discord.Member):
             if user.guild_permissions.manage_messages:
@@ -77,7 +77,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
 
     @commands.command()
     @staff_or_trainee
-    async def unban(self, ctx, member, *, reason: str = None):
+    async def unban(self, ctx, member, *, reason: str = "none"):
         '''Unban a user'''
         try:
             await ctx.guild.unban(moderationUtils.BannedUser(member), reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
@@ -100,7 +100,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
 
     @commands.command()
     @staff_or_trainee
-    async def kick(self, ctx, user: discord.Member, *, reason: str = None):
+    async def kick(self, ctx, user: discord.Member, *, reason: str = "none"):
         '''Kick a user'''
         if user.guild_permissions.manage_messages:
             embed = discord.Embed(description="You cannot kick a moderator/administrator", color=0xff0000)
