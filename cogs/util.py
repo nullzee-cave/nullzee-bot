@@ -110,7 +110,7 @@ class util(commands.Cog, name="Other"):
     async def serverinfo(self, ctx):
         embed = await Embed(ctx.author).user_colour()
         embed.add_field(name="Owner:", value=f"{ctx.guild.owner}", inline=False)
-        embed.add_field(name="Members:", value=ctx.guild.member_count, inline=True)
+        embed.add_field(name="Members:", value=len(ctx.guild.members), inline=True)
         embed.add_field(name="Roles:", value=len(ctx.guild.roles)-1, inline=True)
         bots = 0
         moderators = 0
@@ -210,8 +210,9 @@ class util(commands.Cog, name="Other"):
     @tasks.loop(minutes=20)
     async def update_member_counter(self):
         channel: discord.VoiceChannel = self.bot.get_guild(667953033929293855).get_channel(constants.Channel.MEMBER_COUNT_VC)
-        if channel.name != f"Members: {channel.guild.member_count}":
-            await channel.edit(name=f"Members: {channel.guild.member_count}")
+        member_count = len(channel.guild.members)
+        if channel.name != f"Members: {member_count}":
+            await channel.edit(name=f"Members: {member_count}")
 
     @tasks.loop(minutes=2)
     async def autoSuggestions(self):
