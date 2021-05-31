@@ -51,7 +51,8 @@ class BannedUser(object):
 async def automod_name(user: discord.Member):
     config = await get_config()
     for word in config["badWords"]:
-        if (not user.guild_permissions.manage_messages) and re.findall(word, user.nick, flags=re.IGNORECASE) or re.findall(word, user.name):
+        if (not user.guild_permissions.manage_messages) and (re.findall(word, user.display_name, flags=re.IGNORECASE) or
+                                                             re.findall(word, user.name, flags=re.IGNORECASE)):
             try:
                 await user.send("You were kicked from Nullzee's cave for having an inappropriate name")
             except discord.Forbidden:
