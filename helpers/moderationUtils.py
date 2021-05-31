@@ -45,6 +45,18 @@ class BannedUser(object):
     def __init__(self, _id):
         self.id = _id
 
+
+async def send_report(ctx, message, reason):
+    embed = discord.Embed(title="New report", colour=discord.Color.red(), url=message.jump_url,
+                          description=f"reason: {reason}" if reason else "").add_field(name="Message Content",
+                                                                                       value=message.content,
+                                                                                       inline=False).add_field(
+        name="reported by", value=f"{ctx.author.mention} ({ctx.author})", inline=False).set_author(
+        name=message.author, icon_url=message.author.avatar_url)
+    if message.attachments:
+        embed.set_image(url=message.attachments[0].url)
+    await ctx.guild.get_channel(771061232642949150).send(embed=embed)
+
 async def warn_punishments(ctx, user):
     warns = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
     config = await get_config()

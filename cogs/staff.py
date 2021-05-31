@@ -246,6 +246,19 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         embed.description = string
         await ctx.send(embed=embed)
 
+    @commands.command()
+    @staff_only
+    async def messageJson(self, ctx: commands.Context, message: discord.Message):
+        json_object = {"content": message.content, "embeds": [z.to_dict() for z in message.embeds]}
+        json_string = json.dumps(json_object)
+        if len(json_string) <= 2000:
+            return await ctx.send(f"```json\n{json_string}\n```")
+        else:
+            with open("message.json", 'w') as f:
+                json.dump(json_object, f, indent=4)
+            await ctx.send(file=discord.File("message.json"))
+
+
     @commands.group(invoke_without_command=True)
     @commands.has_guild_permissions(manage_messages=True)
     async def blacklist(self, ctx):
