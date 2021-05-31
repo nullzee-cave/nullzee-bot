@@ -103,7 +103,7 @@ async def staffNickChange(ctx, arg):
         raise PerkError(msg="You cannot change this staff member's nick yet, they are on cooldown.")
     await ctx.send("What do you want to change their nick to?")
     try:
-        nickChange = await ctx.bot.wait_for('message', check=lambda msg: msg.channel.id == ctx.channel.id and msg.author.id == ctx.author.id)
+        nickChange = await ctx.bot.wait_for('message', check=lambda msg: msg.channel.id == ctx.channel.id and msg.author.id == ctx.author.id, timeout=60)
     except asyncio.TimeoutError:
         raise PerkError(msg="timed out")
     content = nickChange.content
