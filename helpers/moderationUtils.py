@@ -1,3 +1,5 @@
+import re
+
 import discord
 import datetime
 from api_key import moderationColl
@@ -25,8 +27,8 @@ COLOURS = {
 SEVERITY = {
     "warn": 1,
     "mute": 3,
-    "kick": 9,
-    "ban": 18
+    "kick": 6,
+    "ban": 9,
 }
 
 
@@ -45,6 +47,16 @@ class BannedUser(object):
     def __init__(self, _id):
         self.id = _id
 
+
+async def automod_name(user: discord.Member):
+    config = await get_config()
+    for word in config["badWords"]:
+        if (not user.guild_permissions.manage_messages) and re.findall(word, user.nick, flags=re.IGNORECASE) or re.findall(word, user.name):
+            try:
+                await user.send("You were kicked from Nullzee's cave for having an inappropriate name")
+            except discord.Forbidden:
+                pass
+            await user.kick(reason="Inappropriate name")
 
 async def send_report(ctx, message, reason):
     embed = discord.Embed(title="New report", colour=discord.Color.red(), url=message.jump_url,
@@ -70,8 +82,8 @@ async def warn_punishments(ctx, user):
     cmd = ctx.bot.get_command(punishment["type"].lower())
     if not cmd: return
     if cmd.name == "kick":
-        return await ctx.invoke(cmd, user, reason=f"{score} warns")
-    await ctx.invoke(cmd, user, punishment["duration"], reason=f"{score} warns")
+        return await ctx.invoke(cmd, user, reason=f"{score} warnings")
+    await ctx.invoke(cmd, user, punishment["duration"], reason=f"{score} warnings")
 
 async def end_punishment(bot, payload, moderator, reason):
     try:

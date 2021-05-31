@@ -68,8 +68,13 @@ class Automod(commands.Cog): # this is for timed punishments, removing warns etc
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
+        await moderationUtils.automod_name(member)
         if await moderationColl.find_one({"offender_id": member.id, "active": True, "type": "mute"}):
             await member.add_roles(member.guild.get_role((await moderationUtils.get_config())["muteRole"]))
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        await moderationUtils.automod_name(after)
 
 def setup(bot):
     bot.add_cog(Automod(bot, True))
