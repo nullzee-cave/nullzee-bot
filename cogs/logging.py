@@ -18,7 +18,7 @@ class Logging(commands.Cog):
             return
 
         content = message.content if message.content else ""
-        truncated_content = content[:1960]
+        truncated_content = content[:1900]
         files = []
         embed = Embed(message.author, colour=discord.Colour.dark_orange(),
                       ).auto_author().set_footer(
@@ -44,7 +44,7 @@ class Logging(commands.Cog):
         if before.content == after.content or not after.guild or after.author.bot:
             return
 
-        if len(before.content) + len(after.content) > 1500:
+        if len(before.content) + len(after.content) > 1800:
             diff = [*difflib.ndiff(before.content, after.content)]
             output = "**Changes:**\n"
             last_change = ""
@@ -63,6 +63,8 @@ class Logging(commands.Cog):
                         last_change = ""
                         output += '`'
                     output += char[-1]
+            if len(output) > 1800:
+                output = f"{output[:1500]}..."
         else:
             output = f"**Before:**\n{before.content}\n**After:**\n{after.content}"
 
