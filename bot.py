@@ -65,7 +65,8 @@ cogs = ['cogs.level',
         'cogs.points',
         'cogs.events_v2',
         'cogs.achievements',
-        'cogs.tickets'
+        'cogs.tickets',
+        'cogs.logging',
         ]
 
 
