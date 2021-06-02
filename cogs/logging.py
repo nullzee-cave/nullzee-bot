@@ -24,7 +24,7 @@ class Logging(commands.Cog):
                       ).auto_author().set_footer(
             text=f"Message ID: {message.id}, Channel ID: {message.channel.id}, Author ID: {message.author.id}")
         embed.description = f"**Message deleted in {message.channel.mention} by {message.author.mention}:**\n" \
-                            f"{content}{'...' if truncated_content != content else ''}"
+                            f"{truncated_content}{'...' if truncated_content != content else ''}"
         if message.attachments:
             for attachment in message.attachments:
                 if attachment.width is not None:
