@@ -67,7 +67,7 @@ class Logging(commands.Cog):
             output = f"**Before:**\n{before.content}\n**After:**\n{after.content}"
 
         embed = Embed(after.author, colour=discord.Colour.orange(),
-                      description=f"**Message edited in {after.channel.mention} by {after.author.mention}:**\n{output}"
+                      description=f"**[Message]({after.jump_url}) edited in {after.channel.mention} by {after.author.mention}:**\n{output}"
                       ).set_footer(
             text=f"Message ID: {after.id}, Channel ID: {after.channel.id}, Author ID: {after.author.id}"
         ).auto_author().timestamp_now()
