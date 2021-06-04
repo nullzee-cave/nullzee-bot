@@ -300,6 +300,7 @@ class TimeConverter(commands.Converter):
 def stringToSeconds(_string):
     _time = 0
     times = {
+        "w": 604800,
         "d": 86400,
         "h": 3600,
         "m": 60,
