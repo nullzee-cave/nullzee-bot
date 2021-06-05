@@ -10,7 +10,7 @@ import asyncio
 import random
 import json
 import math
-from api_key import token, prefix
+from api_key import token, prefix, cogs
 from perks.perkSystem import PerkError
 import traceback
 from helpers.utils import get_user, staff_only, TimeConverter, ItemNotFound
@@ -55,22 +55,6 @@ cooldowns = {}
 bot = commands.Bot(command_prefix=prefix, case_insensitive=True, intents=intents)
 bot.remove_command('help')
 
-cogs = ['cogs.level',
-        'cogs.util',
-        'cogs.moderation',
-        'cogs.staff',
-        'cogs.automod',
-        'cogs.giveaway',
-        'cogs.useless_commands',
-        'cogs.points',
-        'cogs.events_v2',
-        'cogs.achievements',
-        'cogs.tickets',
-        'cogs.logging',
-        ]
-
-
-# cogs = ['cogs.tickets']
 
 
 @bot.event
