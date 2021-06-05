@@ -1,49 +1,87 @@
+from dataclasses import dataclass
+
 from discord.ext import commands
 import discord
-import aiohttp
-from api_key import userColl
+import asyncio
+import typing
+
+from helpers.constants import Role
 
 LOG_CHANNEL = 760898316405571615
+
+event_perms = commands.has_any_role(Role.EVENT_HOSTER, Role.STAFF, Role.TRAINEE)
+
+
+@dataclass
+class Event:
+    owner: discord.Member
+    channel: discord.TextChannel
+    url: str
+    participants: typing.Dict[str, discord.Member]
 
 
 class Events(commands.Cog, name="events"):
 
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: commands.Bot = bot
         self.hidden = False
-
-#     @commands.command()
-#     @commands.guild_only()
-#     async def participate(self, ctx, uname: str, timezone:str):
-#         if not timezone in ['1', '2']:
-#             raise commands.UserInputError
-#         timezone = timezone.upper()
-#         async with aiohttp.ClientSession() as session:
-#             async with session.get(f"https://api.slothpixel.me/api/players/{uname}") as resp:
-#                 if resp.status == 404:
-#                     return await ctx.send("That username does not exist in Minecraft.")
-#                 data = await resp.json()
-#         if data["links"]["DISCORD"] != str(ctx.author):
-#             return await ctx.send(embed=discord.Embed(title=":x: Error :x:",
-#                                                       description="Account not linked. Click [here](https://gfycat.com/dentaltemptingleonberger) to see how to link your account",
-#                                                       colour=discord.Colour.red()))
-#         await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"uname": uname, "timezone": timezone}})
-#         await ctx.guild.get_channel(LOG_CHANNEL).send(f"{ctx.author.mention} [{timezone}] - `{uname}`")
-#         await ctx.send(f"You have signed up as {uname} for event {timezone}")
+        self.event: Event = None
 
     @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
-    async def getParticipants(self, ctx, k=None, v=None):
-        query = {"uname": {"$exists": True}, k: v} if k and v else {"uname": {"$exists": True}}
-        await ctx.send(embed=discord.Embed(description="\n".join(
-            [f"<@{z['_id']}> [{z['timezone']}] - `{z['uname']}`" async for z in userColl.find(query)]),
-                                           colour=discord.Colour.green()))
+    @commands.guild_only()
+    async def joinEvent(self, ctx: commands.Context):
+        if self.event is None:
+            return await ctx.send("There is no event active!")
+        if ctx.author in self.event.participants.values():
+            return await ctx.send("You are already signed up for this event!")
+        try:
+            dm_channel = (await ctx.author.send("What will your IGN be?")).channel
+        except discord.Forbidden:
+            return await ctx.send(f"{ctx.author.mention} Please enable DMs from server members")
+        check = lambda msg: msg.author.id == ctx.author.id and msg.channel.id == dm_channel.id
+        try:
+            ign = (await self.bot.wait_for("message", check=check, timeout=60)).content
+        except asyncio.TimeoutError:
+            return await ctx.author.send("Timed out")
+
+        if ign in self.event.participants:
+            return await ctx.author.send("Someone has already registered with this IGN")
+
+        self.event.participants[ign] = ctx.author
+
+        channel = self.event.channel
+        channel = channel if channel else self.event.owner
+        await channel.send(embed=discord.Embed(colour=discord.Colour.green(),
+                                               description=f"{ctx.author.mention} "
+                                                           f"({ctx.author}) signed up for the event with the IGN `{ign}`"
+                                               ))
+        await ctx.author.send(f"You have signed up for the event as `{ign}`. "
+                              "Please use the name you selected above or you will be kicked from the game"
+                              f"\n{self.event.url}")
 
     @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
-    async def clearParticipants(self, ctx):
-        await userColl.update_many({}, {"$unset": {"uname": "", "timezone": ""}})
-        await ctx.send("Successfully cleared all participants")
+    @event_perms
+    async def startEvent(self, ctx: commands.Context, url: str, channel: discord.TextChannel = None):
+        if self.event is not None:
+            return await ctx.send("There is already an active event!")
+        self.event = Event(ctx.author, channel, url, {})
+        await ctx.send("Event started")
+
+    @commands.command()
+    @event_perms
+    async def endEvent(self, ctx: commands.Context):
+        self.event = None
+        await ctx.send("Event ended")
+
+    @commands.command()
+    @event_perms
+    async def eventIgn(self, ctx: commands.Context, ign: str):
+        if not self.event:
+            return await ctx.send("There is no event active")
+        if ign not in self.event.participants:
+            return await ctx.send("This IGN is not registered")
+        user = self.event.participants[ign]
+        await ctx.send(f"{user.mention} ({user}) signed up with this IGN")
 
 
 def setup(bot):
