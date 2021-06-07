@@ -116,9 +116,12 @@ async def staffNickChange(ctx, arg):
             if ctx.guild.get_role(667953757954244628) in member.roles or ctx.guild.get_role(675031583954173986) in member.roles:
                 await member.edit(nick=f'✰ {content}')
             else:
-                await member.edit(nick=f'{content}')
+                raise PerkError("I can't change a twitch mod's nick!")
             staff_nick_changes[member.id] = time.time()
-            await member.send(f'{ctx.author} changed your nick to {content} btw')
         except discord.Forbidden:
             raise PerkError(msg="I can't change an admin's nick!")
+        try:
+            await member.send(f'{ctx.author} changed your nick to {content} btw')
+        except discord.Forbidden:
+            pass
 
