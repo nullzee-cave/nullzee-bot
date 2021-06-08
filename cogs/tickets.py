@@ -323,7 +323,10 @@ class Tickets(commands.Cog):
         user = int(user.group("user_id"))
         user = self.bot.get_user(user)
         if user.id != ctx.author.id:
-            await user.send(f"Your ticket has been closed\nReason: `{reason}`")
+            try:
+                await user.send(f"Your ticket has been closed\nReason: `{reason}`")
+            except discord.Forbidden:
+                pass
         await ctx.channel.delete()
         await ctx.guild.get_channel(Channel.MOD_LOGS).send(
             embed=Embed(
