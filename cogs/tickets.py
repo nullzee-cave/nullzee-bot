@@ -321,12 +321,12 @@ class Tickets(commands.Cog):
             f.write(transcribe(reversed([z async for z in ctx.channel.history(limit=500)])))
         user = re.search(TICKET_TOPIC_REGEX, ctx.channel.topic)
         user = int(user.group("user_id"))
-        user = self.bot.get_user(user)
-        if user.id != ctx.author.id:
-            try:
+        try:
+            user = self.bot.get_user(user)
+            if user.id != ctx.author.id:
                 await user.send(f"Your ticket has been closed\nReason: `{reason}`")
-            except discord.Forbidden:
-                pass
+        except (discord.Forbidden, discord.NotFound):
+            pass
         await ctx.channel.delete()
         await ctx.guild.get_channel(Channel.MOD_LOGS).send(
             embed=Embed(
