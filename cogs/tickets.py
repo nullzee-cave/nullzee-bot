@@ -325,7 +325,7 @@ class Tickets(commands.Cog):
             user = self.bot.get_user(user)
             if user.id != ctx.author.id:
                 await user.send(f"Your ticket has been closed\nReason: `{reason}`")
-        except (discord.Forbidden, discord.NotFound):
+        except (discord.Forbidden, discord.NotFound, AttributeError):
             pass
         await ctx.channel.delete()
         await ctx.guild.get_channel(Channel.MOD_LOGS).send(
