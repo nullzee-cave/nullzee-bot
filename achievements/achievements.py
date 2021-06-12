@@ -490,7 +490,7 @@ achievements = {
         "hidden": False,
         "value": 2,
         "listeners": {
-            "message": lambda msg: msg.content.startswith("-m") and "8008135" in msg.content
+            "message": lambda ctx: ctx.command.name == "maths" and "8008135" in ctx.message.content
         }
 
     },
