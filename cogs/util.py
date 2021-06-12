@@ -387,8 +387,8 @@ class util(commands.Cog, name="Other"):
     @commands.cooldown(2, 60, BucketType.user)
     async def claimroles(self, ctx, ign: str):
         """Claim roles for in-game achievement"""
-        # if ctx.channel.id != 676693868741263381:
-        #     return await ctx.send("go to <#676693868741263381> for that!")
+        if ctx.channel.id != 853294481825726475:
+            return await ctx.send("go to <#853294481825726475> for that!")
         await ctx.trigger_typing()
         key = hypixel_api_key
         try:
