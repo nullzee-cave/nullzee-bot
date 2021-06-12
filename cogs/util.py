@@ -437,7 +437,7 @@ class util(commands.Cog, name="Other"):
         pets = []
         bank = 0
         skills = ("combat", "farming", "fishing", "foraging", "alchemy", "enchanting", "mining", "taming")
-        skill_averages = []
+        skill_averages = [0]
         for profile in player["profiles"]:
             slots[profile["profile_id"]] = 0
             for user in profile["members"]:

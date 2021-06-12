@@ -340,7 +340,7 @@ def stringToSeconds(_string):
 
 
 def level_from_table(count, table) -> int:
-    current_level = 0
+    current_level = table[0]
     for level in table:
         if count < level:
             break
