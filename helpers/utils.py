@@ -144,7 +144,7 @@ class MessageOrReplyConverter(commands.Converter):
         try:
             message = await commands.MessageConverter().convert(ctx, argument)
         except commands.MessageNotFound:
-            message = ctx.message.reference
+            message = ctx.message.reference.cached_message
         if message is None:
             raise commands.MessageNotFound(argument)
         return message

@@ -304,15 +304,15 @@ class Tickets(commands.Cog):
         await ctx.send(f"{ctx.author.mention} added {member.mention} to this ticket")
 
     @commands.command()
-    async def pin(self, ctx: commands.Context, message: MessageOrReplyConverter):
+    async def pin(self, ctx: commands.Context, message: str=None):
         restrict_ticket_command_usage(ctx)
-        message: discord.Message
+        message: discord.Message = await MessageOrReplyConverter().convert(ctx, message)
         await message.pin(reason=f"pinned by {ctx.author}")
 
     @commands.command()
-    async def unpin(self, ctx: commands.Context, message: MessageOrReplyConverter):
+    async def unpin(self, ctx: commands.Context, message: str=None):
         restrict_ticket_command_usage(ctx)
-        message: discord.Message
+        message: discord.Message = await MessageOrReplyConverter().convert(ctx, message)
         await message.unpin(reason=f"unpinned by {ctx.author}")
         await ctx.send("Unpinned!")
 
