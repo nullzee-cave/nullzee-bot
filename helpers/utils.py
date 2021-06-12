@@ -137,6 +137,20 @@ def saveFileJson(data, filename="config"):
         json.dump(data, f)
 
 
+class MessageOrReplyConverter(commands.Converter):
+
+    async def convert(self, ctx: commands.Context, argument: str):
+        message: discord.Message = None
+        try:
+            message = await commands.MessageConverter().convert(ctx, argument)
+        except commands.MessageNotFound:
+            message = ctx.message.reference
+        if message is None:
+            raise commands.MessageNotFound(argument)
+        return message
+
+
+
 class RoleConverter(commands.Converter):
     abbreviations = {"vc lord": 682656964123295792, "godly giveaway donator": 681900556788301843}
 

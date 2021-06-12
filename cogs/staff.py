@@ -137,7 +137,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
             return await ctx.send("I do not have permission to remove that role from that user")
 
 
-    @commands.command(aliases=["star", "pin"])
+    @commands.command(aliases=["star"])
     @staff_or_trainee
     async def starboard(self, ctx: commands.Context, msg: discord.Message, *, title: str = ""):
         '''Add a message to the starboard'''

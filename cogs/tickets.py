@@ -7,7 +7,7 @@ from discord.ext import commands
 import re
 
 from helpers.constants import Channel, Role
-from helpers.utils import staff_check, Embed, staff_only, getFileJson, saveFileJson
+from helpers.utils import staff_check, Embed, staff_only, getFileJson, saveFileJson, MessageOrReplyConverter
 
 TICKET_TOPIC_REGEX = r"opened by (?P<user>.+#\d{4}) \((?P<user_id>\d+)\) at (?P<time>.+)"
 
@@ -304,10 +304,24 @@ class Tickets(commands.Cog):
         await ctx.send(f"{ctx.author.mention} added {member.mention} to this ticket")
 
     @commands.command()
+    async def pin(self, ctx: commands.Context, message: MessageOrReplyConverter):
+        restrict_ticket_command_usage(ctx)
+        message: discord.Message
+        await message.pin(reason=f"pinned by {ctx.author}")
+
+    @commands.command()
+    async def unpin(self, ctx: commands.Context, message: MessageOrReplyConverter):
+        restrict_ticket_command_usage(ctx)
+        message: discord.Message
+        await message.unpin(reason=f"unpinned by {ctx.author}")
+        await ctx.send("Unpinned!")
+
+    @commands.command()
     async def removeuser(self, ctx: commands.Context, *, member: discord.Member):
         restrict_ticket_command_usage(ctx)
         string = f"{ctx.author.mention} removed {member.mention} from this ticket"
         member_ctx = ctx
+        # noinspection PyPropertyAccess
         member_ctx.author = member
         if restrict_ticket_command_usage(member_ctx, raise_on_false=False):
             raise commands.MissingPermissions(["manage_tickets"])

@@ -21,7 +21,7 @@ class Automod(commands.Cog): # this is for timed punishments, removing warns etc
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if not (message.guild or isinstance(message.author, discord.Member)):
+        if not (message.guild or isinstance(message.author, discord.Member)) or type(message.author) == discord.User:
             return
         if message.author.guild_permissions.manage_messages:
             return
