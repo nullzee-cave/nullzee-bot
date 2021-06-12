@@ -510,9 +510,9 @@ class util(commands.Cog, name="Other"):
         embed.set_thumbnail(url=f"https://mc-heads.net/head/{ign}")
         string = ''
         roles = [ctx.guild.get_role(role) for role in roles]
-        await ctx.author.add_roles(*roles)
         for role in roles:
             string += f'\n{role.mention} {"[+]" if role not in ctx.author.roles else ""}'
+        await ctx.author.add_roles(*roles)
         if not string:
             return await ctx.send(
                 embed=discord.Embed(title=":hear_no_evil: Oh no!", description="You don't qualify for any roles ):",
