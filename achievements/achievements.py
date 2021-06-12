@@ -490,7 +490,7 @@ achievements = {
         "hidden": False,
         "value": 2,
         "listeners": {
-            "message": lambda ctx: ctx.command.name == "maths" and "8008135" in ctx.message.content
+            "message": lambda ctx: ctx.command and ctx.command.name == "maths" and "8008135" in ctx.message.content
         }
 
     },
