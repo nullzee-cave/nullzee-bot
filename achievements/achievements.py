@@ -484,7 +484,16 @@ achievements = {
         "description": "",
         "hidden": True,
         "value": 5
-    }
+    },
+    "Childish": {
+        "description": "Write `8008135` on a particular calculator",
+        "hidden": False,
+        "value": 2,
+        "listeners": {
+            "message": lambda msg: msg.content.startswith("-m") and "8008135" in msg.content
+        }
+
+    },
 
 }
 

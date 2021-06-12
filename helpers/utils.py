@@ -1,7 +1,9 @@
 import abc
+import asyncio
 import re
 import typing
 
+import aiohttp
 import pymongo
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import DuplicateKeyError
@@ -138,7 +140,7 @@ def saveFileJson(data, filename="config"):
 class RoleConverter(commands.Converter):
     abbreviations = {"vc lord": 682656964123295792, "godly giveaway donator": 681900556788301843}
 
-    async def convert(self, ctx, argument) -> discord.Role:
+    async def convert(self, ctx: commands.Context, argument: str) -> discord.Role:
         role = None
         try:
             role = await commands.RoleConverter().convert(ctx, argument)
@@ -149,6 +151,25 @@ class RoleConverter(commands.Converter):
                 role_list_lower = {z.name.lower(): z for z in ctx.guild.roles}
                 if argument.lower() in role_list_lower:
                     role = role_list_lower[argument.lower()]
+                else:
+                    candidates = []
+                    for name in role_list_lower:
+                        if argument.lower() in name:
+                            candidates.append(role_list_lower[name])
+                    if len(candidates) == 1:
+                        role = candidates[0]
+                    elif len(candidates) > 1:
+                        await ctx.send(embed=discord.Embed(title="Which role?",
+                                                           description="\n".join([f"{i+1} : {z.mention}" for i, z in enumerate(candidates)]),
+                                                           colour=discord.Colour.green()))
+                        try:
+                            res: discord.Message = await ctx.bot.wait_for('message', check=lambda msg: msg.author.id == ctx.author.id and msg.channel.id == ctx.channel.id, timeout=60)
+                            number = int(res.content)
+                            role = candidates[number-1]
+                        except asyncio.TimeoutError:
+                            await ctx.send("Timed out")
+                        except (ValueError, TypeError, IndexError):
+                            await ctx.send("Invalid index")
         finally:
             if role:
                 return role
@@ -316,3 +337,18 @@ def stringToSeconds(_string):
         _string = _string[len(match.group('time')):]
         match = re.match(regex, _string)
     return _time
+
+
+def level_from_table(count, table) -> int:
+    current_level = 0
+    for level in table:
+        if count < level:
+            break
+        current_level = level
+    return current_level
+
+
+async def fetch_json_api(url: str) -> dict:
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as res:
+            return await res.json()

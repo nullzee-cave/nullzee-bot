@@ -1,7 +1,10 @@
+import math
+
 from discord.ext import commands, tasks
 from random import randint
 
-from helpers import constants, logic, moderationUtils
+from helpers import constants, logic, moderationUtils, utils
+from helpers.constants import Skyblock
 from helpers.utils import min_level, get_user, RoleConverter
 import json
 import asyncio
@@ -17,6 +20,7 @@ from helpers.utils import Embed, strfdelta
 import mathterpreter
 
 from helpers.events import Emitter
+
 
 class util(commands.Cog, name="Other"):
     def __init__(self, bot, hidden):
@@ -96,22 +100,23 @@ class util(commands.Cog, name="Other"):
         except (mathterpreter.MathSyntaxError, OverflowError) as e:
             if isinstance(e, OverflowError):
                 return await ctx.send(f"{ctx.author.mention}, an error occurred! Result too large")
-            await ctx.send(f"{ctx.author.mention}, an error occurred! ```\n{e.reason}\n``` ```\n{e.visualisation}\n```", allowed_mentions=discord.AllowedMentions(roles=False, users=True, everyone=False))
+            await ctx.send(f"{ctx.author.mention}, an error occurred! ```\n{e.reason}\n``` ```\n{e.visualisation}\n```",
+                           allowed_mentions=discord.AllowedMentions(roles=False, users=True, everyone=False))
 
-#    @commands.command(aliases=["color"])
-#    async def colour(self, ctx, colour):
-#        embed = discord.Embed(description=colour, colour=colour)
-#        try:
-#            await ctx.send(embed=embed)
-#        except TypeError:
-#            raise commands.BadArgument()
+    #    @commands.command(aliases=["color"])
+    #    async def colour(self, ctx, colour):
+    #        embed = discord.Embed(description=colour, colour=colour)
+    #        try:
+    #            await ctx.send(embed=embed)
+    #        except TypeError:
+    #            raise commands.BadArgument()
 
     @commands.command()
     async def serverinfo(self, ctx):
         embed = await Embed(ctx.author).user_colour()
         embed.add_field(name="Owner:", value=f"{ctx.guild.owner}", inline=False)
         embed.add_field(name="Members:", value=len(ctx.guild.members), inline=True)
-        embed.add_field(name="Roles:", value=len(ctx.guild.roles)-1, inline=True)
+        embed.add_field(name="Roles:", value=len(ctx.guild.roles) - 1, inline=True)
         bots = 0
         moderators = 0
         for member in ctx.guild.members:
@@ -128,7 +133,7 @@ class util(commands.Cog, name="Other"):
         time_since_creation = current_date - creation_date
         embed.add_field(name="Server Age:",
                         value=strfdelta(time_since_creation,
-                                              f"{f'%Y years, ' if int(strfdelta(time_since_creation,'%Y')) > 1 else (f'%Y year, ' if int(strfdelta(time_since_creation, '%Y')) == 1 else '')}%D days, %H hours and %M minutes"),
+                                        f"{f'%Y years, ' if int(strfdelta(time_since_creation, '%Y')) > 1 else (f'%Y year, ' if int(strfdelta(time_since_creation, '%Y')) == 1 else '')}%D days, %H hours and %M minutes"),
                         inline=False)
         embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
         embed.set_footer(text=f"ID: {ctx.guild.id}")
@@ -209,7 +214,8 @@ class util(commands.Cog, name="Other"):
 
     @tasks.loop(minutes=20)
     async def update_member_counter(self):
-        channel: discord.VoiceChannel = self.bot.get_guild(667953033929293855).get_channel(constants.Channel.MEMBER_COUNT_VC)
+        channel: discord.VoiceChannel = self.bot.get_guild(667953033929293855).get_channel(
+            constants.Channel.MEMBER_COUNT_VC)
         member_count = len(channel.guild.members)
         if channel.name != f"Members: {member_count}":
             await channel.edit(name=f"Members: {member_count}")
@@ -381,53 +387,28 @@ class util(commands.Cog, name="Other"):
     @commands.cooldown(2, 60, BucketType.user)
     async def claimroles(self, ctx, ign: str):
         """Claim roles for in-game achievement"""
-        if ctx.channel.id != 676693868741263381:
-            return await ctx.send("go to <#676693868741263381> for that!")
+        # if ctx.channel.id != 676693868741263381:
+        #     return await ctx.send("go to <#676693868741263381> for that!")
         await ctx.trigger_typing()
         key = hypixel_api_key
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"https://api.mojang.com/users/profiles/minecraft/{ign}") as resp:
-                    mojang = await resp.json()
+            # noinspection SpellCheckingInspection
+            mojang = await utils.fetch_json_api(f"https://api.mojang.com/users/profiles/minecraft/{ign}")
             uuid = mojang["id"]
         except (aiohttp.ContentTypeError, KeyError):
             return await ctx.send(f"{ctx.author.mention}, that username could not be found")
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://api.hypixel.net/player?uuid={uuid}&key={key}") as resp:
-                dc = await resp.json()
-        failRepsonses = [f"{str(ctx.author)} doesn't know how to claim roles smh",
-                         f"{str(ctx.author)} messed up somehow ¯\_(ツ)_/¯",
-                         "blame pjones123#6025 if something messes up"]
-        try:
-            if dc["player"]["socialMedia"]["links"]["DISCORD"] != str(ctx.author):
-                try:
-                    embed = discord.Embed(title=":no_entry_sign: Error!", description="""In order to automatically claim your roles, you must first link your discord account to your hypixel profile. If you do not know how to do this, refer to the gif below for instructions
+        player_data = await utils.fetch_json_api(f"https://api.hypixel.net/player?uuid={uuid}&key={key}")
+        fail_responses = [f"{str(ctx.author)} doesn't know how to claim roles smh",
+                          f"{str(ctx.author)} messed up somehow ¯\_(ツ)_/¯",
+                          "blame pjones123#6025 if something messes up"]
 
-                    Additionally, you must turn on your skyblock api, which can be accessed in the Skyblock Menu ⇒ Settings ⇒ API Settings.
-
-                    Make sure you check every option. This includes the Bank API which can be turned on in Settings ⇒ Island Settings ⇒ Bank API""",
-                                          color=0xff0000)
-                    embed.set_thumbnail(
-                        url="https://yt3.ggpht.com/-G0UwZhD1hRI/AAAAAAAAAAI/AAAAAAAAAAA/Q5bg4hzv6C0/s900-c-k-no/photo.jpg")
-                    await ctx.author.send(embed=embed)
-                    await ctx.author.send("https://gfycat.com/dentaltemptingleonberger")
-                    await ctx.message.delete()
-                    return await ctx.send(embed=discord.Embed(title=":no_entry_sign: Error!",
-                                                              description="Could not verify your identity. I've DMed you info",
-                                                              color=0xff0000).set_footer(
-                        text=random.choice(failRepsonses), icon_url=ctx.author.avatar_url))
-                except discord.Forbidden:
-                    return await ctx.send(
-                        "Could not verify your identity. Please allow DMs from members of this server then try again",
-                        delete_after=5)
-                    await ctx.message.delete()
-        except KeyError:
+        async def send_fail():
             try:
                 embed = discord.Embed(title=":no_entry_sign: Error!", description="""In order to automatically claim your roles, you must first link your discord account to your hypixel profile. If you do not know how to do this, refer to the gif below for instructions
 
-                    Additionally, you must turn on your skyblock api, which can be accessed in the Skyblock Menu ⇒ Settings ⇒ API Settings.
+                                    Additionally, you must turn on your skyblock api, which can be accessed in the Skyblock Menu ⇒ Settings ⇒ API Settings.
 
-                    Make sure you check every option. This includes the Bank API which can be turned on in Settings ⇒ Island Settings ⇒ Bank API""",
+                                    Make sure you check every option. This includes the Bank API which can be turned on in Settings ⇒ Island Settings ⇒ Bank API""",
                                       color=0xff0000)
                 embed.set_thumbnail(
                     url="https://yt3.ggpht.com/-G0UwZhD1hRI/AAAAAAAAAAI/AAAAAAAAAAA/Q5bg4hzv6C0/s900-c-k-no/photo.jpg")
@@ -436,48 +417,46 @@ class util(commands.Cog, name="Other"):
                 await ctx.message.delete()
                 return await ctx.send(embed=discord.Embed(title=":no_entry_sign: Error!",
                                                           description="Could not verify your identity. I've DMed you info",
-                                                          color=0xff0000).set_footer(text=random.choice(failRepsonses),
-                                                                                     icon_url=ctx.author.avatar_url))
+                                                          color=0xff0000).set_footer(
+                    text=random.choice(fail_responses), icon_url=ctx.author.avatar_url))
             except discord.Forbidden:
-                await ctx.message.delete()
-                return await ctx.send(
+                await ctx.send(
                     "Could not verify your identity. Please allow DMs from members of this server then try again",
                     delete_after=5)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://api.hypixel.net/skyblock/profiles?key={key}&uuid={uuid}") as resp:
-                player = await resp.json()
+                return await ctx.message.delete()
+
+        try:
+            if player_data["player"]["socialMedia"]["links"]["DISCORD"] != str(ctx.author):
+                return await send_fail()
+        except KeyError:
+            return await send_fail()
+        player = await utils.fetch_json_api(f"https://api.hypixel.net/skyblock/profiles?key={key}&uuid={uuid}")
         souls = []
         slayers = []
         slots = {}
         pets = []
         bank = 0
-        skills = {"combat": [0], "farming": [0], "fishing": [0], "foraging": [0], "alchemy": [0], "enchanting": [0],
-                  "mining": [0]}
-        skillroles = {"combat": 694957008759160862, "farming": 694956649458434111, "fishing": 694956709537513502,
-                      "foraging": 694957060907073586, "alchemy": 694956798125408416, "enchanting": 694958166550642838,
-                      "mining": 694957334195208274}
+        skills = ("combat", "farming", "fishing", "foraging", "alchemy", "enchanting", "mining", "taming")
+        skill_averages = []
         for profile in player["profiles"]:
             slots[profile["profile_id"]] = 0
             for user in profile["members"]:
                 if user != uuid:
-                    pass
-                else:
-                    # print(profile["members"][user])
-                    try:
-                        souls.append(profile["members"][user]["fairy_souls_collected"])
-                    except KeyError:
-                        pass
-                    for skill in skills:
-                        try:
-                            skills[skill].append(profile["members"][user][f"experience_skill_{skill}"])
-                        except KeyError:
-                            pass
+                    continue
+                try:
+                    souls.append(profile["members"][user]["fairy_souls_collected"])
+                    skill_averages.append(math.trunc(sum([Skyblock.SKILL_XP_REQUIREMENTS.index(
+                        utils.level_from_table(profile["members"][user][f"experience_skill_{skill}"],
+                                               Skyblock.SKILL_XP_REQUIREMENTS[:50] if skill in Skyblock.MAX_LEVEL_50_SKILLS else Skyblock.SKILL_XP_REQUIREMENTS)
+                    )+1 for skill in skills]) / len(skills)))
                     if "slayer_bosses" in profile["members"][user]:
-                        slayersbosses = profile["members"][user]["slayer_bosses"]
-                        for slayer in slayersbosses:
+                        slayer_bosses = profile["members"][user]["slayer_bosses"]
+                        for slayer in slayer_bosses:
                             try:
-                                if "level_7" in slayersbosses[slayer]["claimed_levels"]:
-                                    slayers.append(slayer)
+                                if "level_7" in slayer_bosses[slayer]["claimed_levels"]:
+                                    slayers.append(7)
+                                if "level_9" in slayer_bosses[slayer]["claimed_levels"]:
+                                    slayers.append(9)
                             except KeyError:
                                 pass
                     if "pets" in profile["members"][user]:
@@ -486,65 +465,67 @@ class util(commands.Cog, name="Other"):
                                 pets.append(pet["type"])
                     if "coin_purse" in profile["members"][user]:
                         bank += profile["members"][user]["coin_purse"]
-                try:
-                    # print(profile["members"][user][len("crafted_generators")])
-                    # print(len(profile["members"][user]["crafted_generators"]))
                     slots[profile["profile_id"]] += len(profile["members"][user]["crafted_generators"])
                 except KeyError:
                     pass
-
-        # print(max(souls))
         for profile in player["profiles"]:
             try:
                 bank += (profile["banking"]["balance"])
             except KeyError:
                 pass
-        money_roles = {676693908788477953: 1000000, 676694080830439425: 10000000, 676694161541300225: 35000000}
+            try:
+                minion_slot_requirements = [0, 0, 0, 0, 0, 5, 15, 30, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275,
+                                            300,
+                                            350, 400, 450, 500, 550, 600, 650]
+                extra_slots = len(
+                    [z for z in profile["community_upgrades"]["upgrade_states"] if z["upgrade"] == "minion_slots"])
+                slots[profile["profile_id"]] = minion_slot_requirements.index(utils.level_from_table(
+                    slots[profile["profile_id"]] + extra_slots, minion_slot_requirements))
+            except KeyError:
+                pass
+
+        money_roles = {676694080830439425: 50_000_000, 676694161541300225: 150_000_000}
         roles = []
-        if max(souls) > 180:
+        if max(skill_averages) >= 20:
+            roles.append(853259525406195762)
+        if max(skill_averages) >= 35:
+            roles.append(853259618645835776)
+        if max(skill_averages) >= 50:
+            roles.append(853259716531978251)
+        if max(souls) >= 210:
             roles.append(676694230382411777)
         for i in money_roles:
             if bank > money_roles[i]:
                 roles.append(i)
         if slayers:
             roles.append(694957553079287860)
-            if len(slayers) > 2:
+            if 9 in slayers:
                 roles.append(694957649703337995)
-        if max(slots.values()) > 200:
+        if max(slots.values()) >= 25:
             roles.append(678152501295448074)
-        # print(slots)
-        for skill in skills:
-            if max(skills[skill]) > 3022425:
-                roles.append(skillroles[skill])
-        if len(pets) >= 15:
+        if len(pets) >= 25:
             roles.append(703135943653326899)
-            # print(f"{skill} {max(skills[skill]) > 3022425}")
         embed = discord.Embed(title="Roles added :scroll:", color=0xfb00fd)
         embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
         embed.set_thumbnail(url=f"https://mc-heads.net/head/{ign}")
         string = ''
+        roles = [ctx.guild.get_role(role) for role in roles]
+        await ctx.author.add_roles(*roles)
         for role in roles:
-            addrole = ctx.guild.get_role(role)
-            if addrole not in ctx.author.roles:
-                had = '[+]'
-            else:
-                had = ''
-            await ctx.author.add_roles(addrole)
-            await asyncio.sleep(0.5)
-            string += f'\n{addrole.mention} {had}'
+            string += f'\n{role.mention} {"[+]" if role not in ctx.author.roles else ""}'
         if not string:
-            # return await ctx.send("You don't qualify for any roles ):\n \n check that all your APIs are turned on")
             return await ctx.send(
                 embed=discord.Embed(title=":hear_no_evil: Oh no!", description="You don't qualify for any roles ):",
                                     color=0xff0000).set_footer(
                     text="Think you deserve some roles? Make sure all API settings are enabled").set_author(
                     name=ctx.author, icon_url=ctx.author.avatar_url))
         embed.add_field(
-            name=f"Added {len(roles)} roles for {ctx.author.nick if ctx.author.nick else ctx.author.name} as {ign}",
+            name=f"Added {len(roles)} roles for {ctx.author.display_name} as {ign}",
             value=string, inline=False)
-        embed.set_footer(text="Innacurate? Make sure all API settings are enabled",
+        embed.set_footer(text="Inaccurate? Make sure all API settings are enabled",
                          icon_url="https://cdn.discordapp.com/icons/667953033929293855/a_76e58197f9e2e51b8280aa70e31fbbe5.gif?size=1024")
         await ctx.send(embed=embed)
+        # noinspection SpellCheckingInspection
         await Emitter().emit("hypixel_link", ctx)
 
 
