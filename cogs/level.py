@@ -236,7 +236,7 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.guild_only()
     async def leaderboard(self, ctx):
         """View the server's XP leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('level', pymongo.DESCENDING)], prefix="level ")
+        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort([('level', pymongo.DESCENDING), ('experience', pymongo.DESCENDING)])], prefix="level ")
         msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
