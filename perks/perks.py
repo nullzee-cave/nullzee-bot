@@ -129,6 +129,7 @@ async def staffNickChange(ctx, arg):
 
 @perk(name="rainbow", description=f"Change the colour of the <@&{Role.RAINBOW}> role", aliases=["roleColour"], cost=20, require_arg=True)
 async def rainbow_role(ctx: commands.Context, arg: str):
+    global last_rainbow
     if time.time() - last_rainbow < 60*15:
         raise PerkError(msg="This perk is on cooldown!")
     try:
