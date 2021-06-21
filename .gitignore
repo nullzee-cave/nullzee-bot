@@ -11,3 +11,4 @@ achievements/__pycache__/*
 venv/
 image_cache/
 transcripts/
+transcript.html
