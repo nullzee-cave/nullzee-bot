@@ -4,11 +4,13 @@ from discord.ext import commands
 import discord
 from api_key import userColl
 from helpers.utils import get_user, Embed, getFileJson, saveFileJson
+from helpers.constants import Role
 import datetime
 import asyncio
 import time
 
 last_ping = 0
+last_rainbow = 0
 staff_nick_changes = {}
 
 @perk(name="AskNullzee", description="Ask Nullzee a question!", cost=10, aliases=["NullzeeQuestion", "askNull"],
@@ -125,3 +127,13 @@ async def staffNickChange(ctx, arg):
         except discord.Forbidden:
             pass
 
+@perk(name="rainbow", description=f"Change the colour of the <@&{Role.RAINBOW}> role", aliases=["roleColour"], cost=20, require_arg=True)
+async def rainbow_role(ctx: commands.Context, arg: str):
+    if time.time() - last_rainbow < 60*15:
+        raise PerkError(msg="This perk is on cooldown!")
+    try:
+        colour: discord.Colour = await commands.ColourConverter().convert(arg)
+    except commands.BadArgument as e:
+        raise PerkError(msg="Invalid colour") from e
+    await ctx.guild.get_role(Role.RAINBOW).edit(colour=colour)
+    last_rainbow = time.time()

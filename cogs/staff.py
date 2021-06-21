@@ -9,6 +9,7 @@ from helpers.events import Emitter
 from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only
 from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only, RoleConverter, staff_or_trainee
 from helpers import moderationUtils
+from helpers.constants import Role, Channel
 import asyncio
 from api_key import moderationColl, userColl
 import subprocess
@@ -381,6 +382,12 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     # @allowed_guilds.command(name="remove")
     # async def g_remove(self,ctx, id: int):
     #     await whiteListedServers.remove(id)
+
+    @commands.command(name="SkyblockAnnouncement", aliases=["sbannouncement"])
+    @commands.has_any_role(Role.STAFF, Role.SB_ADVISER)
+    @commands.guild_only()
+    async def skyblock_announcement(self, ctx: commands.Context, title: str, *, description: str):
+        await ctx.guild.get_channel(Channel.SB_RES).send(f"<@&{Role.SKYBLOCK_PING}>", embed=discord.Embed(title=title, description=description, colour=0x00ff00))
 
     @commands.group(invoke_without_command=True)
     async def sbinfo(self, ctx, category: str):
