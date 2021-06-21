@@ -133,7 +133,7 @@ async def rainbow_role(ctx: commands.Context, arg: str):
     if time.time() - last_rainbow < 60*15:
         raise PerkError(msg="This perk is on cooldown!")
     try:
-        colour: discord.Colour = await commands.ColourConverter().convert(arg)
+        colour: discord.Colour = await commands.ColourConverter().convert(ctx, arg)
     except commands.BadArgument as e:
         raise PerkError(msg="Invalid colour") from e
     await ctx.guild.get_role(Role.RAINBOW).edit(colour=colour)
