@@ -534,6 +534,7 @@ class util(commands.Cog, name="Other"):
             for tag_object in self.tags:
                 if tag.lower() == tag_object["name"].lower() or tag.lower() in [z.lower() for z in tag_object["aliases"]]:
                     return await ctx.send(tag_object["response"])
+            await ctx.send(f"Could not find a tag with that name.")
 
 #     @commands.check(min_level(15))
 #     @commands.cooldown(600, 1, BucketType.user)
