@@ -30,6 +30,7 @@ class util(commands.Cog, name="Other"):
         self.autoSuggestions.start()
         self.update_member_counter.start()
         self.last_update = 0
+        self.tags = utils.getFileJson("config/tags")
         self.updateSubCount()
 
     def updateSubCount(self):
@@ -528,6 +529,11 @@ class util(commands.Cog, name="Other"):
         # noinspection SpellCheckingInspection
         await Emitter().emit("hypixel_link", ctx)
 
+        @commands.command(name="tag")
+        async def tag_command(self, ctx: commands.Context, *, tag: str):
+            for tag_object in self.tags:
+                if tag.lower() == tag_object["name"].lower() or tag.lower() in [z.lower() for z in tag_object["aliases"]]:
+                    return await ctx.send(tag_object["response"])
 
 #     @commands.check(min_level(15))
 #     @commands.cooldown(600, 1, BucketType.user)
