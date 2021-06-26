@@ -227,6 +227,13 @@ achievements = {
         "description": "Change your embed colour",
         "value": 3
     },
+    "Even more colourful": {
+        "listeners": {
+            "points_spent": lambda _, name: name == "rainbow"
+        },
+        "description": "Change the rainbow role colour",
+        "value": 5
+    },
     "Great Job": {
         "listeners": {
             "message": lambda msg: msg.guild and msg.author.guild_permissions.manage_messages,
