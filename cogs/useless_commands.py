@@ -75,7 +75,7 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         
     @commands.command()
     async def gg(self, ctx):
-        await ctx.send(embed = discord.Embed(title = "gg", description = "<a:RainbowDancin:858374508662489088> You did something! Congrats! "))
+        await ctx.send(embed = discord.Embed(title = "gg", description = "<a:RainbowDancin:856584656799137803> You did something! Congrats! "))
         
     @commands.command()
     async def boop(self, ctx, member: discord.Member):
