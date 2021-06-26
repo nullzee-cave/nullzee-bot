@@ -48,16 +48,21 @@ class BannedUser(object):
         self.id = _id
 
 
+# noinspection SpellCheckingInspection
 async def automod_name(user: discord.Member):
     config = await get_config()
     for word in config["badWords"]:
         if (not user.guild_permissions.manage_messages) and (re.findall(word, user.display_name, flags=re.IGNORECASE) or
                                                              re.findall(word, user.name, flags=re.IGNORECASE)):
+            action = "banned" if config["badWords"][word] == "ban" else "kicked"
             try:
-                await user.send("You were kicked from Nullzee's cave for having an inappropriate name")
+                await user.send(f"You were {action} from Nullzee's cave for having an inappropriate name")
             except discord.Forbidden:
                 pass
+            if action == "banned":
+                return await user.ban(reason="Inappropriate name")
             await user.kick(reason="Inappropriate name")
+
 
 async def send_report(ctx, message, reason):
     embed = discord.Embed(title="New report", colour=discord.Color.red(), url=message.jump_url,

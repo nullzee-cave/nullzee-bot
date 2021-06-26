@@ -12,7 +12,7 @@ import os
 import datetime
 from EZPaginator import Paginator
 from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only, ShallowContext, \
-    saveFileJson
+    saveFileJson, clean_message_content, remove_emojis
 from helpers.events import Emitter
 from api_key import userColl
 import pymongo
@@ -46,7 +46,7 @@ class Levelling(commands.Cog, name="levelling"):
 
     @commands.command()
     async def linkTwitch(self, ctx, username: str):
-        '''Link your twitch to your discord to start gaining xp in twitch chat'''
+        """Link your twitch to your discord to start gaining xp in twitch chat"""
         await userColl.update_one({"_id": str(ctx.author.id)},
                                   {"$set": {"twitch_name": username.lower(), "twitch_verified": False}})
         await ctx.send(embed=discord.Embed(
@@ -78,7 +78,7 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.command()
     @staff_only
     async def multiplier(self, ctx, channel: discord.TextChannel, value: float):
-        '''Change the xp multiplier of a channel'''
+        """Change the xp multiplier of a channel"""
         if value < -0.5 or value > 10:
             return await ctx.send("please resign.")
         config = getFileJson()
@@ -90,7 +90,7 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.command()
     @staff_only
     async def global_multiplier(self, ctx, value: float):
-        '''Change the glbal xp multiplier for the whole server'''
+        """Change the global xp multiplier for the whole server"""
         if value < -0.5 or value > 10:
             return await ctx.send("please resign.")
         config = getFileJson()
@@ -113,7 +113,7 @@ class Levelling(commands.Cog, name="levelling"):
         if message.type == discord.MessageType.premium_guild_subscription:
             config = getFileJson()
             config["global_multiplier"] = 2
-            config["boost_multiplier_end"] = max(config["boost_multiplier_end"]+3600, time.time()+3600)
+            config["boost_multiplier_end"] = max(config["boost_multiplier_end"] + 3600, time.time() + 3600)
             saveFileJson(config)
             self.update_multipliers()
         if message.author.bot:
@@ -122,45 +122,48 @@ class Levelling(commands.Cog, name="levelling"):
             return
         else:
             NO_WEEKLY_MULTIPLIER_CHANNELS = [674311689738649600]
-            userData = await get_user(message.author)
+            user_data = await get_user(message.author)
             ctx = await self.bot.get_context(message)
-            await Emitter().emit('message', ctx, user_data=userData)
+            await Emitter().emit('message', ctx, user_data=user_data)
             if str(message.channel.id) in self.multipliers:
                 multiplier = self.multipliers[str(message.channel.id)]
             else:
                 multiplier = 1
             if message.attachments:
                 base_exp = 30
-            elif len("".join(message.content)) > 150:
+            elif len("".join(remove_emojis(clean_message_content(message.content)))) > 150:
                 base_exp = 50
             else:
                 base_exp = 25
-            exp = math.trunc(multiplier*self.global_multiplier*base_exp)
-            weekly_exp = math.trunc(self.global_multiplier*base_exp) if message.channel.id in NO_WEEKLY_MULTIPLIER_CHANNELS else exp
-            if time.time() - userData["last_message"] > 30:
-                points_bonus = 1 if userData["experience"] > userData["last_points"] + 1000 else 0
+            exp = math.trunc(multiplier * self.global_multiplier * base_exp)
+            weekly_exp = math.trunc(
+                self.global_multiplier * base_exp) if message.channel.id in NO_WEEKLY_MULTIPLIER_CHANNELS else exp
+            if time.time() - user_data["last_message"] > 30:
+                points_bonus = 1 if user_data["experience"] > user_data["last_points"] + 1000 else 0
                 if points_bonus:
-                    await Emitter().emit("point_earned", ctx, userData["points"]+1, user_data=userData)
+                    await Emitter().emit("point_earned", ctx, user_data["points"] + 1, user_data=user_data)
                 await userColl.update_one({"_id": str(message.author.id)},
                                           {"$inc": {"experience": exp, "weekly": weekly_exp, "points": points_bonus},
                                            "$set": {"last_message": time.time(),
-                                                    "last_points": userData["experience"] + exp if points_bonus else
-                                                    userData["last_points"]}})
-                userData = await userColl.find_one({"_id": str(message.author.id)})
+                                                    "last_points": user_data["experience"] + exp if points_bonus else
+                                                    user_data["last_points"]}})
+                user_data = await userColl.find_one({"_id": str(message.author.id)})
             else:
-                userData = await userColl.find_one({"_id": str(message.author.id)})
+                user_data = await userColl.find_one({"_id": str(message.author.id)})
 
-            experience = userData["experience"]
-            lvl_start = userData["level"]
+            experience = user_data["experience"]
+            lvl_start = user_data["level"]
             lvl_end = 50 * (lvl_start ** 1.5)
             if experience > lvl_end:
-                await Emitter().emit("level_up", ctx, lvl_start + 1, user_data=userData)
-                await userColl.update_one({"_id": str(message.author.id)}, {"$inc": {"level": 1}, "$set": {"experience": 0,
-                                                                                                 "last_points": 0 - (
-                                                                                                         experience - (
-                                                                                                         userData[
-                                                                                                             "last_points"] + 100))}})
-                await message.channel.send(f":tada: Congrats {message.author.mention}, you levelled up to level {lvl_start + 1}!")
+                await Emitter().emit("level_up", ctx, lvl_start + 1, user_data=user_data)
+                await userColl.update_one({"_id": str(message.author.id)},
+                                          {"$inc": {"level": 1}, "$set": {"experience": 0,
+                                                                          "last_points": 0 - (
+                                                                                  experience - (
+                                                                                  user_data[
+                                                                                      "last_points"] + 100))}})
+                await message.channel.send(
+                    f":tada: Congrats {message.author.mention}, you levelled up to level {lvl_start + 1}!")
                 with open('levelroles.json') as f:
                     levelroles = json.load(f)["levels"]
                 if str(lvl_start + 1) in levelroles:
@@ -172,45 +175,54 @@ class Levelling(commands.Cog, name="levelling"):
         """View your or the mentioned user's level"""
         if not user:
             user = ctx.author
-        userData = await userColl.find_one({"_id": str(user.id)})
-        if not userData:
+        user_data = await userColl.find_one({"_id": str(user.id)})
+        if not user_data:
             return await ctx.send("This user has no level")
-        string = f"XP: {round(userData['experience']):,}/{round(50 * (round(userData['level']) ** 1.5)):,}"
-        string += f"\nWeekly XP: {round(userData['weekly']):,}"
-        string += f"\nPoints: {userData['points']:,}"
-        string += f"\nTotal XP: {(sum([round(50 * z ** 1.5) for z in range(1, userData['level'])]) + userData['experience']):,}"
-        string += f"\nMinutes in VC: {userData['vc_minutes']:,}"
-        embed = await Embed(user, title=f"Level: {str(round(userData['level']))}", url="https://nullzee.ga",
+        string = f"XP: {round(user_data['experience']):,}/{round(50 * (round(user_data['level']) ** 1.5)):,}"
+        string += f"\nWeekly XP: {round(user_data['weekly']):,}"
+        string += f"\nPoints: {user_data['points']:,}"
+        string += f"\nTotal XP: {(sum([round(50 * z ** 1.5) for z in range(1, user_data['level'])]) + user_data['experience']):,}"
+        string += f"\nMinutes in VC: {user_data['vc_minutes']:,}"
+        embed = await Embed(user, title=f"Level: {str(round(user_data['level']))}", url="https://nullzee.ga",
                             description=string).user_colour()
         embed.set_author(name=user, icon_url=user.avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases = ["howFarFromLevel"])
-    async def hffl(self, ctx, wantedLevel: int):
-        '''View how far from a specific level you are, along with some other information'''
+    @commands.command(aliases=["howFarFromLevel"])
+    async def hffl(self, ctx, wanted_level: int):
+        """View how far from a specific level you are, along with some other information"""
         user = ctx.author
-        userData = await userColl.find_one({"_id": str(user.id)})
-        level = userData['level']
-        xp = userData['experience']
-        if wantedLevel <= level or wantedLevel > 500:
+        user_data = await userColl.find_one({"_id": str(user.id)})
+        level = user_data['level']
+        xp = user_data['experience']
+        if wanted_level <= level or wanted_level > 500:
             await ctx.send("This number is invalid")
         else:
             def total_xp(y):
-                return sum([round(50*z**1.5) for z in range(1, y)])
+                return sum([round(50 * z ** 1.5) for z in range(1, y)])
+
             def level_xp(x):
-                return round(50*(x**1.5))
-            desiredTotalXP = level_xp(wantedLevel)
-            embed = await Embed(user, title = "XP Calculator").user_colour()
-            embed.add_field(name = "Desired Level", value = f"XP until desired level: {(sum([round(50*z**1.5) for z in range(level, wantedLevel)])-xp):,}\nXP of desired level: {(level_xp(wantedLevel)):,}")
-            embed.add_field(name = "Total XP Stats", value = f"Total XP of desired level: {(total_xp(wantedLevel)):,}\nYour total XP: {(total_xp(level)+xp):,}", inline = False)
-            embed.add_field(name = "Next Level", value = f"XP until next level: {(level_xp(level)-xp):,}\nXP of next level: {(level_xp(level+1)):,}", inline = False)
-            await ctx.send(embed = embed)
+                return round(50 * (x ** 1.5))
+
+            desired_total_xp = level_xp(wanted_level)
+            embed = await Embed(user, title="XP Calculator").user_colour()
+            embed.add_field(name="Desired Level",
+                            value=f"XP until desired level: {(sum([round(50 * z ** 1.5) for z in range(level, wanted_level)]) - xp):,}\nXP of desired level: {(level_xp(wanted_level)):,}")
+            embed.add_field(name="Total XP Stats",
+                            value=f"Total XP of desired level: {(total_xp(wanted_level)):,}\nYour total XP: {(total_xp(level) + xp):,}",
+                            inline=False)
+            embed.add_field(name="Next Level",
+                            value=f"XP until next level: {(level_xp(level) - xp):,}\nXP of next level: {(level_xp(level + 1)):,}",
+                            inline=False)
+            await ctx.send(embed=embed)
 
     @commands.command(aliases=["wk"])
     @commands.guild_only()
     async def weekly(self, ctx):
         """View the server's weekly XP leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('weekly', pymongo.DESCENDING)], key="weekly", suffix=" XP")
+        embeds = leaderboard_pages(self.bot, ctx.guild,
+                                   [z async for z in userColl.find({}).sort('weekly', pymongo.DESCENDING)],
+                                   key="weekly", suffix=" XP")
         msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
@@ -218,8 +230,11 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.guild_only()
     async def vcleaderboard(self, ctx):
         """View the server's vc minute leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('vc_minutes', pymongo.DESCENDING)], key="vc_minutes", suffix=" minutes",
-                                   title="Voice Activity leaderboard", field_name="Talk in a voice channel to gain time")
+        embeds = leaderboard_pages(self.bot, ctx.guild,
+                                   [z async for z in userColl.find({}).sort('vc_minutes', pymongo.DESCENDING)],
+                                   key="vc_minutes", suffix=" minutes",
+                                   title="Voice Activity leaderboard",
+                                   field_name="Talk in a voice channel to gain time")
         msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
@@ -227,7 +242,9 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.guild_only()
     async def pointsleaderboard(self, ctx):
         """View the server's points leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort('points', pymongo.DESCENDING)], key="points", suffix=" points",
+        embeds = leaderboard_pages(self.bot, ctx.guild,
+                                   [z async for z in userColl.find({}).sort('points', pymongo.DESCENDING)],
+                                   key="points", suffix=" points",
                                    title="Points leaderboard", field_name="Gain 1 point every 1000 XP")
         msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
@@ -236,15 +253,15 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.guild_only()
     async def leaderboard(self, ctx):
         """View the server's XP leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort([('level', pymongo.DESCENDING), ('experience', pymongo.DESCENDING)])], prefix="level ")
+        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in userColl.find({}).sort(
+            [('level', pymongo.DESCENDING), ('experience', pymongo.DESCENDING)])], prefix="level ")
         msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
-
 
     @commands.command(hidden=True)
     @staff_only
     async def weeklyReset(self, ctx):
-        '''Reset everyones weekly xp'''
+        """Reset everyone's weekly xp"""
         await ctx.send("resetting...")
         with open('users.json') as f:
             users = json.load(f)
@@ -293,7 +310,7 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.command(hidden=True)
     @staff_only
     async def removeweekly(self, ctx, user: discord.Member, xp: int):
-        '''Remove weekly xp from a user'''
+        """Remove weekly xp from a user"""
         if 667953757954244628 in [z.id for z in user.roles]:
             return await ctx.send("Cannot remove XP from that user")
         if xp < 0:
@@ -307,7 +324,7 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.command(hidden=True)
     @staff_only
     async def removeXP(self, ctx, user: discord.Member, xp: int):
-        '''Remove xp from someone'''
+        """Remove xp from someone"""
         if 667953757954244628 in [z.id for z in user.roles]:
             return await ctx.send("Cannot remove XP from that user")
         if xp < 0:
@@ -317,7 +334,6 @@ class Levelling(commands.Cog, name="levelling"):
         else:
             await userColl.update_one({"_id": str(user.id)}, {"$inc": {"experience": -xp}})
         await ctx.send(f"removed {xp} xp from {user.mention}")
-
 
 
 def setup(bot):

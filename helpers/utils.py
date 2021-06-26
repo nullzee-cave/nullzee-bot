@@ -1,12 +1,8 @@
-import abc
 import asyncio
 import re
 import typing
 
 import aiohttp
-import pymongo
-from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo.errors import DuplicateKeyError
 
 from api_key import userColl
 import discord
@@ -18,7 +14,6 @@ import collections
 from discord.ext import commands
 
 from helpers.constants import Role
-from helpers.events import Emitter
 
 
 def staff_check(ctx):
@@ -367,3 +362,11 @@ async def fetch_json_api(url: str) -> dict:
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as res:
             return await res.json()
+
+
+def clean_message_content(message: str) -> str:
+    return re.sub(r"[*_\\|`]*", "", message)
+
+
+def remove_emojis(message: str) -> str:
+    return re.sub(r"<a?:\w+:(\d+)>", "\1", message)

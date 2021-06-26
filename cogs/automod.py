@@ -2,12 +2,13 @@ import discord
 from discord.ext import commands, tasks
 from api_key import moderationColl
 import time
-from helpers import moderationUtils
-import re 
+from helpers import moderationUtils, utils
+import re
 
 INVITE_REGEX = "discord.gg\/(\w{6})"
 
-class Automod(commands.Cog): # this is for timed punishments, removing warns etc.
+
+class Automod(commands.Cog):  # this is for timed punishments, removing warns etc.
 
     def __init__(self, bot, hidden):
         self.hidden = hidden
@@ -28,14 +29,18 @@ class Automod(commands.Cog): # this is for timed punishments, removing warns etc
         ctx = await self.bot.get_context(message)
         ctx.author = message.guild.me
         config = await moderationUtils.get_config()
-        if config["mentions"]["val"] <= len(message.mentions) and message.channel.id not in config["mentions"]["allowed_channels"]:
+        if config["mentions"]["val"] <= len(message.mentions) and message.channel.id not in config["mentions"][
+            "allowed_channels"]:
             await ctx.invoke(self.bot.get_command('warn'), message.author, reason="Mass mention")
-        if config["invites"]["action"] == "warn" and message.channel.id not in config["invites"]["allowed_channels"] and re.match(INVITE_REGEX, message.content, re.IGNORECASE):
+        if config["invites"]["action"] == "warn" and message.channel.id not in config["invites"][
+            "allowed_channels"] and re.match(INVITE_REGEX, message.content, re.IGNORECASE):
             await ctx.invoke(self.bot.get_command('warn'), message.author, reason="Invite link")
-        if config["invites"]["action"] == "delete" and message.channel.id not in config["invites"]["allowed_channels"] and re.match(INVITE_REGEX, message.content, re.IGNORECASE):
+        if config["invites"]["action"] == "delete" and message.channel.id not in config["invites"][
+            "allowed_channels"] and re.match(INVITE_REGEX, message.content, re.IGNORECASE):
             await message.delete()
+        clean_content = utils.clean_message_content(message.content)
         for word in config["badWords"]:
-            if re.findall(word, message.content, flags=re.IGNORECASE):
+            if re.findall(word, clean_content, flags=re.IGNORECASE):
                 if config["badWords"][word] == "delete":
                     await message.delete()
                 elif config["badWords"][word] == "warn":
@@ -52,7 +57,6 @@ class Automod(commands.Cog): # this is for timed punishments, removing warns etc
                 await ctx.invoke(self.bot.get_command("report"), message,
                                  reason=f"{moderationUtils.PAST_PARTICIPLES[config['badWords'][word]]} by automod for this message in {ctx.channel.mention}")
 
-
     @tasks.loop(minutes=1)
     async def delete_warns(self):
         async for warn in moderationColl.find({"expired": False}):
@@ -63,7 +67,8 @@ class Automod(commands.Cog): # this is for timed punishments, removing warns etc
     async def timed_punishments(self):
         async for punishment in moderationColl.find({"active": True, "permanent": False}):
             if punishment["ends"] < time.time():
-                await moderationUtils.end_punishment(self.bot, punishment, moderator="automod", reason="punishment served")
+                await moderationUtils.end_punishment(self.bot, punishment, moderator="automod",
+                                                     reason="punishment served")
                 await moderationColl.update_one(punishment, {"$set": {"active": False}})
 
     @commands.Cog.listener()
@@ -75,6 +80,7 @@ class Automod(commands.Cog): # this is for timed punishments, removing warns etc
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         await moderationUtils.automod_name(after)
+
 
 def setup(bot):
     bot.add_cog(Automod(bot, True))

@@ -11,6 +11,7 @@ from helpers.utils import staff_check, Embed, staff_only, getFileJson, saveFileJ
 
 TICKET_TOPIC_REGEX = r"opened by (?P<user>.+#\d{4}) \((?P<user_id>\d+)\) at (?P<time>.+)"
 
+
 def restrict_ticket_command_usage(ctx: commands.Context, raise_on_false=True):
     if ctx.channel.category.id != Channel.TICKETS:
         if raise_on_false:
@@ -264,10 +265,11 @@ class Tickets(commands.Cog):
                 msg = await payload.member.send(question)
                 try:
                     embed.add_field(name=question,
-                                value=(await self.bot.wait_for('message', check=lambda m: m.channel.id == msg.channel.id
-                                                                                          and m.author.id == payload.member.id,
-                                                               timeout=300.0)).content,
-                                inline=False)
+                                    value=(await self.bot.wait_for('message',
+                                                                   check=lambda m: m.channel.id == msg.channel.id
+                                                                                   and m.author.id == payload.member.id,
+                                                                   timeout=300.0)).content,
+                                    inline=False)
                 except asyncio.TimeoutError:
                     return await payload.member.send("Ticket creation timed out")
             channel: discord.TextChannel = await guild.create_text_channel(
@@ -304,13 +306,13 @@ class Tickets(commands.Cog):
         await ctx.send(f"{ctx.author.mention} added {member.mention} to this ticket")
 
     @commands.command()
-    async def pin(self, ctx: commands.Context, message: str="none"):
+    async def pin(self, ctx: commands.Context, message: str = "none"):
         restrict_ticket_command_usage(ctx)
         message: discord.Message = await MessageOrReplyConverter().convert(ctx, message)
         await message.pin(reason=f"pinned by {ctx.author}")
 
     @commands.command()
-    async def unpin(self, ctx: commands.Context, message: str="none"):
+    async def unpin(self, ctx: commands.Context, message: str = "none"):
         restrict_ticket_command_usage(ctx)
         message: discord.Message = await MessageOrReplyConverter().convert(ctx, message)
         await message.unpin(reason=f"unpinned by {ctx.author}")
