@@ -74,6 +74,10 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         await ctx.send(embed = discord.Embed(title = "crikey", description = "<:crikey:812430464785580062> crikey"))
         
     @commands.command()
+    async def gg(self, ctx):
+        await ctx.send(embed = discord.Embed(title = "gg", description = "<a:RainbowDancin:858374508662489088> You did something! Congrats! "))
+        
+    @commands.command()
     async def boop(self, ctx, member: discord.Member):
         embed = await Embed(ctx.author, description = f"<:boop:803398424166137856>{member.mention}").user_colour()
         await ctx.send(embed = embed)
