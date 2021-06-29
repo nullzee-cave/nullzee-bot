@@ -93,6 +93,10 @@ class util(commands.Cog, name="Other"):
             .add_field(name="Member count", value=f"{count:,}", inline=False)
         await ctx.send(embed=embed)
 
+    @commands.command()
+    async def roleColour(self, ctx, *, role: RoleConverter):
+        await ctx.send(embed=discord.Embed(title=str(role.colour), description=f"Colour for {role.mention}", colour=role.colour).set_thumbnail(url=f"https://singlecolorimage.com/get/{role.colour}/400x300"))
+
     @commands.command(aliases=["calc", "math", "m"])
     async def maths(self, ctx, *, expr: str):
         '''Get the bot to do your maths homework for you'''
