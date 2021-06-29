@@ -95,7 +95,7 @@ class util(commands.Cog, name="Other"):
 
     @commands.command()
     async def roleColour(self, ctx, *, role: RoleConverter):
-        await ctx.send(embed=discord.Embed(title=str(role.colour), description=f"Colour for {role.mention}", colour=role.colour).set_thumbnail(url=f"https://singlecolorimage.com/get/{role.colour}/400x300"))
+        await ctx.send(embed=discord.Embed(title=str(role.colour), description=f"Colour for {role.mention}", colour=role.colour).set_thumbnail(url=f"https://singlecolorimage.com/get/{str(role.colour)[1:]}/400x300"))
 
     @commands.command(aliases=["calc", "math", "m"])
     async def maths(self, ctx, *, expr: str):
