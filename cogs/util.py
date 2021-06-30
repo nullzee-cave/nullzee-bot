@@ -540,6 +540,11 @@ class util(commands.Cog, name="Other"):
                 return await ctx.send(tag_object["response"])
         await ctx.send(f"Could not find a tag with that name.")
 
+    @commands.command(name="tags")
+    async def tags_command(self, ctx: commands.Context):
+        tags = "\n".join([f'+ {z["name"]} : {", ".join(z["aliases"])}' for z in self.tags])
+        await ctx.send(f"All available tags: ```diff\n{tags}\n```", allowed_mention=discord.AllowedMentions(roles=False, everyone=False))
+
 #     @commands.check(min_level(15))
 #     @commands.cooldown(600, 1, BucketType.user)
 #     @commands.guild_only()
