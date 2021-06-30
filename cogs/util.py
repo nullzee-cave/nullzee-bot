@@ -543,7 +543,7 @@ class util(commands.Cog, name="Other"):
     @commands.command(name="tags")
     async def tags_command(self, ctx: commands.Context):
         tags = "\n".join([f'+ {z["name"]} : {", ".join(z["aliases"])}' for z in self.tags])
-        await ctx.send(f"All available tags: ```diff\n{tags}\n```", allowed_mention=discord.AllowedMentions(roles=False, everyone=False))
+        await ctx.send(f"All available tags: ```diff\n{tags}\n```", allowed_mentions=discord.AllowedMentions(roles=False, everyone=False))
 
 #     @commands.check(min_level(15))
 #     @commands.cooldown(600, 1, BucketType.user)
