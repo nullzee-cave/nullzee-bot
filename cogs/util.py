@@ -557,7 +557,8 @@ class util(commands.Cog, name="Other"):
         except asyncio.TimeoutError:
             return await ctx.send("Timed out")
         self.tags.append({"name": name, "aliases": aliases, "response": response})
-        utils.saveFileJson('config/data/tags', self.tags)
+        utils.saveFileJson(self.tags, 'config/data/tags')
+        await ctx.send(f"Added tag `{name}`")
 
 
 #     @commands.check(min_level(15))
