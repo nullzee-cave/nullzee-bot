@@ -548,7 +548,7 @@ class util(commands.Cog, name="Other"):
     @commands.command()
     @staff_only
     async def add_tag(self, ctx: commands.Context, name: str):
-        check = lambda message: messag.channel.id == ctx.channel.id and message.author.id == ctx.author.id
+        check = lambda message: message.channel.id == ctx.channel.id and message.author.id == ctx.author.id
         await ctx.send("Send a comma-delimited list of aliases for this tag")
         try:
             aliases = [*map(str.strip, (await self.bot.wait_for('message', check=check, timeout=120.0)).content.split(','))]
