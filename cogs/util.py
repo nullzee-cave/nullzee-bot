@@ -16,7 +16,7 @@ from discord.ext.commands.cooldowns import BucketType
 import time
 import datetime
 from api_key import moderationColl, hypixel_api_key
-from helpers.utils import Embed, strfdelta
+from helpers.utils import Embed, strfdelta, staff_only
 import mathterpreter
 
 from helpers.events import Emitter
@@ -544,6 +544,21 @@ class util(commands.Cog, name="Other"):
     async def tags_command(self, ctx: commands.Context):
         tags = "\n".join([f'+ {z["name"]} : {", ".join(z["aliases"])}' for z in self.tags])
         await ctx.send(f"All available tags: ```diff\n{tags}\n```", allowed_mentions=discord.AllowedMentions(roles=False, everyone=False))
+
+    @commands.command()
+    @staff_only
+    async def add_tag(self, ctx: commands.Context, name: str):
+        check = lambda message: messag.channel.id == ctx.channel.id and message.author.id == ctx.author.id
+        await ctx.send("Send a comma-delimited list of aliases for this tag")
+        try:
+            aliases = [*map(str.strip, (await self.bot.wait_for('message', check=check, timeout=120.0)).content.split(','))]
+            await ctx.send("Send the response for this tag")
+            response = (await self.bot.wait_for('message', check=check, timeout=300)).content
+        except asyncio.TimeoutError:
+            return await ctx.send("Timed out")
+        self.tags.append({"name": name, "aliases": aliases, "response": response})
+        utils.saveFileJson('config/data/tags', self.tags)
+
 
 #     @commands.check(min_level(15))
 #     @commands.cooldown(600, 1, BucketType.user)
