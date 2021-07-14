@@ -563,10 +563,10 @@ class util(commands.Cog, name="Other"):
     @commands.command()
     @staff_only
     async def del_tag(self, ctx: commands.Context, *, tag: str):
-       for i, tag_object in enumerate(self.tags):
-           if tag.lower() == tag_object["name"] or tag.lower() in [z.lower() for z in tag_object["aliases"]]:
-               self.tags.pop(i)
-               break
+        for i, tag_object in enumerate(self.tags):
+            if tag.lower() == tag_object["name"] or tag.lower() in [z.lower() for z in tag_object["aliases"]]:
+                self.tags.pop(i)
+                break
         utils.saveFileJson(self.tags, 'config/tags')
         await ctx.send(f"Deleted tag `{tag}`")
 
