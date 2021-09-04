@@ -181,16 +181,6 @@ async def command_cooldown(ctx, _time: TimeConverter):
     await ctx.send(f"Set command cooldown for {ctx.channel.mention} to {_time:,} seconds")
 
 
-@bot.event
-async def on_command(ctx):
-    with open('UserCount.json') as f:
-        users = json.load(f)
-        if not str(ctx.author.id) in users["users"]:
-            users["users"].append(str(ctx.author.id))
-        with open('UserCount.json', 'w') as f:
-            json.dump(users, f)
-
-
 async def restrict_command_usage(ctx):
     if not ctx.guild:
         return True
