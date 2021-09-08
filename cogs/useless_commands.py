@@ -9,6 +9,11 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         self.hidden = hidden 
         
     @commands.command()
+    async def l(self, ctx):
+        embed = await Embed(ctx.author, description = 'massive L').user_colour()
+        await ctx.send(embed=embed)
+       
+    @commands.command()
     async def smh(self, ctx):
         embed = await Embed(ctx.author, description = f'{ctx.author.mention} shakes their head').user_colour()
         await ctx.send(embed = embed)
