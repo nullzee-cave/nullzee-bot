@@ -190,7 +190,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         a
         ```
         """
-        owners = [564798709045526528]
+        owners = [564798709045526528, 540939418933133312]
         if ctx.author.id in owners:
             fn_name = "_eval_expr"
 
