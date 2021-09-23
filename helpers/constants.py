@@ -82,3 +82,6 @@ class Skyblock(metaclass=Constant):
                              74172425, 79672425, 85472425, 91572425, 97972425, 104672425, 111672425]
 
     MAX_LEVEL_50_SKILLS = ["combat", "alchemy", "carpentry", "taming"]
+
+class Categories(metaclass=Constant):
+    ARCHIVED_CHATS = 745279472910991420
