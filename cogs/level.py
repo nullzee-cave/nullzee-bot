@@ -77,6 +77,14 @@ class Levelling(commands.Cog, name="levelling"):
 
     @commands.command()
     @staff_only
+    async def multipliers(self, ctx):
+        """Check current multipliers in all channels"""
+        multipliers = f"Global: {self.global_multiplier}\n"
+        multipliers += "\n".join([f"<#{z}> : {self.multipliers[z]}" for z in self.multipliers])
+        await ctx.send(embed=discord.Embed(title="Current XP multipliers", description=multipliers))
+
+    @commands.command()
+    @staff_only
     async def multiplier(self, ctx, channel: discord.TextChannel, value: float):
         """Change the xp multiplier of a channel"""
         if value < -0.5 or value > 10:
