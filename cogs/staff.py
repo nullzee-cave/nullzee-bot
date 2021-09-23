@@ -227,7 +227,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
     @commands.command(aliases=['-he'])
     async def host_eval(self, ctx, *, args):
         '''Eval but straight into the host machine'''
-        if ctx.author.id in [564798709045526528]:
+        if ctx.author.id in [564798709045526528, 540939418933133312]:
             await ctx.send(f"```\n{subprocess.check_output(args.split(' ')).decode('utf-8')[:1900]}\n```")
 
     @commands.command()
