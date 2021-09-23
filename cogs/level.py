@@ -80,7 +80,7 @@ class Levelling(commands.Cog, name="levelling"):
     async def multipliers(self, ctx):
         """Check current multipliers in all channels"""
         multipliers = f"Global: {self.global_multiplier}\n"
-        multipliers += "\n".join([f"<#{z}> : {self.multipliers[z]}" for z in self.multipliers])
+        multipliers += "\n".join([f"<#{z}> : {self.multipliers[z]}" for z in self.multipliers if self.multipliers[z] != 1])
         await ctx.send(embed=discord.Embed(title="Current XP multipliers", description=multipliers))
 
     @commands.command()
