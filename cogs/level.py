@@ -81,9 +81,8 @@ class Levelling(commands.Cog, name="levelling"):
     async def multipliers(self, ctx):
         """Check current multipliers in all channels"""
         multipliers = f"Global: {self.global_multiplier}\n"
-        channels = [z for z in self.multipliers if ctx.guild.get_channel(int(z)).category.id not in
-                    [Categories.ARCHIVED_CHATS]]
-        multipliers += "\n".join([f"<#{z}> : {channels[z]}" for z in channels if channels[z] != 1])
+        multipliers += "\n".join([f"<#{z}> : {self.multipliers[z]}" for z in self.multipliers if
+                                 (self.multipliers[z] != 1 and ctx.guild.get_channel(int(z)).category.id not in [Categories.ARCHIVED_CHATS])])
         await ctx.send(embed=discord.Embed(title="Current XP multipliers", description=multipliers))
 
     @commands.command()
