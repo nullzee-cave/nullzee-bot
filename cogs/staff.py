@@ -52,7 +52,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         if user == None:
             user = ctx.author
         if user.pending:
-            embed = discord.Embed(title="True", description=f"{user.mention} has not completed member screening", colour=auser.colour).set_author(name=user, icon_url=user.avatar_url)
+            embed = discord.Embed(title="True", description=f"{user.mention} has not completed member screening", colour=user.colour).set_author(name=user, icon_url=user.avatar_url)
             return await ctx.send(embed=embed)
         elif not user.pending:
             embed = discord.Embed(title="False", description=f"{user.mention} has completed member screening", colour=user.colour).set_author(name=user, icon_url=user.avatar_url)
