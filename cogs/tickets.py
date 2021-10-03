@@ -283,6 +283,10 @@ class Tickets(commands.Cog):
                         Role.STAFF): discord.PermissionOverwrite(
                         read_messages=True,
                         send_messages=True),
+                    guild.get_role(
+                        Role.TRAINEE): discord.PermissionOverwrite(
+                        read_messages=True,
+                        send_messages=True),
                     payload.member: discord.PermissionOverwrite(
                         read_messages=True,
                         send_messages=True)

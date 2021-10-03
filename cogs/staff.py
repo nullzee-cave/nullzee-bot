@@ -46,7 +46,7 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         await self.bot.get_user(564798709045526528).send(embed=embed)
 
     @commands.command()
-    @staff_only
+    @staff_or_trainee
     async def pending(self, ctx, user: discord.Member=None):
         '''Check if a user has completed member screening or not'''
         if user == None:
