@@ -24,9 +24,12 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
         message = await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
         payload = payloads.insert_message(payload, message)
         await moderationColl.insert_one(payload)
-        await user.send(f"You were warned in {ctx.guild.name} for {reason}\nInfraction ID:`{payload['id']}`")
         await moderationUtils.log(self.bot, payload)
         await moderationUtils.warn_punishments(ctx, user)
+        try:
+            await user.send(f"You were warned in {ctx.guild.name} for {reason}\nInfraction ID:`{payload['id']}`")
+        except discord.Forbidden:
+            await ctx.send("I could not dm them!")
 
     @commands.command()
     @staff_or_trainee
@@ -42,8 +45,11 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
         await moderationColl.insert_one(payload)
         await moderationUtils.log(self.bot, payload)
         time_string = payload["duration_string"]
-        await user.send(
-            f"You were muted in {ctx.guild.name} {f'for `{time_string}`' if _time else ''} {f'for `{reason}`' if reason else ''}\nInfraction ID:`{payload['id']}`")
+        try:
+            await user.send(
+                f"You were muted in {ctx.guild.name} {f'for `{time_string}`' if _time else ''} {f'for `{reason}`' if reason else ''}\nInfraction ID:`{payload['id']}`")
+        except discord.Forbidden:
+            await ctx.send("I could not dm them!")
 
     @commands.command()
     @staff_or_trainee
