@@ -130,6 +130,9 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_ready():
+    for current_cog in bot.extensions.copy():
+        bot.unload_extension(current_cog)
+
     print(f"{yellow}Loading the beast: {bot.user.name}!{endc}\n")
     time.sleep(1)
     l = len(cogs)
@@ -139,7 +142,7 @@ async def on_ready():
         printProgressBar(i + 1, l, prefix=f'Loading:{" " * (20 - len(cog))} {cog}', suffix='Complete', length=50)
         bot.load_extension(cog)
     print(f"{yellow}\nInitializing Bot, Please wait...{endc}\n")
-    print(f'{green}Cogs loaded... Bot is now ready and waiting for prefix "."{endc}')
+    print(f'{green}Cogs loaded... Bot is now ready and waiting for prefix "-"{endc}')
 
     print(f'{green}\n√ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √  {endc}')
     # status = (discord.Activity(type=discord.ActivityType.watching, name="nullzee"))
