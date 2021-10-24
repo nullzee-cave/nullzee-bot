@@ -31,7 +31,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
         except discord.Forbidden:
             await ctx.send("I could not dm them!")
 
-    @commands.command()
+    @commands.command(aliases = ["shut"])
     @staff_or_trainee
     async def mute(self, ctx, user: discord.Member, _time: typing.Optional[TimeConverter] = None, *,
                    reason: str = "none"):
@@ -104,7 +104,7 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
             await moderationColl.update_one(doc, {"$set": {"expired": True}})
             await ctx.send("Successfully deleted warning `{}`".format(_id))
 
-    @commands.command()
+    @commands.command(aliases = ["boot"])
     @staff_or_trainee
     async def kick(self, ctx, user: discord.Member, *, reason: str = "none"):
         '''Kick a user'''
