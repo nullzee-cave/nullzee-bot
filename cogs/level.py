@@ -43,7 +43,7 @@ class Levelling(commands.Cog, name="levelling"):
                     await Emitter().emit("vc_minute_gain", await ShallowContext.create(member), user_data["vc_minutes"])
                     await userColl.update_one({"_id": str(member.id)}, {"$inc": {"vc_minutes": 1}})
                     await member.add_roles(
-                        *[guild.get_role(timed_roles[z]) for z in timed_roles if user_data["vc_minutes"] > int(z)])
+                        *[guild.get_role(timed_roles[z]) for z in timed_roles if user_data["vc_minutes"] > int(z) and z not in member.roles])
 
     @commands.command()
     async def linkTwitch(self, ctx, username: str):

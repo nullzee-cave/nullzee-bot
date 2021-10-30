@@ -173,7 +173,7 @@ async def reload(ctx):
         bot.load_extension(cog)
         updated_cogs += f'{cog}\n'
     print(f"\n{purple}Initializing Bot, Please wait...{endc}\n")
-    print(f'{green}Cogs loaded... Bot is now ready and waiting for prefix "."{endc}')
+    print(f'{green}Cogs loaded... Bot is now ready and waiting for prefix "-"{endc}')
     await ctx.send(f"`Cogs reloaded by:` <@{user.id}>")
 
 
