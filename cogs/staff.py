@@ -43,7 +43,8 @@ class Staff(commands.Cog):  # general staff-only commands that don't fit into an
         except:
             pass
         await guild.leave()
-        await self.bot.get_user(564798709045526528).send(embed=embed)
+        # await self.bot.get_user(564798709045526528).send(embed=embed)
+        await self.bot.get_user(540939418933133312).send(embed=embed)
 
     @commands.command()
     @staff_or_trainee
