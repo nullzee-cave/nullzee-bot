@@ -23,6 +23,13 @@ def staff_check(ctx):
     return list_one(roles, Role.STAFF, Role.ADMIN)
 
 
+def event_hoster_staff_check(ctx):
+    if not ctx.guild or ctx.guild.id != 667953033929293855:
+        return False
+    roles = role_ids(ctx.author.roles)
+    return list_one(roles, Role.EVENT_HOSTER, Role.STAFF, Role.ADMIN)
+
+
 staff_only = commands.check(staff_check)
 
 staff_or_trainee = commands.check(
@@ -31,6 +38,8 @@ staff_or_trainee = commands.check(
                                                                                  ctx.author.roles]) or
                                                                       667953757954244628 in roles or
                                                                       675031583954173986 in roles))
+
+event_hoster_or_staff = commands.check(event_hoster_staff_check)
 
 class MemberUserConverter(commands.Converter):
     async def convert(self, ctx, argument) -> typing.Union[discord.Member, discord.User]:

@@ -12,7 +12,7 @@ import os
 import datetime
 from EZPaginator import Paginator
 from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only, ShallowContext, \
-    saveFileJson, clean_message_content, remove_emojis
+    saveFileJson, clean_message_content, remove_emojis, event_hoster_or_staff
 from helpers.constants import Categories
 from helpers.events import Emitter
 from api_key import userColl
@@ -318,7 +318,7 @@ class Levelling(commands.Cog, name="levelling"):
         await ctx.send("Backup created")
 
     @commands.command(hidden=True)
-    @staff_only
+    @event_hoster_or_staff
     async def removeweekly(self, ctx, user: discord.Member, xp: int):
         """Remove weekly xp from a user"""
         if 667953757954244628 in [z.id for z in user.roles]:
