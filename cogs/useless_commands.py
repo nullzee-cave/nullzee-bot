@@ -67,15 +67,18 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
 
     @commands.command()
     async def bonk(self, ctx, member: discord.Member):
-        await ctx.send(embed = await Embed(ctx.author, description = f"{member.mention} got bonked"))
+        embed = await Embed(ctx.author, description = f"{member.mention} got bonked")
+        await ctx.send(embed)
     
     @commands.command()
     async def crikey(self, ctx):
-        await ctx.send(embed = await Embed(ctx.author, title = "crikey", description = "<:crikey:812430464785580062> crikey"))
+        embed = await Embed(ctx.author, title = "crikey", description = "<:crikey:812430464785580062> crikey")
+        await ctx.send(embed)
         
     @commands.command()
     async def gg(self, ctx):
-        await ctx.send(embed = await Embed(ctx.author, title = "gg", description = "<a:RainbowDancin:856584656799137803> You did something! Congrats! "))
+        embed = await Embed(ctx.author, title = "gg", description = "<a:RainbowDancin:856584656799137803> You did something! Congrats! ")
+        await ctx.send(embed)
         
     @commands.command()
     async def boop(self, ctx, member: discord.Member):
