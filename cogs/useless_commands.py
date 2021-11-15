@@ -24,7 +24,7 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
         
     @commands.command()
     async def gooby(self, ctx):
-        gooby = await Embed(ctx.author, title = "gooby", description = "<:gooby:810130190197719050> gooby")
+        gooby = await Embed(ctx.author, title = "gooby", description = "<:gooby:810130190197719050> gooby").user_colour()
         await ctx.send(embed = gooby)
 
     @commands.command()
@@ -67,17 +67,17 @@ class Useless_commands(commands.Cog, name='Useless Commands'):
 
     @commands.command()
     async def bonk(self, ctx, member: discord.Member):
-        embed = await Embed(ctx.author, description = f"{member.mention} got bonked")
+        embed = await Embed(ctx.author, description = f"{member.mention} got bonked").user_colour()
         await ctx.send(embed)
     
     @commands.command()
     async def crikey(self, ctx):
-        embed = await Embed(ctx.author, title = "crikey", description = "<:crikey:812430464785580062> crikey")
+        embed = await Embed(ctx.author, title = "crikey", description = "<:crikey:812430464785580062> crikey").user_colour()
         await ctx.send(embed)
         
     @commands.command()
     async def gg(self, ctx):
-        embed = await Embed(ctx.author, title = "gg", description = "<a:RainbowDancin:856584656799137803> You did something! Congrats! ")
+        embed = await Embed(ctx.author, title = "gg", description = "<a:RainbowDancin:856584656799137803> You did something! Congrats! ").user_colour()
         await ctx.send(embed)
         
     @commands.command()
