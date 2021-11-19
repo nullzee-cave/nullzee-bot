@@ -13,7 +13,7 @@ import datetime
 from EZPaginator import Paginator
 from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only, ShallowContext, \
     saveFileJson, clean_message_content, remove_emojis, event_hoster_or_staff
-from helpers.constants import Categories
+from helpers.constants import Categories, Role
 from helpers.events import Emitter
 from api_key import userColl
 import pymongo
@@ -345,6 +345,14 @@ class Levelling(commands.Cog, name="levelling"):
             await userColl.update_one({"_id": str(user.id)}, {"$inc": {"experience": -xp}})
         await ctx.send(f"removed {xp} xp from {user.mention}")
 
+    @commands.command(hidden=True)
+    @commands.has_role(Role.ADMIN)
+    async def setlevel(self, ctx, user: discord.Member, level: int):
+        if level <= 0:
+            return await ctx.send("Cannot set a level below 1")
+        elif level > 200:
+            return await ctx.send("why did you think that would work")
+        await userColl.update_one({"_id": str(user.id)}, {"$set": {"level": level, "experience": 0}})
 
 def setup(bot):
     bot.add_cog(Levelling(bot, False))
