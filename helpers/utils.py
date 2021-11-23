@@ -178,13 +178,15 @@ class RoleConverter(commands.Converter):
                     if len(candidates) == 1:
                         role = candidates[0]
                     elif len(candidates) > 1:
-                        await ctx.send(embed=discord.Embed(title="Which role?",
-                                                           description="\n".join([f"{i+1} : {z.mention}" for i, z in enumerate(candidates)]),
-                                                           colour=discord.Colour.green()))
+                        decision_msg = await ctx.send(embed=discord.Embed(title="Which role?",
+                                                          description="\n".join([f"{i+1} : {z.mention}" for i, z in enumerate(candidates)]),
+                                                          colour=discord.Colour.green()))
                         try:
                             res: discord.Message = await ctx.bot.wait_for('message', check=lambda msg: msg.author.id == ctx.author.id and msg.channel.id == ctx.channel.id, timeout=60)
                             number = int(res.content)
                             role = candidates[number-1]
+                            await decision_msg.delete()
+                            await res.delete()
                         except asyncio.TimeoutError:
                             await ctx.send("Timed out")
                         except (ValueError, TypeError, IndexError):
