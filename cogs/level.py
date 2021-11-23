@@ -12,7 +12,7 @@ import os
 import datetime
 from EZPaginator import Paginator
 from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only, ShallowContext, \
-    saveFileJson, clean_message_content, remove_emojis, event_hoster_or_staff
+    saveFileJson, clean_message_content, remove_emojis, event_hoster_or_staff, role_ids
 from helpers.constants import Categories, Role, Channel
 from helpers.events import Emitter
 from api_key import userColl
@@ -42,8 +42,9 @@ class Levelling(commands.Cog, name="levelling"):
                     user_data = await get_user(member)
                     await Emitter().emit("vc_minute_gain", await ShallowContext.create(member), user_data["vc_minutes"])
                     await userColl.update_one({"_id": str(member.id)}, {"$inc": {"vc_minutes": 1}})
-                    await member.add_roles(
-                        *[guild.get_role(timed_roles[z]) for z in timed_roles if user_data["vc_minutes"] > int(z) and z not in member.roles])
+                    to_add = [guild.get_role(int(timed_roles[z])) for z in timed_roles if user_data["vc_minutes"] > int(z) and int(timed_roles[z]) not in role_ids(member.roles)]
+                    if not all(role is None for role in to_add):
+                        await member.add_roles(*to_add)
 
     @commands.command()
     async def linkTwitch(self, ctx, username: str):
