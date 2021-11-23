@@ -193,7 +193,7 @@ class Levelling(commands.Cog, name="levelling"):
         string += f"\nPoints: {user_data['points']:,}"
         string += f"\nTotal XP: {(sum([round(50 * z ** 1.5) for z in range(1, user_data['level'])]) + user_data['experience']):,}"
         string += f"\nMinutes in VC: {user_data['vc_minutes']:,}"
-        embed = await Embed(user, title=f"Level: {str(round(user_data['level']))}", url="https://nullzee.ga",
+        embed = await Embed(user, title=f"Level: {str(round(user_data['level']))}", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley",
                             description=string).user_colour()
         embed.set_author(name=user, icon_url=user.avatar_url)
         await ctx.send(embed=embed)
