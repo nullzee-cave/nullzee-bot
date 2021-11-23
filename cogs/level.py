@@ -13,7 +13,7 @@ import datetime
 from EZPaginator import Paginator
 from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only, ShallowContext, \
     saveFileJson, clean_message_content, remove_emojis, event_hoster_or_staff
-from helpers.constants import Categories, Role
+from helpers.constants import Categories, Role, Channel
 from helpers.events import Emitter
 from api_key import userColl
 import pymongo
@@ -284,7 +284,7 @@ class Levelling(commands.Cog, name="levelling"):
         # users["config"]["week_start"] = math.trunc(time.time())
         with open('users.json', 'w') as f:
             json.dump(users, f)
-        await self.bot.get_guild(667953033929293855).get_channel(667957285837864960).send(
+        await self.bot.get_guild(667953033929293855).get_channel(Channel.MOD_LOGS).send(
             embed=discord.Embed(description="Weekly XP leaderboard was reset", color=discord.Color.blue()))
         await ctx.send(
             embed=discord.Embed(description="Weekly XP leaderboard was reset", color=discord.Color.blue()))
@@ -307,7 +307,7 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.command(hidden=True)
     @staff_only
     async def levelBackup(self, ctx):
-        if ctx.author.id != 564798709045526528:
+        if Role.ADMIN not in [z.id for z in ctx.author.roles]:
             return
         with open('users.json') as f:
             users = json.load(f)
@@ -321,7 +321,7 @@ class Levelling(commands.Cog, name="levelling"):
     @event_hoster_or_staff
     async def removeweekly(self, ctx, user: discord.Member, xp: int):
         """Remove weekly xp from a user"""
-        if 667953757954244628 in [z.id for z in user.roles]:
+        if Role.STAFF in [z.id for z in user.roles]:
             return await ctx.send("Cannot remove XP from that user")
         if xp < 0:
             return await ctx.send("nice try")
@@ -335,7 +335,7 @@ class Levelling(commands.Cog, name="levelling"):
     @staff_only
     async def removeXP(self, ctx, user: discord.Member, xp: int):
         """Remove xp from someone"""
-        if 667953757954244628 in [z.id for z in user.roles]:
+        if Role.STAFF in [z.id for z in user.roles]:
             return await ctx.send("Cannot remove XP from that user")
         if xp < 0:
             return await ctx.send("nice try")
@@ -345,14 +345,23 @@ class Levelling(commands.Cog, name="levelling"):
             await userColl.update_one({"_id": str(user.id)}, {"$inc": {"experience": -xp}})
         await ctx.send(f"removed {xp} xp from {user.mention}")
 
+
     @commands.command(hidden=True)
     @commands.has_role(Role.ADMIN)
     async def setlevel(self, ctx, user: discord.Member, level: int):
+        """
+        Set a user to a specific level
+        *For use in emergencies only*
+        """
         if level <= 0:
             return await ctx.send("Cannot set a level below 1")
         elif level > 200:
             return await ctx.send("why did you think that would work")
         await userColl.update_one({"_id": str(user.id)}, {"$set": {"level": level, "experience": 0}})
+        response_msg = await ctx.send(f"{user.mention} has been set to level `{level}`", allowed_mentions=discord.AllowedMentions(users=False))
+        await ctx.message.delete()
+        await asyncio.sleep(3)
+        await response_msg.delete()
 
 def setup(bot):
     bot.add_cog(Levelling(bot, False))
