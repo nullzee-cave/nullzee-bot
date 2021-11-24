@@ -200,32 +200,34 @@ class Levelling(commands.Cog, name="levelling"):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["howFarFromLevel"])
-    async def hffl(self, ctx, wanted_level: int):
+    async def hffl(self, ctx, wanted_level: int = None):
         """View how far from a specific level you are, along with some other information"""
         user = ctx.author
         user_data = await userColl.find_one({"_id": str(user.id)})
         level = user_data['level']
         xp = user_data['experience']
-        if wanted_level <= level or wanted_level > 500:
-            await ctx.send("This number is invalid")
-        else:
-            def total_xp(y):
-                return sum([round(50 * z ** 1.5) for z in range(1, y)])
+        if wanted_level is None:
+            wanted_level = level + 1
+        elif wanted_level <= level or wanted_level > 500:
+            return await ctx.send("This number is invalid")
 
-            def level_xp(x):
-                return round(50 * (x ** 1.5))
+        def total_xp(y):
+            return sum([round(50 * z ** 1.5) for z in range(1, y)])
 
-            desired_total_xp = level_xp(wanted_level)
-            embed = await Embed(user, title="XP Calculator").user_colour()
-            embed.add_field(name="Desired Level",
-                            value=f"XP until desired level: {(sum([round(50 * z ** 1.5) for z in range(level, wanted_level)]) - xp):,}\nXP of desired level: {(level_xp(wanted_level)):,}")
-            embed.add_field(name="Total XP Stats",
-                            value=f"Total XP of desired level: {(total_xp(wanted_level)):,}\nYour total XP: {(total_xp(level) + xp):,}",
-                            inline=False)
-            embed.add_field(name="Next Level",
-                            value=f"XP until next level: {(level_xp(level) - xp):,}\nXP of next level: {(level_xp(level + 1)):,}",
-                            inline=False)
-            await ctx.send(embed=embed)
+        def level_xp(x):
+            return round(50 * (x ** 1.5))
+
+        desired_total_xp = level_xp(wanted_level)
+        embed = await Embed(user, title="XP Calculator").user_colour()
+        embed.add_field(name="Desired Level",
+                        value=f"XP until desired level: {(sum([round(50 * z ** 1.5) for z in range(level, wanted_level)]) - xp):,}\nXP of desired level: {(level_xp(wanted_level)):,}")
+        embed.add_field(name="Total XP Stats",
+                        value=f"Total XP of desired level: {(total_xp(wanted_level)):,}\nYour total XP: {(total_xp(level) + xp):,}",
+                        inline=False)
+        embed.add_field(name="Next Level",
+                        value=f"XP until next level: {(level_xp(level) - xp):,}\nXP of next level: {(level_xp(level + 1)):,}",
+                        inline=False)
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=["wk"])
     @commands.guild_only()
