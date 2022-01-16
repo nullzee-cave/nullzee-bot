@@ -304,7 +304,7 @@ class Tickets(commands.Cog):
                         read_messages=True,
                         send_messages=True)
                 })
-            start = await channel.send(f"<@&{Role.TICKET_PING}e> {payload.member.mention}", embed=embed)
+            start = await channel.send(f"<@&{Role.TICKET_PING}> {payload.member.mention}", embed=embed)
             await start.pin()
             await payload.member.send(f"Ticket created! {start.jump_url}")
             await guild.get_channel(Channel.MOD_LOGS).send(
