@@ -113,7 +113,8 @@ class Skyblock(metaclass=Constant):
     PET_TIERS = ["COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"]
 
 
-class Categories(metaclass=Constant):
+class Category(metaclass=Constant):
+    TICKETS = 821454390685597696
     ARCHIVED_CHATS = 745279472910991420
 
 
