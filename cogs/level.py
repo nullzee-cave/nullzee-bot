@@ -13,7 +13,7 @@ import datetime
 from EZPaginator import Paginator
 from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only, ShallowContext, \
     saveFileJson, clean_message_content, remove_emojis, event_hoster_or_staff, role_ids
-from helpers.constants import Categories, Role, Channel, Misc
+from helpers.constants import Category, Role, Channel, Misc
 from helpers.events import Emitter
 from api_key import userColl
 import pymongo
@@ -85,7 +85,7 @@ class Levelling(commands.Cog, name="levelling"):
         """Check current multipliers in all channels"""
         multipliers = f"Global: {self.global_multiplier}\n"
         multipliers += "\n".join([f"<#{z}> : {self.multipliers[z]}" for z in self.multipliers if
-                                 (self.multipliers[z] != 1 and ctx.guild.get_channel(int(z)).category.id not in [Categories.ARCHIVED_CHATS])])
+                                  (self.multipliers[z] != 1 and ctx.guild.get_channel(int(z)).category.id not in [Category.ARCHIVED_CHATS])])
         await ctx.send(embed=discord.Embed(title="Current XP multipliers", description=multipliers))
 
     @commands.command(hidden=True)

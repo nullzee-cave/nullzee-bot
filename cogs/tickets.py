@@ -6,7 +6,7 @@ from discord.ext import commands
 
 import re
 
-from helpers.constants import Channel, Role
+from helpers.constants import Channel, Role, Category
 from helpers.utils import staff_check, Embed, staff_only, getFileJson, saveFileJson, MessageOrReplyConverter
 
 TICKET_TOPIC_REGEX = r"opened by (?P<user>.+#\d{4}) \((?P<user_id>\d+)\) at (?P<time>.+)"
@@ -257,9 +257,9 @@ class Tickets(commands.Cog):
             return
         if str(payload.emoji) in ticket_types:
             guild: discord.Guild = self.bot.get_guild(payload.guild_id)
-            channel: discord.TextChannel = guild.get_channel(Channel.OPEN_TICKET)
+            cat: discord.CategoryChannel = guild.get_channel(Category.TICKETS)
             owned_ticket_count = 0
-            for c in channel.category.channels:
+            for c in cat.channels:
                 if isinstance(c, discord.TextChannel):
                     if c.topic is not None:
                         if str(payload.member.id) in c.topic:
