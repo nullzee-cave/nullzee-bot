@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from helpers import constants
-from helpers.colour import color
+from helpers.colour import Color
 import sys
 from datetime import datetime
 import time
@@ -11,9 +11,10 @@ import random
 import json
 import math
 from api_key import token, prefix, cogs
+from helpers.constants import Role, Channel
 from perks.perkSystem import PerkError
 import traceback
-from helpers.utils import get_user, staff_only, TimeConverter, ItemNotFound
+from helpers.utils import get_user, staff_only, TimeConverter, ItemNotFound, HelpError, GiveawayError
 
 intents = discord.Intents.default()
 intents.members = True
@@ -25,13 +26,13 @@ def fmtTime():
 
 
 # region colours
-blue = color.BLUE
-endc = color.END
-bold = color.BOLD
-purple = color.PURPLE
-green = color.GREEN
-red = color.RED
-yellow = color.YELLOW
+blue = Color.BLUE
+endc = Color.END
+bold = Color.BOLD
+purple = Color.PURPLE
+green = Color.GREEN
+red = Color.RED
+yellow = Color.YELLOW
 
 
 # endregion
@@ -42,7 +43,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
     if iteration == total:
-        print(f'\r{purple}Loading Complete:             |{bar}| {percent}% {suffix}{endc}', end=printEnd)
+        print(f'\r{purple}Loading Complete:             |{bar}| {percent}% {suffix}{endc}', end="\n")
     elif iteration in [0, 1]:
         print(f'\r{purple}{prefix} |{bar}| {percent}%   {suffix}{endc}', end=printEnd)
     else:
@@ -54,7 +55,6 @@ cooldowns = {}
 
 bot = commands.Bot(command_prefix=prefix, case_insensitive=True, intents=intents)
 bot.remove_command('help')
-
 
 
 @bot.event
@@ -123,6 +123,12 @@ async def on_command_error(ctx, error):
 
     if isinstance(error, PerkError):
         return await error.send_error(ctx)
+
+    if isinstance(error, HelpError):
+        return await error.send_error(ctx)
+
+    if isinstance(error, GiveawayError):
+        return await error.send_error(ctx)
     #     # ignore all other exception types, but print them to stderr
     print("EXCEPTION TRACE PRINT:\n{}".format(
         "".join(traceback.format_exception(type(error), error, error.__traceback__))))
@@ -141,8 +147,8 @@ async def on_ready():
         time.sleep(0.3)
         printProgressBar(i + 1, l, prefix=f'Loading:{" " * (20 - len(cog))} {cog}', suffix='Complete', length=50)
         bot.load_extension(cog)
-    print(f"{yellow}\nInitializing Bot, Please wait...{endc}\n")
-    print(f'{green}Cogs loaded... Bot is now ready and waiting for prefix "-"{endc}')
+    print(f"{yellow}\n\nInitializing Bot, Please wait...{endc}\n")
+    print(f'{green}Cogs loaded... Bot is now ready and waiting for prefix "{prefix}"{endc}')
 
     print(f'{green}\n√ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √  {endc}')
     # status = (discord.Activity(type=discord.ActivityType.watching, name="nullzee"))
@@ -185,7 +191,7 @@ async def command_cooldown(ctx, _time: TimeConverter):
 
 
 async def restrict_command_usage(ctx):
-    if not ctx.guild:
+    if not ctx.guild or (hasattr(ctx, "is_help_command") and ctx.is_help_command is True):
         return True
     user = await get_user(ctx.author)
     not_blacklist = not ("command_blacklist" in user and ctx.command.name in user["command_blacklist"])
@@ -202,8 +208,8 @@ async def restrict_command_usage(ctx):
         cooldown[ctx.channel.id] = {}
     level_bypass = user["level"] >= 50
     role_bypass = (roles := [z.id for z in
-                             ctx.author.roles]) and 706285767898431500 in roles or 668724083718094869 in roles or 668736363297898506 in roles
-    channel_allowed = ctx.channel.id in [668914397531602944] or ctx.channel.category.id in [constants.Channel.TICKETS]
+                             ctx.author.roles]) and Role.RETIRED_SUPPORTER in roles or Role.BOOSTER in roles or Role.TWITCH_SUB in roles
+    channel_allowed = ctx.channel.id in [Channel.BOT_COMMANDS] or ctx.channel.category.id in [constants.Channel.OPEN_TICKET]
     command_bypass = ctx.command.name in ["stab", "hug", "f", "claimroles", "purchase", "report", "sbinfo", "smh",
                                           "bonk"]
     cog_bypass = ctx.command.cog.qualified_name in ["Useless Commands"] if ctx.command.cog else False

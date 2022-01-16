@@ -7,6 +7,7 @@ from helpers.utils import Embed
 
 
 class Logging(commands.Cog):
+    """The message logging system"""
 
     def __init__(self, bot: commands.Bot):
         self.hidden: bool = True

@@ -13,18 +13,18 @@ import string
 import collections
 from discord.ext import commands
 
-from helpers.constants import Role
+from helpers.constants import Role, Misc
 
 
 def staff_check(ctx):
-    if not ctx.guild or ctx.guild.id != 667953033929293855:
+    if not ctx.guild or ctx.guild.id != Misc.GUILD:
         return False
     roles = role_ids(ctx.author.roles)
     return list_one(roles, Role.STAFF, Role.ADMIN)
 
 
 def event_hoster_staff_check(ctx):
-    if not ctx.guild or ctx.guild.id != 667953033929293855:
+    if not ctx.guild or ctx.guild.id != Misc.GUILD:
         return False
     roles = role_ids(ctx.author.roles)
     return list_one(roles, Role.EVENT_HOSTER, Role.STAFF, Role.ADMIN)
@@ -33,13 +33,12 @@ def event_hoster_staff_check(ctx):
 staff_only = commands.check(staff_check)
 
 staff_or_trainee = commands.check(
-    lambda ctx: ctx.guild and ctx.guild.id == 667953033929293855 and (685027474522112000 in
-                                                                      (roles := [z.id for z in
-                                                                                 ctx.author.roles]) or
-                                                                      667953757954244628 in roles or
-                                                                      675031583954173986 in roles))
+    lambda ctx: ctx.guild and ctx.guild.id == Misc.GUILD and
+                (Role.ADMIN in (roles := [z.id for z in ctx.author.roles]) or
+                 Role.STAFF in roles or Role.TRAINEE in roles))
 
 event_hoster_or_staff = commands.check(event_hoster_staff_check)
+
 
 class MemberUserConverter(commands.Converter):
     async def convert(self, ctx, argument) -> typing.Union[discord.Member, discord.User]:
@@ -51,12 +50,13 @@ class MemberUserConverter(commands.Converter):
             except commands.UserNotFound:
                 raise commands.UserInputError
 
+
 class DeltaTemplate(string.Template):
     delimiter = "%"
 
+
 def strfdelta(tdelta, fmt):
-    d = {"Y": tdelta.days//365}
-    d["D"] = int(tdelta.days) % 365
+    d = {"Y": tdelta.days // 365, "D": int(tdelta.days) % 365}
     d["H"], rem = divmod(tdelta.seconds, 3600)
     d["M"], d["S"] = divmod(rem, 60)
     t = DeltaTemplate(fmt)
@@ -155,9 +155,52 @@ class MessageOrReplyConverter(commands.Converter):
         return message
 
 
+class GiveawayError(Exception):
+    """
+    Exception raised for errors with giveaways
+    Currently used for giveaway creation timeout and cancellation
+    """
+
+    def __init__(self, description="Please report this to Septikai#1676"):
+        self.description = description
+        self.embed = discord.Embed(description=description, colour=0xFF0000)
+
+    async def send_error(self, ctx):
+        await ctx.send(embed=self.embed)
+
+
+class HelpError(Exception):
+    """Exception raised for errors with the help command"""
+
+    def __init__(self, description="Please report this to Septikai#1676"):
+        self.description = description
+        self.embed = discord.Embed(title="Error!", description=description, colour=0xFF0000)
+
+    async def send_error(self, ctx):
+        await ctx.send(embed=self.embed)
+
+
+class HelpConverter(commands.Converter):
+
+    async def convert(self, ctx, argument) -> typing.Union[commands.Command, commands.Cog]:
+        argument = argument.replace(" ", "").replace("_", "")
+        ctx.guild = ctx.bot.get_guild(Misc.GUILD)
+        ctx.author = ctx.guild.get_member(ctx.author.id)
+        for cog in [ctx.bot.get_cog(z) for z in ctx.bot.cogs]:
+            if argument.lower() == cog.qualified_name.lower().replace(" ", "").replace("_", ""):
+                if (cog.hidden and not staff_check(ctx)) or cog.get_commands() == []:
+                    break
+                return cog
+            for command in cog.get_commands():
+                if argument.lower() == command.name.lower().replace(" ", "").replace("_", ""):
+                    if command.hidden and not staff_check(ctx):
+                        break
+                    return command
+        raise HelpError("Command/Cog not found")
+
 
 class RoleConverter(commands.Converter):
-    abbreviations = {"vc lord": 682656964123295792, "godly giveaway donator": 681900556788301843}
+    abbreviations = {"vc lord": Role.VC_LORD, "godly giveaway donator": Role.LARGE_GIVEAWAY_DONOR}
 
     async def convert(self, ctx: commands.Context, argument: str) -> discord.Role:
         role = None
@@ -178,13 +221,16 @@ class RoleConverter(commands.Converter):
                     if len(candidates) == 1:
                         role = candidates[0]
                     elif len(candidates) > 1:
-                        decision_msg = await ctx.send(embed=discord.Embed(title="Which role?",
-                                                          description="\n".join([f"{i+1} : {z.mention}" for i, z in enumerate(candidates)]),
-                                                          colour=discord.Colour.green()))
+                        decision_msg = await ctx.send(
+                            embed=discord.Embed(title="Which role?",
+                                                description="\n".join([f"{i + 1} : {z.mention}" for i, z in
+                                                                       enumerate(candidates)]),
+                                                colour=discord.Colour.green()))
                         try:
-                            res: discord.Message = await ctx.bot.wait_for('message', check=lambda msg: msg.author.id == ctx.author.id and msg.channel.id == ctx.channel.id, timeout=60)
+                            res: discord.Message = await ctx.bot.wait_for('message', check=lambda
+                                msg: msg.author.id == ctx.author.id and msg.channel.id == ctx.channel.id, timeout=60)
                             number = int(res.content)
-                            role = candidates[number-1]
+                            role = candidates[number - 1]
                             await decision_msg.delete()
                             await res.delete()
                         except asyncio.TimeoutError:
@@ -206,6 +252,7 @@ def list_one(_list, *items):
         if item in _list:
             return True
     return False
+
 
 def list_every(_list, *items):
     for item in items:
@@ -314,9 +361,8 @@ class Embed(discord.Embed):
 
 def min_level(level: int):
     async def predicate(ctx):
-        if 706285767898431500 in (
-                roles := [z.id for z in
-                          ctx.author.roles]) or 668724083718094869 in roles or 668736363297898506 in roles:
+        if Role.RETIRED_SUPPORTER in (
+                roles := [z.id for z in ctx.author.roles]) or Role.BOOSTER in roles or Role.TWITCH_SUB in roles:
             return True
         user = await userColl.find_one({"_id": str(ctx.author.id)})
         if not user:

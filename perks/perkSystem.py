@@ -8,12 +8,12 @@ def register_perk(perk):
 
 
 class Perk:
-    def __init__(self, name, description, aliases, cost, reqiure_arg, func):
+    def __init__(self, name, description, aliases, cost, require_arg, func):
         self.name = name
         self.aliases = aliases
         self.description = description
         self.cost = cost
-        self.require_arg = reqiure_arg
+        self.require_arg = require_arg
         self.on_buy = func
 
     def match_name(self, arg):
@@ -49,5 +49,6 @@ class PerkError(Exception):
     def __init__(self, msg=None, embed=None):
         self.message = msg
         self.embed = embed
+
     async def send_error(self, ctx):
         await ctx.send(self.message, embed=self.embed)

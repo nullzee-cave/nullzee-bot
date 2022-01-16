@@ -8,7 +8,8 @@ import re
 INVITE_REGEX = "discord.gg\/(\w{6})"
 
 
-class Automod(commands.Cog):  # this is for timed punishments, removing warns etc.
+class Automod(commands.Cog):
+    """Automod, for automatic punishments, timed punishments, removing warns, etc"""
 
     def __init__(self, bot, hidden):
         self.hidden = hidden

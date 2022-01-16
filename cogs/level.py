@@ -13,13 +13,15 @@ import datetime
 from EZPaginator import Paginator
 from helpers.utils import min_level, get_user, Embed, getFileJson, leaderboard_pages, staff_only, ShallowContext, \
     saveFileJson, clean_message_content, remove_emojis, event_hoster_or_staff, role_ids
-from helpers.constants import Categories, Role, Channel
+from helpers.constants import Categories, Role, Channel, Misc
 from helpers.events import Emitter
 from api_key import userColl
 import pymongo
 
 
 class Levelling(commands.Cog, name="levelling"):
+    """The levelling system, and all related commands"""
+
     def __init__(self, bot, hidden):
         self.hidden = hidden
         self.bot: commands.Bot = bot
@@ -32,7 +34,7 @@ class Levelling(commands.Cog, name="levelling"):
 
     @tasks.loop(minutes=1)
     async def vc_tracker(self):
-        guild: discord.Guild = self.bot.get_guild(667953033929293855)
+        guild: discord.Guild = self.bot.get_guild(Misc.GUILD)
         timed_roles = getFileJson("levelroles")["vc"]
         for channel in filter(lambda x: isinstance(x, discord.VoiceChannel), guild.channels):
             channel: discord.VoiceChannel
@@ -60,7 +62,7 @@ class Levelling(commands.Cog, name="levelling"):
         if before.pending and not after.pending:
             with open('levelroles.json') as f:
                 levelroles = json.load(f)["levels"]
-            roles = [after.guild.get_role(738080587000184923)]
+            roles = [after.guild.get_role(levelroles["1"])]
             user_data = await userColl.find_one({"_id": str(after.id)})
             if user_data:
                 level = user_data["level"]
@@ -77,7 +79,7 @@ class Levelling(commands.Cog, name="levelling"):
         self.multipliers = config["multipliers"]
         self.global_multiplier = config["global_multiplier"]
 
-    @commands.command()
+    @commands.command(hidden=True)
     @staff_only
     async def multipliers(self, ctx):
         """Check current multipliers in all channels"""
@@ -86,7 +88,7 @@ class Levelling(commands.Cog, name="levelling"):
                                  (self.multipliers[z] != 1 and ctx.guild.get_channel(int(z)).category.id not in [Categories.ARCHIVED_CHATS])])
         await ctx.send(embed=discord.Embed(title="Current XP multipliers", description=multipliers))
 
-    @commands.command()
+    @commands.command(hidden=True)
     @staff_only
     async def multiplier(self, ctx, channel: discord.TextChannel, value: float):
         """Change the xp multiplier of a channel"""
@@ -98,7 +100,7 @@ class Levelling(commands.Cog, name="levelling"):
         saveFileJson(config)
         self.update_multipliers()
 
-    @commands.command()
+    @commands.command(hidden=True)
     @staff_only
     async def global_multiplier(self, ctx, value: float):
         """Change the global xp multiplier for the whole server"""
@@ -132,7 +134,6 @@ class Levelling(commands.Cog, name="levelling"):
         if not message.guild:
             return
         else:
-            NO_WEEKLY_MULTIPLIER_CHANNELS = [674311689738649600]
             user_data = await get_user(message.author)
             ctx = await self.bot.get_context(message)
             await Emitter().emit('message', ctx, user_data=user_data)
@@ -148,7 +149,7 @@ class Levelling(commands.Cog, name="levelling"):
                 base_exp = 25
             exp = math.trunc(multiplier * self.global_multiplier * base_exp)
             weekly_exp = math.trunc(
-                self.global_multiplier * base_exp) if message.channel.id in NO_WEEKLY_MULTIPLIER_CHANNELS else exp
+                self.global_multiplier * base_exp) if message.channel.id in Misc.NO_WEEKLY_MULTIPLIER_CHANNELS else exp
             if time.time() - user_data["last_message"] > 30:
                 points_bonus = 1 if user_data["experience"] > user_data["last_points"] + 1000 else 0
                 if points_bonus:
@@ -287,7 +288,7 @@ class Levelling(commands.Cog, name="levelling"):
         # users["config"]["week_start"] = math.trunc(time.time())
         with open('users.json', 'w') as f:
             json.dump(users, f)
-        await self.bot.get_guild(667953033929293855).get_channel(Channel.MOD_LOGS).send(
+        await self.bot.get_guild(Misc.GUILD).get_channel(Channel.MOD_LOGS).send(
             embed=discord.Embed(description="Weekly XP leaderboard was reset", color=discord.Color.blue()))
         await ctx.send(
             embed=discord.Embed(description="Weekly XP leaderboard was reset", color=discord.Color.blue()))
@@ -308,8 +309,9 @@ class Levelling(commands.Cog, name="levelling"):
     #         await self.bot.get_guild(667953033929293855).get_channel(667957285837864960).send(embed=discord.Embed(description="Weekly XP leaderboard was reset"), color=discord.Color.blue())
 
     @commands.command(hidden=True)
-    @staff_only
+    @commands.has_role(Role.ADMIN)
     async def levelBackup(self, ctx):
+        """Create a backup of all user's levels"""
         if Role.ADMIN not in [z.id for z in ctx.author.roles]:
             return
         with open('users.json') as f:
@@ -354,7 +356,7 @@ class Levelling(commands.Cog, name="levelling"):
     async def setlevel(self, ctx, user: discord.Member, level: int):
         """
         Set a user to a specific level
-        *For use in emergencies only*
+        **For use in emergencies only**
         """
         if level <= 0:
             return await ctx.send("Cannot set a level below 1")
