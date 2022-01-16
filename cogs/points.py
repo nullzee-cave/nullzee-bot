@@ -8,13 +8,15 @@ from perks import perks
 
 
 class Points(commands.Cog):
+    """The commands related to the points system"""
+
     def __init__(self, bot, hidden):
         self.bot: commands.Bot = bot
         self.hidden = hidden
 
     @commands.command()
     async def shop(self, ctx, item: PerkConverter = None):
-        '''View the points shop!'''
+        """View the points shop!"""
         user = await get_user(ctx.author)
         if not item:
             string = ""
@@ -32,7 +34,7 @@ class Points(commands.Cog):
     @commands.command(aliases=["buy", "redeem", "claim"])
     @commands.guild_only()
     async def purchase(self, ctx, item: PerkConverter, *, arg=None):
-        '''Redeem something from the shop at the cost of points'''
+        """Redeem something from the shop at the cost of points"""
         user = await get_user(ctx.author)
         if item.require_arg and not arg:
             return await ctx.send(embed=discord.Embed(title="Error!", description="You need to specify an argument for this perk!", colour=0xFF0000))
@@ -49,10 +51,10 @@ class Points(commands.Cog):
         else:
             return await ctx.send("You cannot afford this!")
 
-    @commands.command()
+    @commands.command(hidden=True)
     @staff_only
     async def changePoints(self, ctx, user: discord.Member, points: int):
-        '''Modify someone's points'''
+        """Modify someone's points"""
         await userColl.update_one({"_id": str(user.id)}, {"$inc": {"points": points}})
         await ctx.send(f"changed {user.mention}'s points by {points}", allowed_mentions=discord.AllowedMentions(users=False))
         ctx.author = user

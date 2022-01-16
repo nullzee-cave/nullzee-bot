@@ -4,8 +4,8 @@ from discord.ext import commands, tasks
 from random import randint
 
 from helpers import constants, logic, moderationUtils, utils
-from helpers.constants import Skyblock
-from helpers.utils import min_level, get_user, RoleConverter
+from helpers.constants import Skyblock, Role, Channel, Misc
+from helpers.utils import min_level, get_user, RoleConverter, staff_check
 import json
 import asyncio
 import discord
@@ -16,13 +16,16 @@ from discord.ext.commands.cooldowns import BucketType
 import time
 import datetime
 from api_key import moderationColl, hypixel_api_key
-from helpers.utils import Embed, strfdelta, staff_only
+from helpers.utils import Embed, strfdelta, staff_only, HelpConverter
 import mathterpreter
 
 from helpers.events import Emitter
 
 
-class util(commands.Cog, name="Other"):
+class Util(commands.Cog, name="Other"):
+    """Other useful commands"""
+    # and listeners
+
     def __init__(self, bot, hidden):
         self.hidden = hidden
         self.bot = bot
@@ -33,6 +36,16 @@ class util(commands.Cog, name="Other"):
         self.tags = utils.getFileJson("config/tags")
         self.updateSubCount()
 
+    async def toggle_bot_status(self):
+        watching = ["discord.gg/nullzee", "twitch.tv/nullzeelive"]
+        playing = ["with -help", "with Nullzee", "Hypixel Skyblock"]
+        rand = randint(1, 2)
+        if rand == 1:
+            await self.bot.change_presence(
+                activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(watching)))
+        elif rand == 2:
+            await self.bot.change_presence(activity=discord.Game(name=random.choice(playing)))
+
     def updateSubCount(self):
         if time.time() - self.last_update > 600:
             self.sub_count = requests.get(
@@ -42,7 +55,7 @@ class util(commands.Cog, name="Other"):
 
     @commands.command()
     async def subcount(self, ctx):
-        '''View Nullzee's YouTube stats'''
+        """View Nullzee's YouTube stats"""
         await ctx.send(embed=discord.Embed(title="Nullzee's YouTube stats",
                                            description=f"Subscribers: {int(self.sub_count['subscriberCount']):,}\nTotal Views: {int(self.sub_count['viewCount']):,}\nVideo count: {int(self.sub_count['videoCount']):,}",
                                            color=0x00FF00, url="https://youtube.com/nullzee").set_thumbnail(
@@ -53,13 +66,21 @@ class util(commands.Cog, name="Other"):
     async def on_member_update(self, before, after):
         before_ids = [z.id for z in before.roles]
         after_ids = [z.id for z in after.roles]
-        if (668736363297898506 in before_ids and 668736363297898506 not in after_ids) or (
-                668724083718094869 in before_ids and 668724083718094869 not in after_ids):
-            await after.add_roles(after.guild.get_role(706285767898431500))
+        if ((Role.TWITCH_SUB in before_ids and Role.TWITCH_SUB not in after_ids) or (
+             Role.BOOSTER in before_ids and Role.BOOSTER not in after_ids)) and (
+             Role.RETIRED_SUPPORTER not in after_ids):
+            await after.add_roles(after.guild.get_role(Role.RETIRED_SUPPORTER))
 
     @commands.command()
     async def rolelist(self, ctx: commands.Context, *, text: str):
-
+        """
+        Check how many users have a specific role (or combination of roles).
+        Usable characters:
+        `role & role` - users with both roles
+        `role | role` - users with either role
+        `!role` - users without that role
+        `()` - can be used to format the query
+        """
         special_tokens = "&|!()"
         tokens = []
         builder = ""
@@ -95,11 +116,15 @@ class util(commands.Cog, name="Other"):
 
     @commands.command()
     async def roleColour(self, ctx, *, role: RoleConverter):
-        await ctx.send(embed=discord.Embed(title=str(role.colour), description=f"Colour for {role.mention}", colour=role.colour).set_thumbnail(url=f"https://singlecolorimage.com/get/{str(role.colour)[1:]}/400x300"))
+        """View the colour of a role"""
+        await ctx.send(embed=discord.Embed(title=str(role.colour),
+                                           description=f"Colour for {role.mention}",
+                                           colour=role.colour)
+                       .set_thumbnail(url=f"https://singlecolorimage.com/get/{str(role.colour)[1:]}/400x300"))
 
     @commands.command(aliases=["calc", "math", "m"])
     async def maths(self, ctx, *, expr: str):
-        '''Get the bot to do your maths homework for you'''
+        """Get the bot to do your maths homework for you"""
         try:
             await ctx.send(f"{ctx.author.mention}: ```\n{mathterpreter.interpret(expr)}\n```")
         except (mathterpreter.MathSyntaxError, OverflowError) as e:
@@ -118,6 +143,7 @@ class util(commands.Cog, name="Other"):
 
     @commands.command()
     async def serverinfo(self, ctx):
+        """View some information about the server"""
         embed = await Embed(ctx.author).user_colour()
         embed.add_field(name="Owner:", value=f"{ctx.guild.owner}", inline=False)
         embed.add_field(name="Members:", value=len(ctx.guild.members), inline=True)
@@ -147,7 +173,7 @@ class util(commands.Cog, name="Other"):
     @commands.command()
     @commands.guild_only()
     async def whois(self, ctx, user: discord.Member = None):
-        '''View your user info (account creation date, join date, roles, etc)'''
+        """View your user info (account creation date, join date, roles, etc) or that of the mentioned user"""
         user = user or ctx.author
         user_data = await get_user(user)
         embed_colour = user_data["embed_colour"]
@@ -177,14 +203,14 @@ class util(commands.Cog, name="Other"):
 
     @commands.command(aliases=["av"])
     async def avatar(self, ctx, user: discord.Member = None):
-        '''View a user's avatar'''
+        """View a user's avatar"""
         user = user or ctx.author
         await ctx.send(
             embed=await Embed(user, title="Avatar").set_image(url=user.avatar_url).auto_author().user_colour())
 
     @commands.command()
     async def appeal(self, ctx, _id: str, *, reason: str = None):
-        '''Appeal a punishment'''
+        """Appeal a punishment"""
         punishment = await moderationColl.find_one({"id": _id})
         if not punishment:
             return await ctx.send("Could not find a punishment with that ID")
@@ -194,7 +220,7 @@ class util(commands.Cog, name="Other"):
         msg = f"https://discord.com/channels/{location[0]}/{location[1]}/{location[2]}"
         embed = discord.Embed(title="Punishment appeal", url=msg, description=reason, colour=discord.Colour.orange())
         embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-        await self.bot.get_guild(int(location[0])).get_channel(771061232642949150).send(embed=embed)
+        await self.bot.get_guild(int(location[0])).get_channel(Channel.REPORTS_APPEALS).send(embed=embed)
         await ctx.send("Punishment appeal submitted.")
 
     @commands.command()
@@ -206,8 +232,8 @@ class util(commands.Cog, name="Other"):
             suggestions = json.load(f)
         suggestion = await Embed(ctx.author, description=answer, color=0x00FF00).user_colour()
         suggestion.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-        sugChannel = self.bot.get_guild(667953033929293855).get_channel(667959037265969171)
-        sugmsg = await sugChannel.send("<@&738691450417709077>", embed=suggestion)
+        sugChannel = self.bot.get_guild(Misc.GUILD).get_channel(Channel.POLLS)
+        sugmsg = await sugChannel.send(f"<@&{Role.POLL_PING}>", embed=suggestion)
         suggestions.append(sugmsg.id)
         with open('suggestions.json', 'w') as f:
             json.dump(suggestions, f)
@@ -219,7 +245,7 @@ class util(commands.Cog, name="Other"):
 
     @tasks.loop(minutes=20)
     async def update_member_counter(self):
-        channel: discord.VoiceChannel = self.bot.get_guild(667953033929293855).get_channel(
+        channel: discord.VoiceChannel = self.bot.get_guild(Misc.GUILD).get_channel(
             constants.Channel.MEMBER_COUNT_VC)
         member_count = len(channel.guild.members)
         if channel.name != f"Members: {member_count}":
@@ -233,7 +259,7 @@ class util(commands.Cog, name="Other"):
         killList = []
         for i in suggestions:
             try:
-                msg = await self.bot.get_guild(667953033929293855).get_channel(667959037265969171).fetch_message(i)
+                msg = await self.bot.get_guild(Misc.GUILD).get_channel(Channel.POLLS).fetch_message(i)
                 upvotes = [z.count for z in msg.reactions if str(z.emoji) == '✅']
                 downvotes = [z.count for z in msg.reactions if str(z.emoji) == '❎']
                 karma = upvotes[0] - downvotes[0]
@@ -245,10 +271,6 @@ class util(commands.Cog, name="Other"):
                     except commands.BadArgument:
                         pass
                     killList.append(i)
-                elif downvotes[0] > 14:
-                    ctx = await self.bot.get_context(msg)
-                    ctx.author = await commands.MemberConverter().convert(ctx, msg.embeds[0].author.name)
-                    await Emitter().emit("bad_suggestion", ctx)
                 elif downvotes[0] > 8:
                     killList.append(i)
             except:
@@ -275,67 +297,59 @@ class util(commands.Cog, name="Other"):
         # await ctx.message.delete()
 
     @commands.command(aliases=['commands'])
-    async def help(self, ctx, cog: str = None):
+    async def help(self, ctx, *, arg: HelpConverter = None):
         """Displays the help command
-        Anything in angled brackets <> is a required argument. Square brackets [] mark an optional argument"""
-        prefix = "-"
-        if not cog:
-            embed = discord.Embed(title="Help", description=f"use `{prefix}help [category|command]` for more info",
-                                  color=0x00FF00)
-            embed.set_footer(text=f"Created by pjones123#6025")
-            cog_desc = ''
-            for x in self.bot.cogs:
-                if not self.bot.cogs[x].hidden:
-                    cmd = ''
-                    cog_desc += f"__**{x}**__: {self.bot.cogs[x].__doc__}\n"
-                    for y in self.bot.get_cog(x).get_commands():
-                        if not y.hidden:
-                            cmd += f"`{prefix}{y}`,  "
-                    embed.add_field(name=f"__**{x}**__: {self.bot.cogs[x].__doc__}", value=cmd, inline=False)
-            if not isinstance(ctx.channel, discord.channel.DMChannel):
-                await ctx.send("**:mailbox_with_mail: You've got mail**")
-            await ctx.author.send(embed=embed)
-        else:
-            found = False
-            cog = cog.lower()
-            for x in self.bot.cogs:
-                if x.lower() == cog:
-                    # title="Help", description=f"**Category {cog[0]}:** {self.bot.cogs[cog[0]].__doc__}",
-                    embed = discord.Embed(title="Help", color=0x00FF00)
-                    scog_info = ''
-                    for c in self.bot.get_cog(x).get_commands():
-                        if not c.hidden:
-                            scog_info += f"\n`{prefix}{c.name}`: {c.help}\n"
-                    embed.add_field(name=f"\n{cog} Category:\n{self.bot.cogs[cog].__doc__}\n ",
-                                    value=f"\n{scog_info}\n", inline=False)
-                    found = True
-
-            if not found:
-                for x in self.bot.cogs:
-                    for c in self.bot.get_cog(x).get_commands():
-                        if c.name.lower() == cog:
-                            embed = discord.Embed(color=0x00FF00)
-                            embed.add_field(name=f"{c.name}: {c.help}",
-                                            value=f"Usage:\n `{prefix}{c.qualified_name} {c.signature}`")
-                            found = True
-            if not found:
-                embed = discord.Embed(
-                    description="Command not found. Check that you have spelt it correctly and used capitals where appropriate")
-            await ctx.author.send(embed=embed)
-            if not isinstance(ctx.channel, discord.channel.DMChannel):
-                await ctx.send("**:mailbox_with_mail: You've got mail**")
+        Anything in angled brackets `<>` is a required argument. Square brackets `[]` mark an optional argument"""
+        ctx.guild = self.bot.get_guild(Misc.GUILD)
+        ctx.author = ctx.guild.get_member(ctx.author.id)
+        ctx.is_help_command = True
+        help_embed = None
+        if isinstance(arg, commands.Cog):
+            help_embed = discord.Embed(title=arg.qualified_name.capitalize(), description=arg.__doc__, colour=0x00FF00)
+            cog_commands = []
+            for command in arg.get_commands():
+                try:
+                    if not await command.can_run(ctx):
+                        continue
+                    cog_commands.append(command.name)
+                except commands.NoPrivateMessage:
+                    continue
+            help_embed.add_field(name="Commands:", value=(", ".join(sorted(cog_commands))) if cog_commands else None)
+        elif isinstance(arg, commands.Command):
+            help_embed = discord.Embed(title=arg.name.capitalize(),
+                                       description=arg.help if arg.help is not None else "No Information",
+                                       colour=0x00FF00)
+            help_embed.add_field(name="Usage:",
+                                 value=f"`{ctx.prefix}{arg.qualified_name} {arg.signature}"
+                                       f"`\n\n`<>` represents required arguments\n`[]` represents optional arguments")
+        elif arg is None:
+            help_embed = discord.Embed(title="Help",
+                                       description=f"Use `{ctx.prefix}help [category|command]` for more information",
+                                       colour=0x00FF00)
+            for cog in [ctx.bot.get_cog(z) for z in ctx.bot.cogs]:
+                if (cog.hidden and not staff_check(ctx)) or cog.get_commands() == []:
+                    continue
+                help_embed.add_field(name=f"__{cog.qualified_name.capitalize()}:__", value=cog.__doc__, inline=False)
+            help_embed.set_footer(text="Created by pjones123#6025, maintained and continued by Septikai#1676")
+        try:
+            await ctx.author.send(embed=help_embed)
+            if not isinstance(ctx.channel, discord.DMChannel):
+                await ctx.message.add_reaction("✅")
+        except discord.Forbidden:
+            await ctx.send("Please enable DMs from server members then try again")
 
     @commands.command(aliases=['boost'])
     async def nitro(self, ctx):
-        '''View the perks you can get for being a server booster'''
+        """View the perks you can get for being a server booster"""
         embed = discord.Embed(title="Considering boosting the server?", color=0xfb00fd)
-        embed.add_field(name="`For Nitro Boosting You Can Get`", value="""- Access to <#674311689738649600>
-- A message posted in <#714073835791712267>
-- The Nitro Booster (rich) role
-- Access to all level restricted commands
-- The ability to use commands in all channels
-- All other level restricted perks from <#667966078596546580>
-""", inline=False)
+        embed.add_field(name="`For Nitro Boosting You Can Get`",
+                        value=f"""- Access to <#{Channel.COOL_KID_CLUB}>
+                        - A message posted in <#{Channel.NITRO_BOOSTERS}>
+                        - The <@&{Role.BOOSTER}> role
+                        - Access to all level restricted commands
+                        - The ability to use commands in all channels
+                        - All other level restricted perks from <#{Channel.RULES_AND_INFO}>
+                        """, inline=False)
         embed.set_thumbnail(
             url="https://images-ext-1.discordapp.net/external/PbC_AHw6x6OR_5a6hpvuLTP6nBEnpc5e-ftbgOx9oks/https/i.ytimg.com/vi/ZyX7U78keu0/maxresdefault.jpg?width=960&height=540")
         await ctx.send(embed=embed)
@@ -343,26 +357,24 @@ class util(commands.Cog, name="Other"):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        if member.guild.id == 667953033929293855:
-            channel = member.guild.get_channel(667955504651304999)
+        if member.guild.id == Misc.GUILD:
+            channel = member.guild.get_channel(Channel.WELCOME)
             await channel.send(
-                f"Welcome to Nullzee's Cave, {member.mention}, Make sure to read <#667966078596546580> carefully and ensure you understand them. We hope you enjoy your time here! :heart: :wave:")
+                f"Welcome to Nullzee's Cave, {member.mention}, Make sure to read <#{Channel.RULES_AND_INFO}> carefully and ensure you understand them. We hope you enjoy your time here! :heart: :wave:")
 
     @tasks.loop(minutes=30)
     async def autotogglestatus(self):
-        rand = randint(0, 10)
-        watching = ["discord.gg/nullzee", "twitch.tv/nullzeelive"]
-        playing = ["with -help", "with Nullzee", "Hypixel Skyblock"]
-        rand = randint(1, 2)
-        if rand == 1:
-            await self.bot.change_presence(
-                activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(watching)))
-        elif rand == 2:
-            await self.bot.change_presence(activity=discord.Game(name=random.choice(playing)))
+        await self.toggle_bot_status()
+
+    @commands.command(hidden=True)
+    @commands.has_role(Role.ADMIN)
+    async def manualtogglestatus(self, ctx):
+        """Toggle the bot's status manually"""
+        await self.toggle_bot_status()
 
     @commands.command()
     async def report(self, ctx, message: discord.Message, *, reason: str = None):
-        '''Report a message a user has sent'''
+        """Report a message a user has sent"""
         try:
             await ctx.message.delete()
         except:
@@ -374,30 +386,15 @@ class util(commands.Cog, name="Other"):
         except:
             pass
 
-    @commands.command(hidden=True)
-    @commands.has_guild_permissions(administrator=True)
-    async def manualtogglestatus(self, ctx):
-        '''Toggle the bot's status manually'''
-        rand = randint(0, 10)
-        watching = ["discord.gg/nullzee", "twitch.tv/nullzeelive"]
-        playing = ["with -help", "with Nullzee", "Hypixel Skyblock"]
-        rand = randint(1, 2)
-        if rand == 1:
-            await self.bot.change_presence(
-                activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(watching)))
-        elif rand == 2:
-            await self.bot.change_presence(activity=discord.Game(name=random.choice(playing)))
-
     @commands.command()
     @commands.cooldown(2, 60, BucketType.user)
     async def claimroles(self, ctx, ign: str):
         """Claim roles for in-game achievement"""
-        if ctx.channel.id != 853294481825726475:
-            return await ctx.send("go to <#853294481825726475> for that!")
+        if ctx.channel.id != Channel.ROLE_COMMANDS:
+            return await ctx.send(f"go to <#{Channel.ROLE_COMMANDS}> for that!")
         await ctx.trigger_typing()
         key = hypixel_api_key
         try:
-            # noinspection SpellCheckingInspection
             mojang = await utils.fetch_json_api(f"https://api.mojang.com/users/profiles/minecraft/{ign}")
             uuid = mojang["id"]
         except (aiohttp.ContentTypeError, KeyError):
@@ -405,15 +402,16 @@ class util(commands.Cog, name="Other"):
         player_data = await utils.fetch_json_api(f"https://api.hypixel.net/player?uuid={uuid}&key={key}")
         fail_responses = [f"{str(ctx.author)} doesn't know how to claim roles smh",
                           f"{str(ctx.author)} messed up somehow ¯\_(ツ)_/¯",
-                          "blame pjones123#6025 if something messes up"]
+                          "blame Septikai#1676 if something messes up"]
 
         async def send_fail():
             try:
-                embed = discord.Embed(title=":no_entry_sign: Error!", description="""In order to automatically claim your roles, you must first link your discord account to your hypixel profile. If you do not know how to do this, refer to the gif below for instructions
-
-                                    Additionally, you must turn on your skyblock api, which can be accessed in the Skyblock Menu ⇒ Settings ⇒ API Settings.
-
-                                    Make sure you check every option. This includes the Bank API which can be turned on in Settings ⇒ Island Settings ⇒ Bank API""",
+                embed = discord.Embed(title=":no_entry_sign: Error!",
+                                      description="""In order to automatically claim your roles, you must first link your discord account to your hypixel profile. If you do not know how to do this, refer to the gif below for instructions
+                                      
+                                      Additionally, you must turn on your skyblock api, which can be accessed in the Skyblock Menu ⇒ Settings ⇒ API Settings.
+                                      
+                                      Make sure you check every option. This includes the Bank API which can be turned on in Settings ⇒ Island Settings ⇒ Bank API""",
                                       color=0xff0000)
                 embed.set_thumbnail(
                     url="https://yt3.ggpht.com/-G0UwZhD1hRI/AAAAAAAAAAI/AAAAAAAAAAA/Q5bg4hzv6C0/s900-c-k-no/photo.jpg")
@@ -422,8 +420,8 @@ class util(commands.Cog, name="Other"):
                 await ctx.message.delete()
                 return await ctx.send(embed=discord.Embed(title=":no_entry_sign: Error!",
                                                           description="Could not verify your identity. I've DMed you info",
-                                                          color=0xff0000).set_footer(
-                    text=random.choice(fail_responses), icon_url=ctx.author.avatar_url))
+                                                          color=0xff0000)
+                                      .set_footer(text=random.choice(fail_responses), icon_url=ctx.author.avatar_url))
             except discord.Forbidden:
                 await ctx.send(
                     "Could not verify your identity. Please allow DMs from members of this server then try again",
@@ -435,25 +433,27 @@ class util(commands.Cog, name="Other"):
                 return await send_fail()
         except KeyError:
             return await send_fail()
+
         player = await utils.fetch_json_api(f"https://api.hypixel.net/skyblock/profiles?key={key}&uuid={uuid}")
         souls = []
         slayers = []
-        slots = {}
-        pets = []
-        bank = 0
         skills = ("combat", "farming", "fishing", "foraging", "alchemy", "enchanting", "mining", "taming")
         skill_averages = [0]
+        catacombs_xp = 0
+        catacombs_level = 0
+        pet_score = 0
         for profile in player["profiles"]:
-            slots[profile["profile_id"]] = 0
             for user in profile["members"]:
                 if user != uuid:
                     continue
                 try:
                     souls.append(profile["members"][user]["fairy_souls_collected"])
+
                     skill_averages.append(math.trunc(sum([Skyblock.SKILL_XP_REQUIREMENTS.index(
                         utils.level_from_table(profile["members"][user][f"experience_skill_{skill}"],
                                                Skyblock.SKILL_XP_REQUIREMENTS[:50] if skill in Skyblock.MAX_LEVEL_50_SKILLS else Skyblock.SKILL_XP_REQUIREMENTS)
                     )+1 for skill in skills]) / len(skills)))
+
                     if "slayer_bosses" in profile["members"][user]:
                         slayer_bosses = profile["members"][user]["slayer_bosses"]
                         for slayer in slayer_bosses:
@@ -464,52 +464,59 @@ class util(commands.Cog, name="Other"):
                                     slayers.append(9)
                             except KeyError:
                                 pass
+
+                    pets = {}
                     if "pets" in profile["members"][user]:
                         for pet in profile["members"][user]["pets"]:
-                            if pet["type"] not in pets:
-                                pets.append(pet["type"])
-                    if "coin_purse" in profile["members"][user]:
-                        bank += profile["members"][user]["coin_purse"]
-                    slots[profile["profile_id"]] += len(profile["members"][user]["crafted_generators"])
+                            if pet["tier"] in Skyblock.PET_TIERS:
+                                if pet["type"] not in pets:
+                                    if pet["heldItem"] in ["PET_ITEM_TOY_JERRY"]:
+                                        pets[pet["type"]] = Skyblock.PET_TIERS[Skyblock.PET_TIERS.index(pet["tier"])+1]
+                                    else:
+                                        pets[pet["type"]] = pet["tier"]
+                                else:
+                                    if Skyblock.PET_TIERS.index(pet["tier"]) > Skyblock.PET_TIERS.index(pets[pet["type"]]):
+                                        # TODO: find the id for tier boosts and add it to the following line
+                                        if pet["heldItem"] in ["PET_ITEM_TOY_JERRY"]:
+                                            pets[pet["type"]] = Skyblock.PET_TIERS[Skyblock.PET_TIERS.index(pet["tier"])+1]
+                                        else:
+                                            pets[pet["type"]] = pet["tier"]
+                            else:
+                                await ctx.guild.get_member(540939418933133312) \
+                                    .send(f"Invalid pet tier: `{pet['tier']}`")
+                    profile_pet_score = 0
+                    for _pet in pets:
+                        profile_pet_score += Skyblock.PET_TIERS.index(pets[_pet]) + 1
+                    if profile_pet_score > pet_score:
+                        pet_score = profile_pet_score
+
+                    if "experience" in profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"]:
+                        if profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"]["experience"] > catacombs_xp:
+                            catacombs_xp = profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"]["experience"]
+                            catacombs_level = Skyblock.CATACOMBS_XP_REQUIREMENTS.index(utils.level_from_table(catacombs_xp, Skyblock.CATACOMBS_XP_REQUIREMENTS)) + 1
                 except KeyError:
                     pass
-        for profile in player["profiles"]:
-            try:
-                bank += (profile["banking"]["balance"])
-            except KeyError:
-                pass
-            try:
-                minion_slot_requirements = [0, 0, 0, 0, 0, 5, 15, 30, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275,
-                                            300,
-                                            350, 400, 450, 500, 550, 600, 650]
-                extra_slots = len(
-                    [z for z in profile["community_upgrades"]["upgrade_states"] if z["upgrade"] == "minion_slots"])
-                slots[profile["profile_id"]] = minion_slot_requirements.index(utils.level_from_table(
-                    slots[profile["profile_id"]] + extra_slots, minion_slot_requirements))
-            except KeyError:
-                pass
-
-        money_roles = {676694080830439425: 50_000_000, 676694161541300225: 150_000_000}
         roles = []
         if max(skill_averages) >= 20:
-            roles.append(853259525406195762)
+            roles.append(Role.SkyblockRole.NOVICE_SKILLER)
         if max(skill_averages) >= 35:
-            roles.append(853259618645835776)
+            roles.append(Role.SkyblockRole.EXPERIENCED_SKILLER)
         if max(skill_averages) >= 50:
-            roles.append(853259716531978251)
+            roles.append(Role.SkyblockRole.MASTER_SKILLER)
         if max(souls) >= 210:
-            roles.append(676694230382411777)
-        for i in money_roles:
-            if bank > money_roles[i]:
-                roles.append(i)
+            roles.append(Role.SkyblockRole.FAIRY)
         if slayers:
-            roles.append(694957553079287860)
+            roles.append(Role.SkyblockRole.EXPERIENCED_SLAYER)
             if 9 in slayers:
-                roles.append(694957649703337995)
-        if max(slots.values()) >= 25:
-            roles.append(678152501295448074)
-        if len(pets) >= 25:
-            roles.append(703135943653326899)
+                roles.append(Role.SkyblockRole.SEASONED_SLAYER)
+        if pet_score > 100:
+            roles.append(Role.SkyblockRole.MENAGERIST)
+        if catacombs_level >= 20:
+            roles.append(Role.SkyblockRole.CATA_20)
+            if catacombs_level >= 30:
+                roles.append(Role.SkyblockRole.CATA_30)
+                if catacombs_level >= 40:
+                    roles.append(Role.SkyblockRole.CATA_40)
         embed = discord.Embed(title="Roles added :scroll:", color=0xfb00fd)
         embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
         embed.set_thumbnail(url=f"https://mc-heads.net/head/{ign}")
@@ -520,10 +527,11 @@ class util(commands.Cog, name="Other"):
         await ctx.author.add_roles(*roles)
         if not string:
             return await ctx.send(
-                embed=discord.Embed(title=":hear_no_evil: Oh no!", description="You don't qualify for any roles ):",
-                                    color=0xff0000).set_footer(
-                    text="Think you deserve some roles? Make sure all API settings are enabled").set_author(
-                    name=ctx.author, icon_url=ctx.author.avatar_url))
+                embed=discord.Embed(title=":hear_no_evil: Oh no!",
+                                    description="You don't qualify for any roles ):",
+                                    color=0xff0000)
+                    .set_footer(text="Think you deserve some roles? Make sure all API settings are enabled")
+                    .set_author(name=ctx.author, icon_url=ctx.author.avatar_url))
         embed.add_field(
             name=f"Added {len(roles)} roles for {ctx.author.display_name} as {ign}",
             value=string, inline=False)
@@ -535,6 +543,7 @@ class util(commands.Cog, name="Other"):
 
     @commands.command(name="tag")
     async def tag_command(self, ctx: commands.Context, *, tag: str):
+        """View a tag"""
         for tag_object in self.tags:
             if tag.lower() == tag_object["name"].lower() or tag.lower() in [z.lower() for z in tag_object["aliases"]]:
                 return await ctx.send(tag_object["response"])
@@ -542,12 +551,14 @@ class util(commands.Cog, name="Other"):
 
     @commands.command(name="tags")
     async def tags_command(self, ctx: commands.Context):
+        """View a list of all saved tags"""
         tags = "\n".join([f'+ {z["name"]} : {", ".join(z["aliases"])}' for z in self.tags])
         await ctx.send(f"All available tags: ```diff\n{tags}\n```", allowed_mentions=discord.AllowedMentions(roles=False, everyone=False))
 
-    @commands.command()
+    @commands.command(hidden=True)
     @staff_only
     async def add_tag(self, ctx: commands.Context, name: str):
+        """Add a new tag"""
         check = lambda message: message.channel.id == ctx.channel.id and message.author.id == ctx.author.id
         await ctx.send("Send a comma-delimited list of aliases for this tag")
         try:
@@ -560,9 +571,10 @@ class util(commands.Cog, name="Other"):
         utils.saveFileJson(self.tags, 'config/tags')
         await ctx.send(f"Added tag `{name}`")
 
-    @commands.command()
+    @commands.command(hidden=True)
     @staff_only
     async def del_tag(self, ctx: commands.Context, *, tag: str):
+        """Delete an unwanted tag"""
         for i, tag_object in enumerate(self.tags):
             if tag.lower() == tag_object["name"] or tag.lower() in [z.lower() for z in tag_object["aliases"]]:
                 self.tags.pop(i)
@@ -631,4 +643,4 @@ class util(commands.Cog, name="Other"):
 
 
 def setup(bot):
-    bot.add_cog(util(bot, False))
+    bot.add_cog(Util(bot, False))

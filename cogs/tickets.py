@@ -13,7 +13,7 @@ TICKET_TOPIC_REGEX = r"opened by (?P<user>.+#\d{4}) \((?P<user_id>\d+)\) at (?P<
 
 
 def restrict_ticket_command_usage(ctx: commands.Context, raise_on_false=True):
-    if ctx.channel.category.id != Channel.TICKETS:
+    if ctx.channel.category.id != Channel.OPEN_TICKET:
         if raise_on_false:
             raise commands.MissingPermissions(["manage_ticket"])
         else:
@@ -194,7 +194,7 @@ def next_author(author, timestamp):
 
 ticket_types = {
     "💰": {
-        "name": "giveaway donation",
+        "name": "Giveaway Donation",
         "questions": [
             "How long will the giveaway last?",
             "How many winners will there be?",
@@ -203,7 +203,7 @@ ticket_types = {
         ],
     },
     "🛄": {
-        "name": "giveaway claim",
+        "name": "Giveaway Claim",
         "questions": [
             "What is the link to the giveaway that you won?",
             "What is the name of the account on which you wish to claim the giveaway?",
@@ -211,7 +211,7 @@ ticket_types = {
         ],
     },
     "❓": {
-        "name": "other",
+        "name": "Other",
         "questions": [
             "Why have you opened this ticket?",
         ],
@@ -220,6 +220,8 @@ ticket_types = {
 
 
 class Tickets(commands.Cog):
+    """The tickets system, and all related commands"""
+
     def __init__(self, bot):
         self.hidden = False
         self.bot = bot
@@ -229,18 +231,20 @@ class Tickets(commands.Cog):
     def load_message_ids(self):
         self.message_ids = getFileJson("config")["ticket_messages"]
 
-    @commands.command()
+    @commands.command(hidden=True)
     @staff_only
     async def addTicketMessage(self, ctx, message: discord.Message):
+        """Add a message that should trigger ticket creation"""
         config = getFileJson("config")
         config["ticket_messages"].append(message.id)
         saveFileJson(config, "config")
         self.load_message_ids()
         await ctx.send("Successfully added message")
 
-    @commands.command()
+    @commands.command(hidden=True)
     @staff_only
     async def removeTicketMessage(self, ctx, message: discord.Message):
+        """Remove a message from those that can trigger ticket creation"""
         config = getFileJson("config")
         config["ticket_messages"].remove(message.id)
         saveFileJson(config, "config")
@@ -253,6 +257,15 @@ class Tickets(commands.Cog):
             return
         if str(payload.emoji) in ticket_types:
             guild: discord.Guild = self.bot.get_guild(payload.guild_id)
+            channel: discord.TextChannel = guild.get_channel(Channel.OPEN_TICKET)
+            owned_ticket_count = 0
+            for c in channel.category.channels:
+                if isinstance(c, discord.TextChannel):
+                    if c.topic is not None:
+                        if str(payload.member.id) in c.topic:
+                            owned_ticket_count += 1
+                            if owned_ticket_count >= 3:
+                                return await payload.member.send("You have too many open tickets!")
             msg: discord.Message = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
             await msg.remove_reaction(payload.emoji, payload.member)
             embed = discord.Embed(title=ticket_types[str(payload.emoji)]["name"], colour=discord.Colour.green(),
@@ -274,7 +287,7 @@ class Tickets(commands.Cog):
                     return await payload.member.send("Ticket creation timed out")
             channel: discord.TextChannel = await guild.create_text_channel(
                 f"{payload.member.name}-{payload.member.discriminator}",
-                category=guild.get_channel(Channel.TICKETS),
+                category=guild.get_channel(Channel.OPEN_TICKET),
                 topic=f"opened by {payload.member} ({payload.member.id}) at {datetime.datetime.now().strftime('%d/%m/%y %H:%M')}",
                 overwrites={
                     guild.default_role: discord.PermissionOverwrite(
@@ -291,7 +304,7 @@ class Tickets(commands.Cog):
                         read_messages=True,
                         send_messages=True)
                 })
-            start = await channel.send(f"<@&{Role.TICKET_PING}> {payload.member.mention}", embed=embed)
+            start = await channel.send(f"<@&{Role.TICKET_PING}e> {payload.member.mention}", embed=embed)
             await start.pin()
             await payload.member.send(f"Ticket created! {start.jump_url}")
             await guild.get_channel(Channel.MOD_LOGS).send(
@@ -305,18 +318,21 @@ class Tickets(commands.Cog):
 
     @commands.command()
     async def adduser(self, ctx: commands.Context, *, member: discord.Member):
+        """Add a user to a ticket"""
         restrict_ticket_command_usage(ctx)
         await ctx.channel.set_permissions(member, read_messages=True)
         await ctx.send(f"{ctx.author.mention} added {member.mention} to this ticket")
 
     @commands.command()
     async def pin(self, ctx: commands.Context, message: str = "none"):
+        """Pin a message in a ticket"""
         restrict_ticket_command_usage(ctx)
         message: discord.Message = await MessageOrReplyConverter().convert(ctx, message)
         await message.pin(reason=f"pinned by {ctx.author}")
 
     @commands.command()
     async def unpin(self, ctx: commands.Context, message: str = "none"):
+        """Unpin a message in a ticket"""
         restrict_ticket_command_usage(ctx)
         message: discord.Message = await MessageOrReplyConverter().convert(ctx, message)
         await message.unpin(reason=f"unpinned by {ctx.author}")
@@ -324,6 +340,7 @@ class Tickets(commands.Cog):
 
     @commands.command()
     async def removeuser(self, ctx: commands.Context, *, member: discord.Member):
+        """Remove a user from a ticket"""
         restrict_ticket_command_usage(ctx)
         string = f"{ctx.author.mention} removed {member.mention} from this ticket"
         member_ctx = ctx
@@ -336,6 +353,7 @@ class Tickets(commands.Cog):
 
     @commands.command()
     async def close(self, ctx, *, reason: str = None):
+        """Close a ticket"""
         restrict_ticket_command_usage(ctx)
         with open(f"transcripts/{ctx.channel.name}.html", 'w', encoding="utf-8") as f:
             f.write(transcribe(reversed([z async for z in ctx.channel.history(limit=500)])))

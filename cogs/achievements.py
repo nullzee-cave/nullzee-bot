@@ -22,6 +22,7 @@ import imageio
 subscriber = Subscriber()
 
 class Achievements(commands.Cog):
+    """The achievements system"""
 
     def __init__(self, bot):
         self.hidden = True
@@ -185,6 +186,7 @@ class Achievements(commands.Cog):
 
     @commands.command(aliases=["inv"])
     async def inventory(self, ctx):
+        """View all of your achievement backgrounds and box borders"""
         bg_embed = (await self.get_bg_inv(ctx.author)).set_footer(text="page 1 of 2")
         bb_embed = (await self.get_bb_inv(ctx.author)).set_footer(text="page 2 of 2")
         msg = await ctx.send(embed=bg_embed)
@@ -192,6 +194,7 @@ class Achievements(commands.Cog):
 
     @commands.group(name="boxBorder", invoke_without_command=True, aliases=["bb"])
     async def box_border(self, ctx):
+        """Boxborder related commands"""
         await ctx.send(embed=discord.Embed(
             title="-boxBorder",
             description="\n".join([f":arrow_right: `{ctx.prefix}boxBorder {z.name} {z.signature}`"
@@ -201,6 +204,7 @@ class Achievements(commands.Cog):
 
     @box_border.command(name="shop")
     async def bb_shop(self, ctx):
+        """The boxborder shop"""
         user_data = await get_user(ctx.author)
         balance = user_data["achievement_points"]
         backgrounds = [f"{z} - {BoxBorderMeta.get()[z].cost} achievement points" for z in BoxBorderMeta.get()
@@ -212,17 +216,20 @@ class Achievements(commands.Cog):
     @box_border.command(name="preview")
     @commands.cooldown(10, 1, BucketType.user)
     async def bb_preview(self, ctx, *, image: BoxBorderConverter = None):
+        """Preview the boxborders"""
         await ctx.send(file=discord.File(
             f"image_cache/static_boxborder_previews/{f'{image}.png' if image else 'animated.gif'}"
         ))
 
     @box_border.command(name="inventory", aliases=["inv"])
     async def bb_inventory(self, ctx):
+        """View your boxborders"""
         embed = await self.get_bb_inv(ctx.author)
         await ctx.send(embed=embed)
 
     @box_border.command(name="select", aliases=["equip"])
     async def bb_select(self, ctx, *, item: BoxBorderConverter):
+        """Select which boxborder you would like to use"""
         user_data = await get_user(ctx.author)
         if item not in user_data["achievement_inventory"]["box_borders"]:
             return await ctx.send("You have not unlocked that border yet!")
@@ -231,6 +238,7 @@ class Achievements(commands.Cog):
 
     @box_border.command(name="purchase", aliases=["buy"])
     async def bb_purchase(self, ctx, *, item: BoxBorderConverter):
+        """Purchase a new boxborder"""
         user_data = await get_user(ctx.author)
         item_data = BoxBorderMeta.get()[item]
         if item in user_data["achievement_inventory"]["box_borders"]:
@@ -245,6 +253,7 @@ class Achievements(commands.Cog):
 
     @commands.group(invoke_without_command=True, aliases=["backgrounds", "bg"])
     async def background(self, ctx):
+        """Background related commands"""
         await ctx.send(embed=discord.Embed(
             title="-background",
             description="\n".join([f":arrow_right: `{ctx.prefix}background {z.name} {z.signature}`"
@@ -254,6 +263,7 @@ class Achievements(commands.Cog):
 
     @background.command(name="shop")
     async def bg_shop(self, ctx):
+        """The background shop"""
         user_data = await get_user(ctx.author)
         balance = user_data["achievement_points"]
         backgrounds = [f"{z} - {BackgroundMeta.get()[z].cost} achievement points" for z in BackgroundMeta.get()
@@ -265,17 +275,20 @@ class Achievements(commands.Cog):
     @background.command(name="preview")
     @commands.cooldown(10, 1, BucketType.user)
     async def bg_preview(self, ctx, *, image: BackgroundConverter = None):
+        """Preview the backgrounds"""
         await ctx.send(file=discord.File(
             f"image_cache/static_background_previews/{f'{image}.png' if image else 'animated.gif'}"
         ))
 
     @background.command(name="inventory", aliases=["inv"])
     async def bg_inventory(self, ctx):
+        """View your backgrounds"""
         embed = await self.get_bg_inv(ctx.author)
         await ctx.send(embed=embed)
 
     @background.command(name="select", aliases=["equip"])
     async def bg_select(self, ctx, *, item: BackgroundConverter):
+        """Select which background you would like to use"""
         user_data = await get_user(ctx.author)
         if item not in user_data["achievement_inventory"]["backgrounds"]:
             return await ctx.send("You have not unlocked that background yet!")
@@ -284,6 +297,7 @@ class Achievements(commands.Cog):
 
     @background.command(name="purchase", aliases=["buy"])
     async def bg_purchase(self, ctx, *, item: BackgroundConverter):
+        """Purchase a new background"""
         user_data = await get_user(ctx.author)
         item_data = BackgroundMeta.get()[item]
         if item in user_data["achievement_inventory"]["backgrounds"]:

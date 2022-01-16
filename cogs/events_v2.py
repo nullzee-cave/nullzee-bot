@@ -5,22 +5,41 @@ import discord
 import asyncio
 import typing
 
-from helpers.constants import Role
+from helpers.constants import Role, Misc
+from helpers.utils import role_ids, list_one
 
-LOG_CHANNEL = 760898316405571615
 
-event_perms = commands.has_any_role(Role.EVENT_HOSTER, Role.STAFF, Role.TRAINEE)
+def event_perms(ctx):
+    if not ctx.guild or ctx.guild.id != Misc.GUILD:
+        return False
+    roles = role_ids(ctx.author.roles)
+    return list_one(roles, Role.EVENT_HOSTER, Role.ADMIN, Role.STAFF, Role.TRAINEE)
+
+
+event_perms_check = commands.check(event_perms)
 
 
 @dataclass
 class Event:
+    """
+    An Event
+
+    For discord based events
+
+    Attributes:
+    owner (discord.Member): the person who started the event
+    channel (discord.TextChannel): the channel where the event was started
+    arg (str): anything else about the event, could be the name of the event, a skribbl.io link, etc
+    participants (typing.Dict[str, discord.Member]): a dict of ign:user
+    """
     owner: discord.Member
     channel: discord.TextChannel
-    url: str
+    arg: str
     participants: typing.Dict[str, discord.Member]
 
 
 class Events(commands.Cog, name="events"):
+    """All commands related to events that are hosted in Nullzee's Cave"""
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
@@ -30,6 +49,7 @@ class Events(commands.Cog, name="events"):
     @commands.command()
     @commands.guild_only()
     async def joinEvent(self, ctx: commands.Context):
+        """Join a currently running event"""
         if self.event is None:
             return await ctx.send("There is no event active!")
         if ctx.author in self.event.participants.values():
@@ -57,25 +77,28 @@ class Events(commands.Cog, name="events"):
                                                ))
         await ctx.author.send(f"You have signed up for the event as `{ign}`. "
                               "Please use the name you selected above or you will be kicked from the game"
-                              f"\n{self.event.url}")
+                              f"\n{self.event.arg}")
 
     @commands.command()
-    @event_perms
-    async def startEvent(self, ctx: commands.Context, url: str, channel: discord.TextChannel = None):
+    @event_perms_check
+    async def startEvent(self, ctx: commands.Context, arg: str, channel: discord.TextChannel = None):
+        """Start a new event"""
         if self.event is not None:
             return await ctx.send("There is already an active event!")
-        self.event = Event(ctx.author, channel, url, {})
+        self.event = Event(ctx.author, channel, arg, {})
         await ctx.send("Event started")
 
     @commands.command()
-    @event_perms
+    @event_perms_check
     async def endEvent(self, ctx: commands.Context):
+        """End a currently running event"""
         self.event = None
         await ctx.send("Event ended")
 
     @commands.command()
-    @event_perms
+    @event_perms_check
     async def eventIgn(self, ctx: commands.Context, ign: str):
+        """Check which user signed up with a specific ign"""
         if not self.event:
             return await ctx.send("There is no event active")
         if ign not in self.event.participants:

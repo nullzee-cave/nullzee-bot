@@ -15,6 +15,8 @@ import aiohttp
 import json
 
 class events(commands.Cog, name="events"):
+    """The original events cog"""
+
     def __init__(self, bot, hidden):
         self.hidden = hidden
         self.bot = bot

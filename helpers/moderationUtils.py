@@ -4,10 +4,8 @@ import discord
 import datetime
 from api_key import moderationColl
 
-# MUTED_ROLE = 678911295835078657
-MUTED_ROLE = 749178299518943343
-GUILD_ID = 667953033929293855
-LOG_CHANNEL_ID = 667957285837864960
+from helpers.constants import Channel, Misc
+
 DELETE_WARNS_AFTER = 1209600
 
 PAST_PARTICIPLES = {
@@ -31,11 +29,13 @@ SEVERITY = {
     "ban": 9,
 }
 
-
 doc = {}
+
+
 async def update_config():
     global doc
     doc = await moderationColl.find_one({"_id": "config"})
+
 
 async def get_config():
     if not doc:
@@ -48,7 +48,6 @@ class BannedUser(object):
         self.id = _id
 
 
-# noinspection SpellCheckingInspection
 async def automod_name(user: discord.Member):
     config = await get_config()
     for word in config["badWords"]:
@@ -73,7 +72,8 @@ async def send_report(ctx, message, reason):
         name=message.author, icon_url=message.author.avatar_url)
     if message.attachments:
         embed.set_image(url=message.attachments[0].url)
-    await ctx.guild.get_channel(771061232642949150).send(embed=embed)
+    await ctx.guild.get_channel(Channel.REPORTS_APPEALS).send(embed=embed)
+
 
 async def warn_punishments(ctx, user):
     warns = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
@@ -91,9 +91,10 @@ async def warn_punishments(ctx, user):
         return await ctx.invoke(cmd, user, reason=f"{score} warnings")
     await ctx.invoke(cmd, user, punishment["duration"], reason=f"{score} warnings")
 
+
 async def end_punishment(bot, payload, moderator, reason):
     try:
-        guild = bot.get_guild(GUILD_ID)
+        guild = bot.get_guild(Misc.GUILD)
         if payload["type"] == "mute":
             member = guild.get_member(payload["offender_id"])
             await member.remove_roles(guild.get_role((await get_config())["muteRole"]))
@@ -103,17 +104,20 @@ async def end_punishment(bot, payload, moderator, reason):
     except:
         return
 
+
 def chatEmbed(ctx, payload):
     offender = ctx.bot.get_user(payload["offender_id"])
     embed = discord.Embed(title=f'**{PAST_PARTICIPLES[payload["type"]]}**', colour=COLOURS[payload["type"]], description=payload["reason"] if payload["reason"] else "").set_author(name=offender, icon_url=offender.avatar_url)
     return embed
+
 
 async def end_log(bot, payload, *, moderator, reason):
     user = bot.get_user(payload["offender_id"])
     embed = discord.Embed(title=f"Un{payload['type']}", colour=discord.Colour.green()).set_author(name=(user or "not found"), icon_url=(user.avatar_url if hasattr(user, "avatar_url") else ""))
     embed.add_field(name="Reason", value=reason, inline=False)
     embed.add_field(name="Moderator", value=moderator, inline=False)
-    await bot.get_guild(GUILD_ID).get_channel(LOG_CHANNEL_ID).send(embed=embed)
+    await bot.get_guild(Misc.GUILD).get_channel(Channel.MOD_LOGS).send(embed=embed)
+
 
 async def log(bot, payload):
     offender = bot.get_user(payload["offender_id"])
@@ -124,4 +128,4 @@ async def log(bot, payload):
         embed.add_field(name="Duration", value=payload["duration_string"])
     embed.set_footer(text=f"Case ID: {payload['id']}")
     embed.timestamp = datetime.datetime.now()
-    await bot.get_guild(GUILD_ID).get_channel(LOG_CHANNEL_ID).send(embed=embed)
+    await bot.get_guild(Misc.GUILD).get_channel(Channel.MOD_LOGS).send(embed=embed)

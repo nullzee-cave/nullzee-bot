@@ -150,8 +150,8 @@ achievements = {
     "Up to date": {
         "listeners": {
             "update_roles": lambda _, roles: {Role.POLL_PING, Role.QOTD_PING, Role.EVENT_PING,
-                                              Role.DEAD_CHAT_PING,
-                                              Role.GIVEAWAY_PING, Role.ANNOUNCEMENT_PING} <= set(
+                                              Role.DEAD_CHAT_PING, Role.GIVEAWAY_PING,
+                                              Role.ANNOUNCEMENT_PING, Role.SKYBLOCK_PING} <= set(
                 role_ids(roles))
         },
         "description": "Have all ping roles",
@@ -367,14 +367,6 @@ achievements = {
         },
         "value": 2
     },
-    "Get 15+ downvotes on a suggestion": {
-        "description": "Terrible idea",
-        "listeners": {
-            "bad_suggestion": lambda _: True
-        },
-        "value": -1,
-        "hidden": True
-    },
     "Talented": {
         "description": "Produce something pretty cool",
         "listeners": {
@@ -400,7 +392,7 @@ achievements = {
     "Nullzee Simp": {
         "description": "Have the mega fan role",
         "listeners": {
-            "update_roles": lambda _, roles: Role.MEGA_FAN in role_ids(roles)
+            "update_roles": lambda _, roles: Role.SkyblockRole.MEGA_FAN in role_ids(roles)
         },
         "value": 3,
 
@@ -532,6 +524,8 @@ def listeners_for(event):
 award_queue = {}
 
 subscriber = Subscriber()
+
+
 @subscriber.listen_all()
 async def listen(event, ctx, *args, **kwargs):
     for achievement in listeners_for(event):

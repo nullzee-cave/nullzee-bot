@@ -11,15 +11,17 @@ import datetime
 from EZPaginator import Paginator
 
 
-class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns, mutes etc.
+class Moderation(commands.Cog, name="Moderation"):
+    """Moderation commands, such as warn, mute, kick, etc"""
+
     def __init__(self, bot, hidden):
         self.hidden = hidden
         self.bot = bot
 
-    @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @commands.command(hidden=True)
+    @staff_or_trainee
     async def warn(self, ctx, user: discord.Member, *, reason: str):
-        '''Give a user a warning'''
+        """Give a user a warning"""
         payload = payloads.warn_payload(offender_id=user.id, mod_id=ctx.author.id, reason=reason)
         message = await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
         payload = payloads.insert_message(payload, message)
@@ -31,11 +33,11 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
         except discord.Forbidden:
             await ctx.send("I could not dm them!")
 
-    @commands.command(aliases = ["shut"])
+    @commands.command(hidden=True, aliases=["shut"])
     @staff_or_trainee
     async def mute(self, ctx, user: discord.Member, _time: typing.Optional[TimeConverter] = None, *,
                    reason: str = "none"):
-        '''Mute a user'''
+        """Mute a user"""
         if user.guild_permissions.manage_messages:
             return await ctx.send("You cannot mute a moderator/administrator")
         payload = payloads.mute_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason)
@@ -51,20 +53,20 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
         except discord.Forbidden:
             await ctx.send("I could not dm them!")
 
-    @commands.command()
+    @commands.command(hidden=True)
     @staff_or_trainee
     async def unmute(self, ctx, user: discord.Member, *, reason: str = "none"):
-        '''Unmute a user'''
+        """Unmute a user"""
         await moderationColl.delete_many({"offender_id": user.id, "type": "mute"})
         await user.remove_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]), reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
         await moderationUtils.end_log(self.bot, {"type": "mute", "offender_id": user.id}, moderator=ctx.author,
                                       reason=reason)
         await ctx.send(embed=discord.Embed(description=f"unmuted {user}", colour=discord.Colour.green()))
 
-    @commands.command(aliases=["yeet"])
+    @commands.command(hidden=True, aliases=["yeet"])
     @staff_or_trainee
     async def ban(self, ctx, user: MemberUserConverter, _time: typing.Optional[TimeConverter]=None, *, reason: str = "none"):
-        '''Ban a user'''
+        """Ban a user"""
         if isinstance(user, discord.Member):
             if user.guild_permissions.manage_messages:
                 return await ctx.send("You cannot ban a moderator/administrator")
@@ -81,10 +83,10 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
         await moderationColl.insert_one(payload)
         await moderationUtils.log(self.bot, payload)
 
-    @commands.command()
+    @commands.command(hidden=True)
     @staff_or_trainee
     async def unban(self, ctx, member, *, reason: str = "none"):
-        '''Unban a user'''
+        """Unban a user"""
         try:
             await ctx.guild.unban(moderationUtils.BannedUser(member), reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
         except (discord.NotFound, discord.HTTPException):
@@ -93,10 +95,10 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
                                       reason=reason)
         await ctx.send(embed=discord.Embed(description=f"**{member} was unbanned**", color=discord.Colour.green()))
 
-    @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @commands.command(hidden=True)
+    @staff_or_trainee
     async def delwarn(self, ctx, _id: str):
-        '''Delete a warning from someone'''
+        """Delete a warning from someone"""
         doc = await moderationColl.find_one({"id": _id})
         if not doc:
             return await ctx.send("Could not find that warning")
@@ -104,10 +106,10 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
             await moderationColl.update_one(doc, {"$set": {"expired": True}})
             await ctx.send("Successfully deleted warning `{}`".format(_id))
 
-    @commands.command(aliases = ["boot"])
+    @commands.command(hidden=True, aliases=["boot"])
     @staff_or_trainee
     async def kick(self, ctx, user: discord.Member, *, reason: str = "none"):
-        '''Kick a user'''
+        """Kick a user"""
         if user.guild_permissions.manage_messages:
             embed = discord.Embed(description="You cannot kick a moderator/administrator", color=0xff0000)
             return await ctx.send(embed=embed)
@@ -123,10 +125,10 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
             pass
         await user.kick(reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
 
-    @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @commands.command(hidden=True)
+    @staff_or_trainee
     async def punishments(self, ctx, user: MemberUserConverter = None):
-        '''View a user's punishments'''
+        """View a user's punishments"""
         user = user if user else ctx.author
         warnings = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
         embed = discord.Embed(title=f"{len(warnings)} punishments", colour=discord.Colour.green())
@@ -137,10 +139,10 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
                             inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @commands.command(hidden=True)
+    @staff_or_trainee
     async def warnings(self, ctx, user: MemberUserConverter = None):
-        '''View a user's warnings'''
+        """View a user's warnings"""
         user = user if user else ctx.author
         warnings = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False, "type": "warn"})]
         embed = discord.Embed(title=f"{len(warnings)} warnings", colour=discord.Colour.green())
@@ -151,10 +153,10 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
                             inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @commands.command(hidden=True)
+    @staff_or_trainee
     async def modlogs(self, ctx, user: MemberUserConverter):
-        '''View all of a user's moderation logs'''
+        """View all of a user's moderation logs"""
         user = user if user else ctx.author
         infractions = [z async for z in moderationColl.find({"offender_id": user.id})]
         if not infractions:
@@ -176,12 +178,11 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
             e.set_footer(text=f"page {i+1} of {len(embeds)}")
         pages = Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author)
         await pages.start()
-                
-                
-    @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
-    async def whereiswarn(self, ctx, warn:str):
-        '''Find where someone was warned'''
+
+    @commands.command(hidden=True)
+    @staff_or_trainee
+    async def whereiswarn(self, ctx, warn: str):
+        """Find where someone was warned"""
         warning = await moderationColl.find_one({"id": warn})
         if not warning:
             return await ctx.send("Could not find a warning with that ID")
@@ -191,8 +192,6 @@ class Moderation(commands.Cog, name="Moderation"):  # moderation commands, warns
     async def cog_after_invoke(self, ctx):
         await ctx.message.delete()
                 
-                
-
 
 def setup(bot):
     bot.add_cog(Moderation(bot, True))
