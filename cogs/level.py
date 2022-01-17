@@ -71,7 +71,12 @@ class Levelling(commands.Cog, name="levelling"):
                         break
                     else:
                         roles.append(after.guild.get_role(int(levelroles[str(lr)])))
-            await after.add_roles(*roles)
+            for role in roles:
+                try:
+                    await after.add_role(role)
+                except AttributeException as e:
+
+
 
     def update_multipliers(self):
         with open('config.json') as f:
