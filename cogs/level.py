@@ -73,7 +73,7 @@ class Levelling(commands.Cog, name="levelling"):
                         roles.append(after.guild.get_role(int(levelroles[str(lr)])))
             for role in roles:
                 try:
-                    await after.add_role(role)
+                    await after.add_roles(role)
                 except AttributeError as err:
                     print(f"Error: {role} - {role.id}")
                     print(err.__traceback__)
