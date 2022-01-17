@@ -75,7 +75,8 @@ class Levelling(commands.Cog, name="levelling"):
                 try:
                     await after.add_role(role)
                 except AttributeException as e:
-
+                    print(f"Error: {role} - {role.id}")
+                    print(e.__traceback__)
 
 
     def update_multipliers(self):
