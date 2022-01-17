@@ -35,7 +35,6 @@ class Levelling(commands.Cog, name="levelling"):
     @tasks.loop(minutes=1)
     async def vc_tracker(self):
         guild: discord.Guild = self.bot.get_guild(Misc.GUILD)
-        timed_roles = getFileJson("levelroles")["vc"]
         for channel in filter(lambda x: isinstance(x, discord.VoiceChannel), guild.channels):
             channel: discord.VoiceChannel
             for member in channel.members:
@@ -44,7 +43,7 @@ class Levelling(commands.Cog, name="levelling"):
                     user_data = await get_user(member)
                     await Emitter().emit("vc_minute_gain", await ShallowContext.create(member), user_data["vc_minutes"])
                     await userColl.update_one({"_id": str(member.id)}, {"$inc": {"vc_minutes": 1}})
-                    to_add = [guild.get_role(int(timed_roles[z])) for z in timed_roles if user_data["vc_minutes"] > int(z) and int(timed_roles[z]) not in role_ids(member.roles)]
+                    to_add = [guild.get_role(int(Role.LevelRoles.VC_ROLES[z])) for z in Role.LevelRoles.VC_ROLES if user_data["vc_minutes"] > int(z) and int(Role.LevelRoles.VC_ROLES[z]) not in role_ids(member.roles)]
                     if not all(role is None for role in to_add):
                         await member.add_roles(*to_add)
 
@@ -60,23 +59,21 @@ class Levelling(commands.Cog, name="levelling"):
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         if before.pending and not after.pending:
-            with open('levelroles.json') as f:
-                levelroles = json.load(f)["levels"]
-            roles = [after.guild.get_role(levelroles["1"])]
+            # roles = [after.guild.get_role(Role.LevelRoles.LEVELS["1"])]
             user_data = await userColl.find_one({"_id": str(after.id)})
+            # role_ids = []
             if user_data:
                 level = user_data["level"]
-                for lr in levelroles:
+                for lr in Role.LevelRoles.LEVELS:
                     if int(lr) > level:
                         break
                     else:
-                        roles.append(after.guild.get_role(int(levelroles[str(lr)])))
-            for role in roles:
-                try:
-                    await after.add_roles(role)
-                except AttributeError as err:
-                    print(f"Error: {role} - {role.id}")
-                    print(err.__traceback__)
+                        role = after.guild.get_role(int(Role.LevelRoles.LEVELS[str(lr)]))
+                        if role not in after.roles:
+                            await after.add_roles(role)
+                            # roles.append(role)
+                        # role_ids.append(int(Role.LevelRoles.LEVELS[str(lr)]))
+                # await after.add_roles(*roles)
 
 
     def update_multipliers(self):
@@ -182,10 +179,8 @@ class Levelling(commands.Cog, name="levelling"):
                                                                                       "last_points"] + 100))}})
                 await message.channel.send(
                     f":tada: Congrats {message.author.mention}, you levelled up to level {lvl_start + 1}!")
-                with open('levelroles.json') as f:
-                    levelroles = json.load(f)["levels"]
-                if str(lvl_start + 1) in levelroles:
-                    role = message.guild.get_role(int(levelroles[str(lvl_start + 1)]))
+                if str(lvl_start + 1) in Role.LevelRoles.LEVELS:
+                    role = message.guild.get_role(int(Role.LevelRoles.LEVELS[str(lvl_start + 1)]))
                     await message.author.add_roles(role)
 
     @commands.command(aliases=['level', "lvl"])
