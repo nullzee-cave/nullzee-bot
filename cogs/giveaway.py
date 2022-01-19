@@ -70,7 +70,7 @@ class Giveaway(commands.Cog, name="giveaway"):
             if len(role_reqs) > 1:
                 await ctx.send("Must users have [1] all of these roles or [2] any one of them?")
                 role_req_strategy = await self.get_input(ctx)
-                role_req_strategy = int(role_req_strategy)
+                role_req_strategy = int(role_req_strategy.content)
 
         await ctx.send("What is the minimum level that users must be in order to win?")
         level_msg = await self.get_input(ctx)
