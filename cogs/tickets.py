@@ -274,14 +274,19 @@ class Tickets(commands.Cog):
                                               "`-adduser [user]` : add someone else to the ticket\n"
                                               "`-removeuser [user]` : remove someone else from the ticket")
             embed.set_author(name=payload.member, icon_url=payload.member.avatar_url)
+            images = []
             for question in ticket_types[str(payload.emoji)]["questions"]:
                 msg = await payload.member.send(question)
                 try:
+                    message = await self.bot.wait_for('message',
+                                                      check=lambda m: m.channel.id == msg.channel.id
+                                                                      and m.author.id == payload.member.id,
+                                                      timeout=300.0)
+                    if message.attachments is not None:
+                        for attachment in message.attachments:
+                            images.append(attachment.url)
                     embed.add_field(name=question,
-                                    value=(await self.bot.wait_for('message',
-                                                                   check=lambda m: m.channel.id == msg.channel.id
-                                                                                   and m.author.id == payload.member.id,
-                                                                   timeout=300.0)).content,
+                                    value=message.content if message.content else "`None`",
                                     inline=False)
                 except asyncio.TimeoutError:
                     return await payload.member.send("Ticket creation timed out")
