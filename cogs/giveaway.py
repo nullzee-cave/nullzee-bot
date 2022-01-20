@@ -249,6 +249,7 @@ class Giveaway(commands.Cog, name="giveaway"):
                 try:
                     await self.roll_giveaway(guild, giveaway)
                 except Exception as e:
+                    print(f"\nGiveaway failed to roll: {giveaway['_id']}")
                     print("exception occurred rolling giveaway: {0.__class.__name__}\n-\n{0}--".format(e))
 
 
