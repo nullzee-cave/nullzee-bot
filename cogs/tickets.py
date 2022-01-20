@@ -290,6 +290,8 @@ class Tickets(commands.Cog):
                                     inline=False)
                 except asyncio.TimeoutError:
                     return await payload.member.send("Ticket creation timed out")
+            if images:
+                embed.set_image(url=images[0])
             channel: discord.TextChannel = await guild.create_text_channel(
                 f"{payload.member.name}-{payload.member.discriminator}",
                 category=guild.get_channel(Channel.OPEN_TICKET),

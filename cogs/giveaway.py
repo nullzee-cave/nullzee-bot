@@ -4,6 +4,7 @@ import discord
 import random
 import time
 import math
+import traceback
 
 from helpers import payloads
 from helpers.constants import Role, Channel, Misc
@@ -211,6 +212,27 @@ class Giveaway(commands.Cog, name="giveaway"):
         else:
             await ctx.send("Could not find that giveaway")
 
+    @commands.command(name="gdeleteid", hidden=True)
+    @staff_or_trainee
+    async def gdelete_by_id(self, ctx, _id: int):
+        """
+        Delete a giveaway by ID
+
+        Added so I can stop manually deleting them when someone
+        doesn't use the command and the bot starts throwing errors
+        """
+        giveaway = await giveawayColl.find_one({"active": True, "_id": str(_id)})
+        if giveaway:
+            await giveawayColl.update_one({"_id": str(_id)}, {"$set": {"active": False}})
+            await ctx.send("Stopped the giveaway")
+            try:
+                msg = await ctx.guild.get_channel(int(giveaway["channel"])).fetch_message(int(giveaway["_id"]))
+                await msg.edit(content="*[giveaway deleted]*", embed=None)
+            except discord.NotFound:
+                pass
+        else:
+            await ctx.send("Could not find that giveaway")
+
     @commands.command(hidden=True)
     @staff_or_trainee
     async def reroll(self, ctx, message: discord.Message):
@@ -249,8 +271,9 @@ class Giveaway(commands.Cog, name="giveaway"):
                 try:
                     await self.roll_giveaway(guild, giveaway)
                 except Exception as e:
+                    await self.bot.get_guild(Misc.GUILD).get_member(540939418933133312).send(f"\nGiveaway failed to roll: `{giveaway['_id']}`")
                     print(f"\nGiveaway failed to roll: {giveaway['_id']}")
-                    print("exception occurred rolling giveaway: {0.__class.__name__}\n-\n{0}--".format(e))
+                    traceback.print_tb(e.__traceback__)
 
 
 def setup(bot):
