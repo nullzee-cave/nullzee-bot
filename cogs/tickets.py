@@ -265,7 +265,10 @@ class Tickets(commands.Cog):
                         if str(payload.member.id) in c.topic:
                             owned_ticket_count += 1
                             if owned_ticket_count >= 3:
-                                return await payload.member.send("You have too many open tickets!")
+                                try:
+                                    return await payload.member.send("You have too many open tickets!")
+                                except discord.Forbidden:
+                                    return
             msg: discord.Message = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
             await msg.remove_reaction(payload.emoji, payload.member)
             embed = discord.Embed(title=ticket_types[str(payload.emoji)]["name"], colour=discord.Colour.green(),
@@ -276,7 +279,10 @@ class Tickets(commands.Cog):
             embed.set_author(name=payload.member, icon_url=payload.member.avatar_url)
             images = []
             for question in ticket_types[str(payload.emoji)]["questions"]:
-                msg = await payload.member.send(question)
+                try:
+                    msg = await payload.member.send(question)
+                except discord.Forbidden:
+                    return
                 try:
                     message = await self.bot.wait_for('message',
                                                       check=lambda m: m.channel.id == msg.channel.id

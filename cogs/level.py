@@ -351,7 +351,6 @@ class Levelling(commands.Cog, name="levelling"):
             await userColl.update_one({"_id": str(user.id)}, {"$inc": {"experience": -xp}})
         await ctx.send(f"removed {xp} xp from {user.mention}")
 
-
     @commands.command(hidden=True)
     @commands.has_role(Role.ADMIN)
     async def setlevel(self, ctx, user: discord.Member, level: int):
@@ -368,6 +367,7 @@ class Levelling(commands.Cog, name="levelling"):
         await ctx.message.delete()
         await asyncio.sleep(3)
         await response_msg.delete()
+
 
 def setup(bot):
     bot.add_cog(Levelling(bot, False))
