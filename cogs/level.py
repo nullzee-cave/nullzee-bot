@@ -132,9 +132,12 @@ class Levelling(commands.Cog, name="levelling"):
             config["boost_multiplier_end"] = max(config["boost_multiplier_end"] + 3600, time.time() + 3600)
             saveFileJson(config)
             self.update_multipliers()
-        if message.author.bot:
-            return
         if not message.guild:
+            return
+        if isinstance(message.author, discord.Member) and \
+                int(Role.LevelRoles.LEVELS["1"]) not in role_ids(message.author.roles) and not message.author.pending:
+            await message.author.add_roles(message.guild.get_role(int(Role.LevelRoles.LEVELS["1"])))
+        if message.author.bot:
             return
         else:
             user_data = await get_user(message.author)

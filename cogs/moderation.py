@@ -65,7 +65,7 @@ class Moderation(commands.Cog, name="Moderation"):
 
     @commands.command(hidden=True, aliases=["yeet"])
     @staff_or_trainee
-    async def ban(self, ctx, user: MemberUserConverter, _time: typing.Optional[TimeConverter]=None, *, reason: str = "none"):
+    async def ban(self, ctx, user: MemberUserConverter, _time: typing.Optional[TimeConverter] = None, *, reason: str = "none"):
         """Ban a user"""
         if isinstance(user, discord.Member):
             if user.guild_permissions.manage_messages:
@@ -82,6 +82,13 @@ class Moderation(commands.Cog, name="Moderation"):
         await ctx.guild.ban(user, reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
         await moderationColl.insert_one(payload)
         await moderationUtils.log(self.bot, payload)
+
+    @commands.command(hidden=True, name="scamban", aliases=["syeet"])
+    @staff_or_trainee
+    async def scam_ban(self, ctx, user: MemberUserConverter, _time: typing.Optional[TimeConverter] = None):
+        await ctx.invoke(self.bot.get_command("ban"), user, _time,
+                         reason="Scam Links. When you regain access to your account, please DM a staff member "
+                                "or rejoin and open a ticket on another account to be unbanned.")
 
     @commands.command(hidden=True)
     @staff_or_trainee

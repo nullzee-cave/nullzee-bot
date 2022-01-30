@@ -115,7 +115,8 @@ class Staff(commands.Cog):
     @staff_or_trainee
     async def role(self, ctx, user: discord.Member, *, role: RoleConverter):
         """Give someone a role"""
-        if role.permissions.manage_messages or role.permissions.administrator or role.name.lower() == "muted":
+        if role.permissions.manage_messages or role.permissions.administrator \
+                or role.permissions.manage_roles or role.name.lower() in ["muted", "v~~staff roles~~v"]:
             return await ctx.send("You are not allowed to give that role")
         try:
             await user.add_roles(role, reason=f"Given by {ctx.author}")
@@ -130,7 +131,8 @@ class Staff(commands.Cog):
     @staff_or_trainee
     async def removerole(self, ctx, user: discord.Member, *, role: RoleConverter):
         """Remove a role from someone"""
-        if role.permissions.manage_messages or role.permissions.administrator or role.name.lower() == "muted":
+        if role.permissions.manage_messages or role.permissions.administrator \
+                or role.permissions.manage_roles or role.name.lower() in ["muted", "v~~staff roles~~v"]:
             return await ctx.send("You are not allowed to remove that role")
         try:
             await user.remove_roles(role, reason=f"Removed by {ctx.author}")
@@ -376,6 +378,31 @@ class Staff(commands.Cog):
     @badWords.command(hidden=True, name="remove")
     async def b_remove(self, ctx, word: str):
         await moderationColl.update_one({"_id": "config"}, {"$unset": {"badWords.{}".format(word.lower()): ""}})
+
+    @automod.group(hidden=True, invoke_without_command=True, case_insensitive=True)
+    async def scamLinks(self, ctx):
+        await ctx.send(
+            "\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.badWords.commands]))
+
+    @scamLinks.command(hidden=True, name="addLink")
+    async def s_add(self, ctx, link: str, action: str = "ban"):
+        split_link = link.split("/")
+        if len(split_link) < 3 or len(split_link) > 4 or "." not in split_link[2]:
+            return await ctx.send("Invalid link format")
+        formatted_link = f"https?;//{split_link[2].replace('.', ',')}"
+        await ctx.send(f"Added `http(s)://{split_link[2]}` to automod")
+        await moderationColl.update_one({"_id": "config"},
+                                        {"$set": {"scamLinks.{}".format(formatted_link.lower()): action}})
+
+    @scamLinks.command(hidden=True, name="remove")
+    async def s_remove(self, ctx, link: str):
+        split_link = link.split("/")
+        if len(split_link) < 3 or len(split_link) > 4 or "." not in split_link[2]:
+            return await ctx.send("Invalid link format")
+        formatted_link = f"https?;//{split_link[2].replace('.', ',')}"
+        await ctx.send(f"Removed `http(s)://{split_link[2]}` to automod")
+        await moderationColl.update_one({"_id": "config"},
+                                        {"$unset": {"scamLinks.{}".format(formatted_link.lower()): ""}})
 
     # whiteListedServers = ["667953033929293855","722421169311187037"]
     #
