@@ -57,6 +57,15 @@ class Automod(commands.Cog):
                     continue
                 await ctx.invoke(self.bot.get_command("report"), message,
                                  reason=f"{moderationUtils.PAST_PARTICIPLES[config['badWords'][word]]} by automod for this message in {ctx.channel.mention}")
+        for link in config["scamLinks"]:
+            formatted_link = link.replace(";", ":").replace(",", ".")
+            if re.findall(formatted_link, clean_content, flags=re.IGNORECASE):
+                if config["scamLinks"][link] == "ban":
+                    await ctx.invoke(self.bot.get_command("ban"), message.author,
+                                     reason="Scam Links. When you regain access to your account, please DM a staff "
+                                            "member or rejoin and open a ticket on another account to be unbanned.")
+                elif config["scamLinks"][link] == "delete":
+                    await ctx.message.delete()
 
     @tasks.loop(minutes=1)
     async def delete_warns(self):
