@@ -116,7 +116,7 @@ def chatEmbed(ctx, payload):
 def massBanChatEmbed(ctx, payload):
     mod = ctx.guild.get_member(payload["mod_id"])
     embed = discord.Embed(title="Mass Ban", colour=COLOURS["ban"],
-                          description=payload["offenders_string"][:400] + ("\n..." if len(payload["offenders_string"]) > 400 else ""))\
+                          description=payload["offenders_string"][:1900] + ("\n..." if len(payload["offenders_string"]) > 400 else ""))\
         .set_author(name=mod, icon_url=mod.avatar_url)
     return embed
 
@@ -127,13 +127,17 @@ async def end_log(bot, payload, *, moderator, reason):
         .set_author(name=(user or "not found"), icon_url=(user.avatar_url if hasattr(user, "avatar_url") else ""))\
         .set_footer(text=f"Offender ID: {payload['offender_id']}")
     embed.add_field(name="Reason", value=reason, inline=False)
-    embed.add_field(name="Moderator", value=moderator.mention, inline=False)
+    embed.add_field(name="Moderator", value=moderator if moderator == "Automod" else moderator.mention, inline=False)
+    # TODO: make a inverse of stringToSeconds() to format an integer value of seconds
+    # if "duration" in payload:
+    #     embed.add_field(name="Duration", value=payload["duration"], inline=False)
     await bot.get_guild(Misc.GUILD).get_channel(Channel.MOD_LOGS).send(embed=embed)
 
 
 async def log(bot, payload):
     offender = bot.get_user(payload["offender_id"])
-    embed = discord.Embed(title=payload["type"].capitalize(), colour=COLOURS[payload["type"]]).set_author(name=offender, icon_url=offender.avatar_url)
+    embed = discord.Embed(title=payload["type"].capitalize(), colour=COLOURS[payload["type"]])\
+        .set_author(name=offender, icon_url=offender.avatar_url)
     embed.add_field(name="Reason", value=payload["reason"], inline=False)
     embed.add_field(name="Moderator", value=f"<@{payload['mod_id']}>", inline=False)
     if "duration" in payload and payload["duration"]:
@@ -144,13 +148,13 @@ async def log(bot, payload):
 
 
 async def log_mass(bot, payload):
-    mod = bot.get_member(payload["mod_id"])
-    embed = discord.Embed(title=f"Mass {payload['type']}", colour=COLOURS[payload["type"]]).set_author(name=mod, icon_url=mod)
+    mod = bot.get_user(payload["mod_id"])
+    embed = discord.Embed(title=f"Mass {payload['type']}", colour=COLOURS[payload["type"]])
     embed.add_field(name="Reason", value=f"Mass {payload['type']}", inline=False)
     embed.add_field(name="Moderator", value=mod.mention, inline=False)
     if "duration" in payload and payload["duration"]:
-        embed.add_field(name="Duration", value=payload["duration_string"])
-    embed.add_field(name="Offenders", value=payload["offenders_string"])
+        embed.add_field(name="Duration", value=payload["duration_string"], inline=False)
+    embed.add_field(name="Offenders", value=payload["offenders_string"], inline=False)
     embed.set_footer(text=f"Case ID: {payload['id']}")
     embed.timestamp = datetime.datetime.now()
     await bot.get_guild(Misc.GUILD).get_channel(Channel.MOD_LOGS).send(embed=embed)
