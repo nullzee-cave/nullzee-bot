@@ -1,7 +1,7 @@
 from discord.ext import commands, tasks
 import typing
 from random import randint
-from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only, staff_or_trainee, MemberUserConverter
+from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only, staff_or_trainee, MemberUserConverter, nanoId
 import json
 import asyncio
 import discord
@@ -76,19 +76,66 @@ class Moderation(commands.Cog, name="Moderation"):
         time_string = payload["duration_string"]
         try:
             await user.send(
-                f"You were banned from {ctx.guild.name} {f'for `{time_string}`' if _time else ''} {f'for `{reason}`' if reason else ''}\nInfraction ID:`{payload['id']}`")
+                f"You were banned from {ctx.guild.name} "
+                f"{f'for `{time_string}`' if _time else ''} {f'for `{reason}`' if reason else ''}\nInfraction ID:`{payload['id']}`")
         except discord.Forbidden:
             pass
-        await ctx.guild.ban(user, reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
+        await ctx.guild.ban(user, reason=f"Mod: {ctx.author} | Reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
         await moderationColl.insert_one(payload)
         await moderationUtils.log(self.bot, payload)
 
     @commands.command(hidden=True, name="scamban", aliases=["syeet"])
     @staff_or_trainee
     async def scam_ban(self, ctx, user: MemberUserConverter, _time: typing.Optional[TimeConverter] = None):
+        """
+        Ban with a pre-set reason
+        For hacked accounts sending scam/IP logger links
+        """
         await ctx.invoke(self.bot.get_command("ban"), user, _time,
                          reason="Scam Links. When you regain access to your account, please DM a staff member "
                                 "or rejoin and open a ticket on another account to be unbanned.")
+
+    @commands.command(hidden=True, name="massban")
+    async def mass_ban(self, ctx, users: typing.List[int], _time: typing.Optional[TimeConverter] = None):
+        """
+        Ban a list of users via user ID
+        For use during raids with a list of user
+        """
+        mass_ban_command = self.bot.get_command("mass_ban_internal")
+        valid = []
+        invalid = []
+        for user_id in users:
+            # TODO: Figure out which errors this throws when provided invalid users and invalid data types
+            # try:
+            user = await MemberUserConverter().convert(ctx, str(user_id))
+            valid.append(user)
+            # except SomeError as err:
+            # invalid.append(user_id)
+        if valid:
+            _id = nanoId()
+            payload = payloads.mass_ban_payload(offenders=valid, mod_id=ctx.author.id, duration=_time,
+                                                reason="Mass Ban", _id=_id)
+            message = await ctx.send(embed=moderationUtils.massBanChatEmbed(ctx, payload))
+            payload = payloads.insert_message(payload, message)
+            for user in valid:
+                await ctx.invoke(mass_ban_command, ctx, user, _time, message, _id)
+            await moderationUtils.log_mass(self.bot, payload)
+        if invalid:
+            invalid_users = "\n- ".join(invalid)
+            await ctx.send(f"Could not find the following users:\n```diff\n- {[z for z in invalid_users]}\n```")
+
+    async def mass_ban_internal(self, ctx, user: typing.Union[discord.Member, discord.User],
+                                _time: int, message: discord.Message, _id):
+        if isinstance(user, discord.Member):
+            if user.guild_permissions.manage_messages:
+                return await ctx.send("You cannot ban a moderator/administrator")
+        reason = "Mass Banned"
+        # Here it makes the payload that goes into the db, for individual user bans in the mass ban
+        payload = payloads.ban_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason, _id=_id)
+        payload = payloads.insert_message(payload, message)
+        await ctx.guild.ban(user, reason=f"Mod: {ctx.author} | Reason: {reason}")
+        await moderationColl.insert_one(payload)
+        await moderationUtils.log(self.bot, payload)
 
     @commands.command(hidden=True)
     @staff_or_trainee

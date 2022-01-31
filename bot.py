@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from helpers import constants
-from helpers.colour import Color
+from helpers.colour import Colour
 import sys
 from datetime import datetime
 import time
@@ -26,13 +26,13 @@ def fmtTime():
 
 
 # region colours
-blue = Color.BLUE
-endc = Color.END
-bold = Color.BOLD
-purple = Color.PURPLE
-green = Color.GREEN
-red = Color.RED
-yellow = Color.YELLOW
+blue = Colour.BLUE
+endc = Colour.END
+bold = Colour.BOLD
+purple = Colour.PURPLE
+green = Colour.GREEN
+red = Colour.RED
+yellow = Colour.YELLOW
 
 
 # endregion

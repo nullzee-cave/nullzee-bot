@@ -38,9 +38,9 @@ def mute_payload(*, offender_id, mod_id, reason, duration):
     }
 
 
-def ban_payload(*, offender_id, mod_id, reason, duration):
+def ban_payload(*, offender_id, mod_id, reason, duration, _id = None):
     return {
-        "id": utils.nanoId(),
+        "id": _id if _id else utils.nanoId(),
         "offender_id": offender_id,
         "mod_id": mod_id,
         "type": "ban",
@@ -53,6 +53,24 @@ def ban_payload(*, offender_id, mod_id, reason, duration):
         "permanent": True if not duration else False,
         "expired": False
 
+    }
+
+
+def mass_ban_payload(*, offenders, mod_id, reason, duration, _id):
+    return {
+        "id": _id if _id else utils.nanoId(),
+        "offenders": offenders,
+        "offenders_string": "\n".join([f'{z.mention} - {z.id}' for z in offenders]),
+        "mod_id": mod_id,
+        "type": "ban",
+        "reason": reason,
+        "timestamp": round(time.time()),
+        "duration": duration,
+        "duration_string": "{:0>8}".format(str(datetime.timedelta(seconds=duration))) if duration else 0,
+        "ends": round(time.time()) + duration if duration else 0,
+        "active": True,
+        "permanent": True if not duration else False,
+        "expired": False
     }
 
 

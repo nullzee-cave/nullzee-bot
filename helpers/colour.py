@@ -1,5 +1,5 @@
 
-class Color:
+class Colour:
     PURPLE = '\033[35m'
     CYAN = '\033[96m'
     DARKCYAN = '\033[36m'
