@@ -394,7 +394,7 @@ class Staff(commands.Cog):
         await moderationColl.update_one({"_id": "config"},
                                         {"$set": {"scamLinks.{}".format(formatted_link.lower()): action}})
 
-    @scamLinks.command(hidden=True, name="remove")
+    @scamLinks.command(hidden=True, name="removeLink")
     async def s_remove(self, ctx, link: str):
         split_link = link.split("/")
         if len(split_link) < 3 or len(split_link) > 4 or "." not in split_link[2]:
