@@ -107,7 +107,17 @@ async def end_punishment(bot, payload, moderator, reason):
 
 def chatEmbed(ctx, payload):
     offender = ctx.bot.get_user(payload["offender_id"])
-    embed = discord.Embed(title=f'**{PAST_PARTICIPLES[payload["type"]]}**', colour=COLOURS[payload["type"]], description=payload["reason"] if payload["reason"] else "").set_author(name=offender, icon_url=offender.avatar_url)
+    embed = discord.Embed(title=f'**{PAST_PARTICIPLES[payload["type"]]}**', colour=COLOURS[payload["type"]],
+                          description=payload["reason"] if payload["reason"] else "")\
+        .set_author(name=offender, icon_url=offender.avatar_url)
+    return embed
+
+
+def massBanChatEmbed(ctx, payload):
+    mod = ctx.guild.get_member(payload["mod_id"])
+    embed = discord.Embed(title="Mass Ban", colour=COLOURS["ban"],
+                          description=payload["offenders_string"][:400] + ("\n..." if len(payload["offenders_string"]) > 400 else ""))\
+        .set_author(name=mod, icon_url=mod.avatar_url)
     return embed
 
 
@@ -128,6 +138,19 @@ async def log(bot, payload):
     embed.add_field(name="Moderator", value=f"<@{payload['mod_id']}>", inline=False)
     if "duration" in payload and payload["duration"]:
         embed.add_field(name="Duration", value=payload["duration_string"])
+    embed.set_footer(text=f"Case ID: {payload['id']}")
+    embed.timestamp = datetime.datetime.now()
+    await bot.get_guild(Misc.GUILD).get_channel(Channel.MOD_LOGS).send(embed=embed)
+
+
+async def log_mass(bot, payload):
+    mod = bot.get_member(payload["mod_id"])
+    embed = discord.Embed(title=f"Mass {payload['type']}", colour=COLOURS[payload["type"]]).set_author(name=mod, icon_url=mod)
+    embed.add_field(name="Reason", value=f"Mass {payload['type']}", inline=False)
+    embed.add_field(name="Moderator", value=mod.mention, inline=False)
+    if "duration" in payload and payload["duration"]:
+        embed.add_field(name="Duration", value=payload["duration_string"])
+    embed.add_field(name="Offenders", value=payload["offenders_string"])
     embed.set_footer(text=f"Case ID: {payload['id']}")
     embed.timestamp = datetime.datetime.now()
     await bot.get_guild(Misc.GUILD).get_channel(Channel.MOD_LOGS).send(embed=embed)
