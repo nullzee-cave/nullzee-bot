@@ -382,7 +382,7 @@ class Staff(commands.Cog):
     @automod.group(hidden=True, invoke_without_command=True, case_insensitive=True)
     async def scamLinks(self, ctx):
         await ctx.send(
-            "\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.badWords.commands]))
+            "\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.scamLinks.commands]))
 
     @scamLinks.command(hidden=True, name="addLink")
     async def s_add(self, ctx, link: str, action: str = "ban"):
