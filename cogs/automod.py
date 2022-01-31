@@ -30,14 +30,19 @@ class Automod(commands.Cog):
         ctx = await self.bot.get_context(message)
         ctx.author = message.guild.me
         config = await moderationUtils.get_config()
-        if config["mentions"]["val"] <= len(message.mentions) and message.channel.id not in config["mentions"][
-            "allowed_channels"]:
-            await ctx.invoke(self.bot.get_command('warn'), message.author, reason="Mass mention")
-        if config["invites"]["action"] == "warn" and message.channel.id not in config["invites"][
-            "allowed_channels"] and re.match(INVITE_REGEX, message.content, re.IGNORECASE):
+        if config["mentions"]["val"] <= len(message.mentions) and \
+           message.channel.id not in config["mentions"]["allowed_channels"]:
+            if config["mentions"]["action"] == "warn":
+                await ctx.invoke(self.bot.get_command('warn'), message.author, reason="Mass mention")
+            elif config["mentions"]["action"] == "mute":
+                await ctx.invoke(self.bot.get_command('mute'), message.author, 86400, reason="Mass mention")
+        if config["invites"]["action"] == "warn" and \
+           message.channel.id not in config["invites"]["allowed_channels"] and \
+           re.match(INVITE_REGEX, message.content, re.IGNORECASE):
             await ctx.invoke(self.bot.get_command('warn'), message.author, reason="Invite link")
-        if config["invites"]["action"] == "delete" and message.channel.id not in config["invites"][
-            "allowed_channels"] and re.match(INVITE_REGEX, message.content, re.IGNORECASE):
+        if config["invites"]["action"] == "delete" and \
+           message.channel.id not in config["invites"]["allowed_channels"] and \
+           re.match(INVITE_REGEX, message.content, re.IGNORECASE):
             await message.delete()
         clean_content = utils.clean_message_content(message.content)
         for word in config["badWords"]:
@@ -78,7 +83,7 @@ class Automod(commands.Cog):
         async for punishment in moderationColl.find({"active": True, "permanent": False}):
             if punishment["ends"] < time.time():
                 await moderationUtils.end_punishment(self.bot, punishment, moderator="automod",
-                                                     reason="punishment served")
+                                                     reason="Punishment served")
                 await moderationColl.update_one(punishment, {"$set": {"active": False}})
 
     @commands.Cog.listener()

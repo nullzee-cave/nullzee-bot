@@ -1,7 +1,9 @@
 from discord.ext import commands, tasks
 import typing
 from random import randint
-from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only, staff_or_trainee, MemberUserConverter, nanoId
+
+from helpers.constants import Role, Channel
+from helpers.utils import stringToSeconds as sts, Embed, TimeConverter, staff_only, staff_or_trainee, MemberUserConverter, nanoId, getFileJson, saveFileJson
 import json
 import asyncio
 import discord
@@ -96,21 +98,22 @@ class Moderation(commands.Cog, name="Moderation"):
                                 "or rejoin and open a ticket on another account to be unbanned.")
 
     @commands.command(hidden=True, name="massban")
-    async def mass_ban(self, ctx, users: typing.List[int], _time: typing.Optional[TimeConverter] = None):
+    @staff_only
+    async def mass_ban(self, ctx, users: commands.Greedy[int], _time: typing.Optional[TimeConverter] = None):
         """
-        Ban a list of users via user ID
-        For use during raids with a list of user
+        Ban multiple users at once via user ID
+        Mainly for use during raids with a list of user IDs
         """
-        mass_ban_command = self.bot.get_command("mass_ban_internal")
+        if not users:
+            raise commands.UserInputError
         valid = []
         invalid = []
         for user_id in users:
-            # TODO: Figure out which errors this throws when provided invalid users and invalid data types
-            # try:
-            user = await MemberUserConverter().convert(ctx, str(user_id))
-            valid.append(user)
-            # except SomeError as err:
-            # invalid.append(user_id)
+            try:
+                user = await MemberUserConverter().convert(ctx, str(user_id))
+                valid.append(user)
+            except (commands.UserInputError):
+                invalid.append(user_id)
         if valid:
             _id = nanoId()
             payload = payloads.mass_ban_payload(offenders=valid, mod_id=ctx.author.id, duration=_time,
@@ -118,11 +121,14 @@ class Moderation(commands.Cog, name="Moderation"):
             message = await ctx.send(embed=moderationUtils.massBanChatEmbed(ctx, payload))
             payload = payloads.insert_message(payload, message)
             for user in valid:
-                await ctx.invoke(mass_ban_command, ctx, user, _time, message, _id)
+                await self.mass_ban_internal(ctx, user, _time, message, _id)
+            dt = datetime.datetime.now()
+            with open(f"mass_bans/{dt.strftime('%M-%S--%d%m%y')}.txt", 'w') as f:
+                f.write(f"Mass Ban\n{dt.strftime('%M:%S %d/%m/%Y')}\n\n" + "\n".join([f'{z} - {z.id}' for z in valid]))
             await moderationUtils.log_mass(self.bot, payload)
         if invalid:
-            invalid_users = "\n- ".join(invalid)
-            await ctx.send(f"Could not find the following users:\n```diff\n- {[z for z in invalid_users]}\n```")
+            invalid_users = "\n- ".join([str(z) for z in invalid])
+            await ctx.send(f"Could not find the following users:\n```diff\n- {invalid_users}\n```")
 
     async def mass_ban_internal(self, ctx, user: typing.Union[discord.Member, discord.User],
                                 _time: int, message: discord.Message, _id):
@@ -135,7 +141,6 @@ class Moderation(commands.Cog, name="Moderation"):
         payload = payloads.insert_message(payload, message)
         await ctx.guild.ban(user, reason=f"Mod: {ctx.author} | Reason: {reason}")
         await moderationColl.insert_one(payload)
-        await moderationUtils.log(self.bot, payload)
 
     @commands.command(hidden=True)
     @staff_or_trainee
@@ -242,6 +247,57 @@ class Moderation(commands.Cog, name="Moderation"):
             return await ctx.send("Could not find a warning with that ID")
         location = warning["message"].split('-')
         await ctx.send(f"https://discord.com/channels/{location[0]}/{location[1]}/{location[2]}")
+
+    @commands.command(hidden=True)
+    @staff_only
+    async def lockdown(self, ctx, channel: discord.TextChannel = None):
+        allowed = {}
+        config = getFileJson("config")
+        in_lockdown = config["lockdown"]
+
+        default = ctx.guild.default_role
+        level_one = ctx.guild.get_role(int(Role.LevelRoles.LEVELS["1"]))
+
+        if channel is None:
+            for channel_id in Channel.lockdown_channels():
+                channel = ctx.guild.get_channel(channel_id)
+                overwrites = channel.overwrites
+
+                if not in_lockdown:
+                    if level_one in overwrites and overwrites[level_one].send_messages is not False:
+                        perms = channel.overwrites_for(level_one)
+                        perms.send_messages = False
+                        await channel.set_permissions(level_one, overwrite=perms, reason="Lockdown")
+                        allowed[str(channel.id)] = "level_one"
+                    if default in overwrites and overwrites[default].send_messages is not False:
+                        perms = channel.overwrites_for(default)
+                        perms.send_messages = False
+                        await channel.set_permissions(default, overwrite=perms, reason="Lockdown")
+                        allowed[str(channel.id)] = "default"
+                else:
+                    if str(channel.id) in config["lockdown_channel_perms"] and \
+                       config["lockdown_channel_perms"][str(channel.id)] == "default":
+                        perms = channel.overwrites_for(default)
+                        perms.send_messages = True
+                        await channel.set_permissions(default, overwrite=perms, reason="Lockdown Lifted")
+                        allowed[str(channel.id)] = "default"
+                    elif str(channel.id) in config["lockdown_channel_perms"] and \
+                         config["lockdown_channel_perms"][str(channel.id)] == "level_one":
+                        perms = channel.overwrites_for(level_one)
+                        perms.send_messages = True
+                        await channel.set_permissions(level_one, overwrite=perms, reason="Lockdown Lifted")
+                        allowed[str(channel.id)] = "level_one"
+
+            if not in_lockdown:
+                config["lockdown_channel_perms"] = allowed
+                config["lockdown"] = True
+            else:
+                config["lockdown_channel_perms"] = {}
+                config["lockdown"] = False
+            saveFileJson(config, "config")
+
+
+
 
     async def cog_after_invoke(self, ctx):
         await ctx.message.delete()

@@ -92,17 +92,28 @@ class Channel(metaclass=Constant):
     NITRO_BOOSTERS      = 714073835791712267
     POLLS               = 667959037265969171
     WELCOME             = 667955504651304999
+    ROLE_REQUESTS       = 676693868741263381
     ROLE_COMMANDS       = 853294481825726475
     OPEN_TICKET         = 821454390685597696
+    GENERAL             = 667953033929293861
     COOL_KID_CLUB       = 674311689738649600
+    NERD_CHANNEL        = 718012614084657224
     BOT_COMMANDS        = 668914397531602944
     BOT_GAMES           = 685782425502220311
     STARBOARD           = 770316631829643275
+    SB_CHAT             = 667961621330526208
     SB_RES              = 788162727461781504
+    TRADES_CRAFT_AHS    = 667963943939080222
     GIVEAWAY            = 667960870697041942
     MINI_GIVEAWAY       = 735236900830576643
     PETS                = 705106181559156888
+    ART                 = 703187960123883530
+    MUSIC               = 823996656617652275
+    FOOD                = 926944981216804904
+    MEMES               = 683390490707492932
+    WEEB_ZONE           = 729686172498001930
     SELF_PROMO          = 667960498448367668
+    TEXTURE_PACK        = 843171845510529024
     QOTD_ANSWERS        = 749631176431370260
     STAFF_ANNOUNCEMENTS = 709820460162089061
     EVENT_SHIZ          = 760898316405571615
@@ -110,6 +121,36 @@ class Channel(metaclass=Constant):
     MESSAGE_LOGS        = 849666627830415380
     REPORTS_APPEALS     = 771061232642949150
     NO_MIC              = 706920230089392260
+    GAME_NIGHT          = 751139258844184687
+
+    @classmethod
+    def lockdown_channels(cls):
+        return [
+            cls.ROLE_REQUESTS,
+            cls.ROLE_COMMANDS,
+
+            cls.GENERAL,
+            cls.NERD_CHANNEL,
+            cls.BOT_COMMANDS,
+            cls.BOT_GAMES,
+
+            cls.SB_CHAT,
+            cls.TRADES_CRAFT_AHS,
+
+            cls.PETS,
+            cls.ART,
+            cls.MUSIC,
+            cls.FOOD,
+            cls.MEMES,
+            cls.WEEB_ZONE,
+            cls.SELF_PROMO,
+            cls.TEXTURE_PACK,
+
+            cls.QOTD_ANSWERS,
+
+            cls.NO_MIC,
+            cls.GAME_NIGHT
+        ]
 
 
 class Skyblock(metaclass=Constant):

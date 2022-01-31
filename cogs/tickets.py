@@ -257,6 +257,11 @@ class Tickets(commands.Cog):
             return
         if str(payload.emoji) in ticket_types:
             guild: discord.Guild = self.bot.get_guild(payload.guild_id)
+            msg: discord.Message = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
+            await msg.remove_reaction(payload.emoji, payload.member)
+            in_lockdown = getFileJson("config")["lockdown"]
+            if in_lockdown:
+                return await payload.member.send("Unable to create ticket: `Server in lockdown!`")
             cat: discord.CategoryChannel = guild.get_channel(Category.TICKETS)
             owned_ticket_count = 0
             for c in cat.channels:
@@ -269,8 +274,6 @@ class Tickets(commands.Cog):
                                     return await payload.member.send("You have too many open tickets!")
                                 except discord.Forbidden:
                                     return
-            msg: discord.Message = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
-            await msg.remove_reaction(payload.emoji, payload.member)
             embed = discord.Embed(title=ticket_types[str(payload.emoji)]["name"], colour=discord.Colour.green(),
                                   description="**Commands:**\n"
                                               "`-close [reason]` : close the ticket\n"
