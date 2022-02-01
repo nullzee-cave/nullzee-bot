@@ -246,9 +246,16 @@ class Moderation(commands.Cog, name="Moderation"):
         await ctx.send(f"https://discord.com/channels/{location[0]}/{location[1]}/{location[2]}")
 
     @commands.command(hidden=True)
-    @commands.cooldown(1, 300, commands.BucketType.guild)
     @staff_only
-    async def lockdown(self, ctx):
+    async def lockdown(self, ctx, confirmation: bool = None):
+        """
+        Put the server into lockdown.
+
+        While in lockdown:
+        - All public channels are read-only
+        - Tickets are disabled
+        - All kicks and bans are logged, stored in a .txt file and sent in modlogs when lockdown is ended.
+        """
         allowed = {}
         config = getFileJson("config")
         in_lockdown = config["lockdown"]
@@ -256,10 +263,19 @@ class Moderation(commands.Cog, name="Moderation"):
         default = ctx.guild.default_role
         level_one = ctx.guild.get_role(int(Role.LevelRoles.LEVELS["1"]))
 
-        if in_lockdown:
-            await ctx.send("Lifting Lockdown")
-        else:
-            await ctx.send("Entering Lockdown")
+        if confirmation is None or confirmation is False:
+            def check(m):
+                return m.channel == ctx.channel and m.author == ctx.author
+
+            if in_lockdown:
+                msg = await ctx.send("The server is currently in lockdown. Are you sure you want to lift lockdown? (`Y`/`N`)")
+            else:
+                msg = await ctx.send("The server is not currently in lockdown. Are you sure you want to enter lockdown? (`Y`/`N`)")
+            message = await self.bot.wait_for("message", timeout=60, check=check)
+            await msg.delete()
+            await message.delete()
+            if message.content.lower() not in ["y", "yes"]:
+                return
 
         for channel_id in Channel.lockdown_channels():
             channel = ctx.guild.get_channel(channel_id)
@@ -290,43 +306,46 @@ class Moderation(commands.Cog, name="Moderation"):
                     await channel.set_permissions(level_one, overwrite=perms, reason="Lockdown Lifted")
                     allowed[str(channel.id)] = "level_one"
 
-        if not in_lockdown:
-            saveFileJson(config)
-            dt = datetime.datetime.now()
-            data = getFileJson(f"lockdown_logs/{dt.strftime('%d-%m-%Y')}")
-            if data is not None:
-                saveFileJson({}, f"lockdown_logs/{dt.strftime('%d-%m-%Y')}")
-        else:
-            dt = datetime.datetime.now()
+        dt = datetime.datetime.now()
+        if in_lockdown:
             data = moderationUtils.get_lockdown_log()
             formatted_data = f"--------------------------------------------------" \
                              f"\nLockdown - Ended @ {dt.strftime('%M:%S %d/%m/%Y')}\n"
-            for user in data:
-                formatted_data += f"\n{user} ({user[0]}): {user[1].upper()} - {user[2]}"
-            formatted_data += f"\n\nRaw ID's:\n"
-            for user in data:
-                formatted_data += f"\n{user}"
-            formatted_data += "--------------------------------------------------\n\n\n"
+            if data:
+                for user in data:
+                    formatted_data += f"\n{user} ({data[user]['name']}): {data[user]['type'].upper()} - {data[user]['reason']}"
+                formatted_data += f"\n\nRaw ID's:\n"
+                for user in data:
+                    formatted_data += f"\n{user}"
+            else:
+                formatted_data += "\nNo Data"
+            formatted_data += "\n--------------------------------------------------\n\n\n"
             with open(f"lockdown_logs/{dt.strftime('%d-%m-%Y')}.txt", "a+") as f:
                 f.write(formatted_data)
             moderationUtils.reset_lockdown_log()
 
         if not in_lockdown:
-            embed = Embed(ctx.author, title="Entering Lockdown", colour=0xFF0000)
+            await ctx.send("Entered lockdown.")
+            embed = Embed(ctx.author, title="Entered Lockdown", colour=0xFF0000)
             embed.auto_author().timestamp_now()
-            await ctx.send(embed=embed)
+            await ctx.guild.get_channel(Channel.MOD_LOGS).send(embed=embed)
             config["lockdown_channel_perms"] = allowed
             config["lockdown"] = True
         else:
-            embed = Embed(ctx.author, title="Lifting Lockdown", colour=discord.Colour.green())
+            await ctx.send("Lifted lockdown.")
+            embed = Embed(ctx.author, title="Lifted Lockdown", colour=discord.Colour.green())
             embed.auto_author().timestamp_now()
-            await ctx.send(embed=embed)
+            log_file = discord.File(f"lockdown_logs/{dt.strftime('%d-%m-%Y')}.txt")
+            await ctx.guild.get_channel(Channel.MOD_LOGS).send(embed=embed, file=log_file)
             config["lockdown_channel_perms"] = {}
             config["lockdown"] = False
+
+        saveFileJson(config)
 
     @commands.command(hidden=True)
     @staff_only
     async def lock(self, ctx, channel: discord.TextChannel):
+        """Lock a channel"""
         allowed = {}
         default = ctx.guild.default_role
         level_one = ctx.guild.get_role(int(Role.LevelRoles.LEVELS["1"]))
@@ -354,12 +373,13 @@ class Moderation(commands.Cog, name="Moderation"):
             else:
                 config["lockdown_channel_perms"][str(channel_data)] = allowed[str(channel_data)]
         saveFileJson(config)
-        await ctx.send(embed=discord.Embed(description=f"Locked {channel.mention}"))
-        moderationUtils.log_channel_lock(ctx, channel, "lock")
+        await ctx.send(embed=discord.Embed(description=f"Locked {channel.mention}", colour=0xFF0000))
+        await moderationUtils.log_channel_lock(ctx, channel, "lock")
 
     @commands.command(hidden=True)
     @staff_only
     async def unlock(self, ctx, channel: discord.TextChannel):
+        """Unlock a locked channel"""
         allowed = {}
         default = ctx.guild.default_role
         level_one = ctx.guild.get_role(int(Role.LevelRoles.LEVELS["1"]))
@@ -383,8 +403,8 @@ class Moderation(commands.Cog, name="Moderation"):
             if str(channel_data) in config["lockdown_channel_perms"]:
                 del config["lockdown_channel_perms"][str(channel_data)]
         saveFileJson(config)
-        await ctx.send(embed=discord.Embed(description=f"Unlocked {channel.mention}"))
-        moderationUtils.log_channel_lock(ctx, channel, "unlock")
+        await ctx.send(embed=discord.Embed(description=f"Unlocked {channel.mention}", colour=discord.Colour.green()))
+        await moderationUtils.log_channel_lock(ctx, channel, "unlock")
 
     async def cog_after_invoke(self, ctx):
         await ctx.message.delete()
