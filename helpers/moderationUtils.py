@@ -162,7 +162,7 @@ async def log_mass(bot, payload):
     embed.add_field(name="Moderator", value=mod.mention, inline=False)
     if "duration" in payload and payload["duration"]:
         embed.add_field(name="Duration", value=payload["duration_string"], inline=False)
-    embed.add_field(name="Offenders", value=payload["offenders_string"], inline=False)
+    embed.add_field(name="Offenders", value=payload["offenders_string"][:1900], inline=False)
     embed.set_footer(text=f"Case ID: {payload['id']}")
     embed.timestamp = dt
     await bot.get_guild(Misc.GUILD).get_channel(Channel.MOD_LOGS).send(embed=embed)
