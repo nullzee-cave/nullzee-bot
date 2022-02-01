@@ -168,9 +168,9 @@ async def log_mass(bot, payload):
     await bot.get_guild(Misc.GUILD).get_channel(Channel.MOD_LOGS).send(embed=embed)
 
 
-def log_channel_lock(ctx, channel, _type):
-    embed = Embed(ctx.author, title=f"Channel {_type.capitalize()}ed",
-                  description=f"{channel.mention} was {_type.capitalize()}ed by {ctx.author.mention}")
+async def log_channel_lock(ctx, channel, _type):
+    embed = Embed(ctx.author, description=f"{channel.mention} was {_type}ed by {ctx.author.mention}",
+                  colour=0xFF0000 if _type == "lock" else discord.Colour.green())
     embed.auto_author().timestamp_now()
     await ctx.guild.get_channel(Channel.MOD_LOGS).send(embed=embed)
 
@@ -181,11 +181,19 @@ def log_lockdown(bot, payload):
         return
     if payload["type"].upper() not in ["BAN", "KICK"]:
         return
-    lockdown_data[payload["offender"]] = {
-        "name": str(bot.get_user(payload["offender"])),
-        "type": payload["type"],
-        "reason": payload["reason"]
-    }
+    if "offenders" in payload:
+        for offender in payload["offenders"]:
+            lockdown_data[offender.id] = {
+                "name": str(offender),
+                "type": payload["type"],
+                "reason": payload["reason"]
+            }
+    else:
+        lockdown_data[payload["offender_id"]] = {
+            "name": str(bot.get_user(payload["offender_id"])),
+            "type": payload["type"],
+            "reason": payload["reason"]
+        }
 
 
 def get_lockdown_log():
