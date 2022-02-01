@@ -126,29 +126,28 @@ class Channel(metaclass=Constant):
     @classmethod
     def lockdown_channels(cls):
         return [
-            # cls.ROLE_REQUESTS,
-            # cls.ROLE_COMMANDS,
-            #
-            # cls.GENERAL,
-            # cls.NERD_CHANNEL,
-            # cls.BOT_COMMANDS,
-            # cls.BOT_GAMES,
-            #
-            # cls.SB_CHAT,
-            # cls.TRADES_CRAFT_AHS,
-            #
-            # cls.PETS,
-            # cls.ART,
-            # cls.MUSIC,
-            # cls.FOOD,
-            # cls.MEMES,
-            # cls.WEEB_ZONE,
-            # cls.TEXTURE_PACK,
-            #
-            # cls.QOTD_ANSWERS,
+            cls.ROLE_REQUESTS,
+            cls.ROLE_COMMANDS,
 
-            cls.NO_MIC
-            # cls.GAME_NIGHT
+            cls.GENERAL,
+            cls.NERD_CHANNEL,
+            cls.BOT_COMMANDS,
+            cls.BOT_GAMES,
+
+            cls.SB_CHAT,
+            cls.TRADES_CRAFT_AHS,
+
+            cls.PETS,
+            cls.ART,
+            cls.MUSIC,
+            cls.FOOD,
+            cls.MEMES,
+            cls.TEXTURE_PACK,
+
+            cls.QOTD_ANSWERS,
+
+            cls.NO_MIC,
+            cls.GAME_NIGHT
         ]
 
     @classmethod

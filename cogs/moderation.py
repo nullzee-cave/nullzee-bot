@@ -296,13 +296,13 @@ class Moderation(commands.Cog, name="Moderation"):
                 if str(channel.id) in config["lockdown_channel_perms"] and \
                    config["lockdown_channel_perms"][str(channel.id)] == "default":
                     perms = channel.overwrites_for(default)
-                    perms.send_messages = True
+                    perms.send_messages = None
                     await channel.set_permissions(default, overwrite=perms, reason="Lockdown Lifted")
                     allowed[str(channel.id)] = "default"
                 if str(channel.id) in config["lockdown_channel_perms"] and \
                    config["lockdown_channel_perms"][str(channel.id)] in ["default", "level_one"]:
                     perms = channel.overwrites_for(level_one)
-                    perms.send_messages = True
+                    perms.send_messages = None
                     await channel.set_permissions(level_one, overwrite=perms, reason="Lockdown Lifted")
                     allowed[str(channel.id)] = "level_one"
 
@@ -389,13 +389,13 @@ class Moderation(commands.Cog, name="Moderation"):
         if str(channel.id) in config["lockdown_channel_perms"] and \
            config["lockdown_channel_perms"][str(channel.id)] == "default":
             perms = channel.overwrites_for(default)
-            perms.send_messages = True
+            perms.send_messages = None
             await channel.set_permissions(default, overwrite=perms, reason="Unlocked")
             allowed[str(channel.id)] = "default"
         if str(channel.id) in config["lockdown_channel_perms"] and \
            config["lockdown_channel_perms"][str(channel.id)] in ["default", "level_one"]:
             perms = channel.overwrites_for(level_one)
-            perms.send_messages = True
+            perms.send_messages = None
             await channel.set_permissions(level_one, overwrite=perms, reason="Unlocked")
             allowed[str(channel.id)] = "level_one"
 
