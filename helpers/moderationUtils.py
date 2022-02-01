@@ -4,7 +4,7 @@ import discord
 import datetime
 from api_key import moderationColl
 
-from helpers.utils import getFileJson, saveFileJson
+from helpers.utils import getFileJson, saveFileJson, Embed
 from helpers.constants import Channel, Misc
 
 DELETE_WARNS_AFTER = 1209600
@@ -166,6 +166,13 @@ async def log_mass(bot, payload):
     embed.set_footer(text=f"Case ID: {payload['id']}")
     embed.timestamp = dt
     await bot.get_guild(Misc.GUILD).get_channel(Channel.MOD_LOGS).send(embed=embed)
+
+
+def log_channel_lock(ctx, channel, _type):
+    embed = Embed(ctx.author, title=f"Channel {_type.capitalize()}ed",
+                  description=f"{channel.mention} was {_type.capitalize()}ed by {ctx.author.mention}")
+    embed.auto_author().timestamp_now()
+    await ctx.guild.get_channel(Channel.MOD_LOGS).send(embed=embed)
 
 
 def log_lockdown(bot, payload):
