@@ -354,6 +354,8 @@ class Moderation(commands.Cog, name="Moderation"):
             else:
                 config["lockdown_channel_perms"][str(channel_data)] = allowed[str(channel_data)]
         saveFileJson(config)
+        await ctx.send(embed=discord.Embed(description=f"Locked {channel.mention}"))
+        moderationUtils.log_channel_lock(ctx, channel, "lock")
 
     @commands.command(hidden=True)
     @staff_only
@@ -381,6 +383,8 @@ class Moderation(commands.Cog, name="Moderation"):
             if str(channel_data) in config["lockdown_channel_perms"]:
                 del config["lockdown_channel_perms"][str(channel_data)]
         saveFileJson(config)
+        await ctx.send(embed=discord.Embed(description=f"Unlocked {channel.mention}"))
+        moderationUtils.log_channel_lock(ctx, channel, "unlock")
 
     async def cog_after_invoke(self, ctx):
         await ctx.message.delete()
