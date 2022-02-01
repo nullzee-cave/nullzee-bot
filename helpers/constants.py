@@ -143,7 +143,6 @@ class Channel(metaclass=Constant):
             cls.FOOD,
             cls.MEMES,
             cls.WEEB_ZONE,
-            cls.SELF_PROMO,
             cls.TEXTURE_PACK,
 
             cls.QOTD_ANSWERS,
@@ -151,6 +150,10 @@ class Channel(metaclass=Constant):
             cls.NO_MIC,
             cls.GAME_NIGHT
         ]
+
+    @classmethod
+    def lockdown_priority(cls):
+        return ["default", "level_one"]
 
 
 class Skyblock(metaclass=Constant):

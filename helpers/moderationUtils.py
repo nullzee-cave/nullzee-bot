@@ -4,6 +4,7 @@ import discord
 import datetime
 from api_key import moderationColl
 
+from helpers.utils import getFileJson, saveFileJson
 from helpers.constants import Channel, Misc
 
 DELETE_WARNS_AFTER = 1209600
@@ -30,6 +31,8 @@ SEVERITY = {
 }
 
 doc = {}
+
+lockdown_data = {}
 
 
 async def update_config():
@@ -135,6 +138,7 @@ async def end_log(bot, payload, *, moderator, reason):
 
 
 async def log(bot, payload):
+    log_lockdown(bot, payload)
     offender = bot.get_user(payload["offender_id"])
     embed = discord.Embed(title=payload["type"].capitalize(), colour=COLOURS[payload["type"]])\
         .set_author(name=offender, icon_url=offender.avatar_url)
@@ -148,6 +152,10 @@ async def log(bot, payload):
 
 
 async def log_mass(bot, payload):
+    log_lockdown(bot, payload)
+    dt = datetime.datetime.now()
+    with open(f"mass_bans/{dt.strftime('%M-%S--%d%m%y')}.txt", 'w') as f:
+        f.write(f"Mass Ban\n{dt.strftime('%M:%S %d/%m/%Y')}\n\n" + "\n".join([f"{z} - {z.id}" for z in payload["offenders"]]))
     mod = bot.get_user(payload["mod_id"])
     embed = discord.Embed(title=f"Mass {payload['type']}", colour=COLOURS[payload["type"]])
     embed.add_field(name="Reason", value=f"Mass {payload['type']}", inline=False)
@@ -156,5 +164,26 @@ async def log_mass(bot, payload):
         embed.add_field(name="Duration", value=payload["duration_string"], inline=False)
     embed.add_field(name="Offenders", value=payload["offenders_string"], inline=False)
     embed.set_footer(text=f"Case ID: {payload['id']}")
-    embed.timestamp = datetime.datetime.now()
+    embed.timestamp = dt
     await bot.get_guild(Misc.GUILD).get_channel(Channel.MOD_LOGS).send(embed=embed)
+
+
+def log_lockdown(bot, payload):
+    bot_config = getFileJson("config")
+    if not bot_config["lockdown"]:
+        return
+    if payload["type"].upper() not in ["BAN", "KICK"]:
+        return
+    lockdown_data[payload["offender"]] = {
+        "name": str(bot.get_user(payload["offender"])),
+        "type": payload["type"],
+        "reason": payload["reason"]
+    }
+
+
+def get_lockdown_log():
+    return lockdown_data
+
+
+def reset_lockdown_log():
+    lockdown_data.clear()

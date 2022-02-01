@@ -122,9 +122,6 @@ class Moderation(commands.Cog, name="Moderation"):
             payload = payloads.insert_message(payload, message)
             for user in valid:
                 await self.mass_ban_internal(ctx, user, _time, message, _id)
-            dt = datetime.datetime.now()
-            with open(f"mass_bans/{dt.strftime('%M-%S--%d%m%y')}.txt", 'w') as f:
-                f.write(f"Mass Ban\n{dt.strftime('%M:%S %d/%m/%Y')}\n\n" + "\n".join([f'{z} - {z.id}' for z in valid]))
             await moderationUtils.log_mass(self.bot, payload)
         if invalid:
             invalid_users = "\n- ".join([str(z) for z in invalid])
@@ -249,8 +246,9 @@ class Moderation(commands.Cog, name="Moderation"):
         await ctx.send(f"https://discord.com/channels/{location[0]}/{location[1]}/{location[2]}")
 
     @commands.command(hidden=True)
+    @commands.cooldown(1, 300, commands.BucketType.guild)
     @staff_only
-    async def lockdown(self, ctx, channel: discord.TextChannel = None):
+    async def lockdown(self, ctx):
         allowed = {}
         config = getFileJson("config")
         in_lockdown = config["lockdown"]
@@ -258,46 +256,131 @@ class Moderation(commands.Cog, name="Moderation"):
         default = ctx.guild.default_role
         level_one = ctx.guild.get_role(int(Role.LevelRoles.LEVELS["1"]))
 
-        if channel is None:
-            for channel_id in Channel.lockdown_channels():
-                channel = ctx.guild.get_channel(channel_id)
-                overwrites = channel.overwrites
+        if in_lockdown:
+            await ctx.send("Lifting Lockdown")
+        else:
+            await ctx.send("Entering Lockdown")
 
-                if not in_lockdown:
-                    if level_one in overwrites and overwrites[level_one].send_messages is not False:
-                        perms = channel.overwrites_for(level_one)
-                        perms.send_messages = False
-                        await channel.set_permissions(level_one, overwrite=perms, reason="Lockdown")
-                        allowed[str(channel.id)] = "level_one"
-                    if default in overwrites and overwrites[default].send_messages is not False:
-                        perms = channel.overwrites_for(default)
-                        perms.send_messages = False
-                        await channel.set_permissions(default, overwrite=perms, reason="Lockdown")
-                        allowed[str(channel.id)] = "default"
-                else:
-                    # if str(channel.id) in config["lockdown_channel_perms"] and \
-                    #    config["lockdown_channel_perms"][str(channel.id)] == "default":
-                    #     perms = channel.overwrites_for(default)
-                    #     perms.send_messages = True
-                    #     await channel.set_permissions(default, overwrite=perms, reason="Lockdown Lifted")
-                    #     allowed[str(channel.id)] = "default"
-                    if str(channel.id) in config["lockdown_channel_perms"]:
-                        #and config["lockdown_channel_perms"][str(channel.id)] == "level_one"
-                        perms = channel.overwrites_for(level_one)
-                        perms.send_messages = True
-                        await channel.set_permissions(level_one, overwrite=perms, reason="Lockdown Lifted")
-                        allowed[str(channel.id)] = "level_one"
+        for channel_id in Channel.lockdown_channels():
+            channel = ctx.guild.get_channel(channel_id)
+            overwrites = channel.overwrites
 
             if not in_lockdown:
-                config["lockdown_channel_perms"] = allowed
-                config["lockdown"] = True
+                if level_one in overwrites and overwrites[level_one].send_messages is not False:
+                    perms = channel.overwrites_for(level_one)
+                    perms.send_messages = False
+                    await channel.set_permissions(level_one, overwrite=perms, reason="Lockdown")
+                    allowed[str(channel.id)] = "level_one"
+                if default in overwrites and overwrites[default].send_messages is not False:
+                    perms = channel.overwrites_for(default)
+                    perms.send_messages = False
+                    await channel.set_permissions(default, overwrite=perms, reason="Lockdown")
+                    allowed[str(channel.id)] = "default"
             else:
-                config["lockdown_channel_perms"] = {}
-                config["lockdown"] = False
-            saveFileJson(config, "config")
+                if str(channel.id) in config["lockdown_channel_perms"] and \
+                   config["lockdown_channel_perms"][str(channel.id)] == "default":
+                    perms = channel.overwrites_for(default)
+                    perms.send_messages = True
+                    await channel.set_permissions(default, overwrite=perms, reason="Lockdown Lifted")
+                    allowed[str(channel.id)] = "default"
+                if str(channel.id) in config["lockdown_channel_perms"] and \
+                   config["lockdown_channel_perms"][str(channel.id)] in ["default", "level_one"]:
+                    perms = channel.overwrites_for(level_one)
+                    perms.send_messages = True
+                    await channel.set_permissions(level_one, overwrite=perms, reason="Lockdown Lifted")
+                    allowed[str(channel.id)] = "level_one"
 
+        if not in_lockdown:
+            saveFileJson(config)
+            dt = datetime.datetime.now()
+            data = getFileJson(f"lockdown_logs/{dt.strftime('%d-%m-%Y')}")
+            if data is not None:
+                saveFileJson({}, f"lockdown_logs/{dt.strftime('%d-%m-%Y')}")
+        else:
+            dt = datetime.datetime.now()
+            data = moderationUtils.get_lockdown_log()
+            formatted_data = f"--------------------------------------------------" \
+                             f"\nLockdown - Ended @ {dt.strftime('%M:%S %d/%m/%Y')}\n"
+            for user in data:
+                formatted_data += f"\n{user} ({user[0]}): {user[1].upper()} - {user[2]}"
+            formatted_data += f"\n\nRaw ID's:\n"
+            for user in data:
+                formatted_data += f"\n{user}"
+            formatted_data += "--------------------------------------------------\n\n\n"
+            with open(f"lockdown_logs/{dt.strftime('%d-%m-%Y')}.txt", "a+") as f:
+                f.write(formatted_data)
+            moderationUtils.reset_lockdown_log()
 
+        if not in_lockdown:
+            embed = Embed(ctx.author, title="Entering Lockdown", colour=0xFF0000)
+            embed.auto_author().timestamp_now()
+            await ctx.send(embed=embed)
+            config["lockdown_channel_perms"] = allowed
+            config["lockdown"] = True
+        else:
+            embed = Embed(ctx.author, title="Lifting Lockdown", colour=discord.Colour.green())
+            embed.auto_author().timestamp_now()
+            await ctx.send(embed=embed)
+            config["lockdown_channel_perms"] = {}
+            config["lockdown"] = False
 
+    @commands.command(hidden=True)
+    @staff_only
+    async def lock(self, ctx, channel: discord.TextChannel):
+        allowed = {}
+        default = ctx.guild.default_role
+        level_one = ctx.guild.get_role(int(Role.LevelRoles.LEVELS["1"]))
+
+        overwrites = channel.overwrites
+        if level_one in overwrites and overwrites[level_one].send_messages is not False:
+            perms = channel.overwrites_for(level_one)
+            perms.send_messages = False
+            await channel.set_permissions(level_one, overwrite=perms, reason="Locked")
+            allowed[str(channel.id)] = "level_one"
+        if default in overwrites and overwrites[default].send_messages is not False:
+            perms = channel.overwrites_for(default)
+            perms.send_messages = False
+            await channel.set_permissions(default, overwrite=perms, reason="Locked")
+            allowed[str(channel.id)] = "default"
+
+        config = getFileJson("config")
+
+        for channel_data in allowed:
+            if str(channel_data) in config["lockdown_channel_perms"]:
+                if Channel.lockdown_priority().index(config["lockdown_channel_perms"][str(channel_data)]) < allowed[str(channel_data)]:
+                    continue
+                else:
+                    config["lockdown_channel_perms"][str(channel_data)] = allowed[str(channel_data)]
+            else:
+                config["lockdown_channel_perms"][str(channel_data)] = allowed[str(channel_data)]
+        saveFileJson(config)
+
+    @commands.command(hidden=True)
+    @staff_only
+    async def unlock(self, ctx, channel: discord.TextChannel):
+        allowed = {}
+        default = ctx.guild.default_role
+        level_one = ctx.guild.get_role(int(Role.LevelRoles.LEVELS["1"]))
+
+        config = getFileJson("config")
+
+        if str(channel.id) in config["lockdown_channel_perms"] and \
+           config["lockdown_channel_perms"][str(channel.id)] == "default":
+            perms = channel.overwrites_for(default)
+            perms.send_messages = True
+            await channel.set_permissions(default, overwrite=perms, reason="Unlocked")
+            allowed[str(channel.id)] = "default"
+        if str(channel.id) in config["lockdown_channel_perms"] and \
+           config["lockdown_channel_perms"][str(channel.id)] in ["default", "level_one"]:
+            perms = channel.overwrites_for(level_one)
+            perms.send_messages = True
+            await channel.set_permissions(level_one, overwrite=perms, reason="Unlocked")
+            allowed[str(channel.id)] = "level_one"
+
+        for channel_data in allowed:
+            if str(channel_data) in config["lockdown_channel_perms"]:
+                del config["lockdown_channel_perms"][str(channel_data)]
+        saveFileJson(config)
 
     async def cog_after_invoke(self, ctx):
         await ctx.message.delete()
