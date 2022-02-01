@@ -1,6 +1,7 @@
 api_key.py
 backups/*
 mass_bans/*
+lockdown_logs/*
 /*.json
 .idea/*
 venv/*
