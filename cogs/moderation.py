@@ -86,7 +86,7 @@ class Moderation(commands.Cog, name="Moderation"):
         await moderationColl.insert_one(payload)
         await moderationUtils.log(self.bot, payload)
 
-    @commands.command(hidden=True, name="scamban", aliases=["syeet"])
+    @commands.command(hidden=True, name="scamban", aliases=["sban", "syeet"])
     @staff_or_trainee
     async def scam_ban(self, ctx, user: MemberUserConverter, _time: typing.Optional[TimeConverter] = None):
         """
