@@ -28,6 +28,7 @@ class Levelling(commands.Cog, name="levelling"):
         self.update_multipliers()
         self.vc_tracker.start()
         self.boost_multiplier_end.start()
+        self.check_level_one_role.start()
 
     def cog_unload(self):
         self.vc_tracker.cancel()
@@ -46,6 +47,14 @@ class Levelling(commands.Cog, name="levelling"):
                     to_add = [guild.get_role(int(Role.LevelRoles.VC_ROLES[z])) for z in Role.LevelRoles.VC_ROLES if user_data["vc_minutes"] > int(z) and int(Role.LevelRoles.VC_ROLES[z]) not in role_ids(member.roles)]
                     if not all(role is None for role in to_add):
                         await member.add_roles(*to_add)
+
+    @tasks.loop(hours=1)
+    async def check_level_one_role(self):
+        guild = self.bot.get_guild(Misc.GUILD)
+        role = guild.get_role(int(Role.LevelRoles.LEVELS["1"]))
+        for member in guild.members:
+            if not member.pending and role not in member.roles:
+                await member.add_roles(role)
 
     @commands.command()
     async def linkTwitch(self, ctx, username: str):
