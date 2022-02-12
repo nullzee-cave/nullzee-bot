@@ -17,7 +17,8 @@ class Logging(commands.Cog):
     async def on_message_delete(self, message: discord.Message):
         if not message.guild or message.author.bot:
             return
-
+        if message.channel.id in [Channel.ADMIN_CHAT]:
+            return
         content = message.content if message.content else ""
         truncated_content = content[:1900]
         files = []
@@ -43,6 +44,8 @@ class Logging(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if before.content == after.content or not after.guild or after.author.bot:
+            return
+        if before.channel.id in [Channel.ADMIN_CHAT]:
             return
 
         if len(before.content) + len(after.content) > 1800:
