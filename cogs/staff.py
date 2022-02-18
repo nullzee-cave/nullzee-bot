@@ -387,7 +387,7 @@ class Staff(commands.Cog):
     @scamLinks.command(hidden=True, name="addLink")
     async def s_add(self, ctx, link: str, action: str = "ban"):
         split_link = link.split("/")
-        if len(split_link) < 3 or len(split_link) > 4 or "." not in split_link[2]:
+        if len(split_link) < 3 or "." not in split_link[2]:
             return await ctx.send("Invalid link format")
         formatted_link = f"https?;//{split_link[2].replace('.', ',')}"
         await ctx.send(f"Added `http(s)://{split_link[2]}` to automod")
@@ -397,7 +397,7 @@ class Staff(commands.Cog):
     @scamLinks.command(hidden=True, name="removeLink")
     async def s_remove(self, ctx, link: str):
         split_link = link.split("/")
-        if len(split_link) < 3 or len(split_link) > 4 or "." not in split_link[2]:
+        if len(split_link) < 3 or "." not in split_link[2]:
             return await ctx.send("Invalid link format")
         formatted_link = f"https?;//{split_link[2].replace('.', ',')}"
         await ctx.send(f"Removed `http(s)://{split_link[2]}` to automod")
