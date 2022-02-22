@@ -69,7 +69,7 @@ async def automod_name(user: discord.Member):
 async def send_report(ctx, message, reason):
     embed = discord.Embed(title="New report", colour=discord.Color.red(), url=message.jump_url,
                           description=f"Reason: {reason}" if reason else "").add_field(name="Message Content",
-                                                                                       value=message.content,
+                                                                                       value=message.content[:1900],
                                                                                        inline=False).add_field(
         name="Reported By", value=f"{ctx.author.mention} ({ctx.author})", inline=False).set_author(
         name=message.author, icon_url=message.author.avatar_url)

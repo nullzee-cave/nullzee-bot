@@ -288,8 +288,8 @@ class Tickets(commands.Cog):
                     return
                 try:
                     message = await self.bot.wait_for('message',
-                                                      check=lambda m: m.channel.id == msg.channel.id
-                                                                      and m.author.id == payload.member.id,
+                                                      check=lambda m: m.channel.id == msg.channel.id and
+                                                                      m.author.id == payload.member.id,
                                                       timeout=300.0)
                     if message.attachments is not None:
                         for attachment in message.attachments:
@@ -298,7 +298,10 @@ class Tickets(commands.Cog):
                                     value=message.content if message.content else "`None`",
                                     inline=False)
                 except asyncio.TimeoutError:
-                    return await payload.member.send("Ticket creation timed out")
+                    try:
+                        return await payload.member.send("Ticket creation timed out")
+                    except discord.Forbidden:
+                        return
             if images:
                 embed.set_image(url=images[0])
             channel: discord.TextChannel = await guild.create_text_channel(
