@@ -68,11 +68,12 @@ async def automod_name(user: discord.Member):
 
 async def send_report(ctx, message, reason):
     embed = discord.Embed(title="New report", colour=discord.Color.red(), url=message.jump_url,
-                          description=f"Reason: {reason}" if reason else "").add_field(name="Message Content",
-                                                                                       value=message.content,
-                                                                                       inline=False).add_field(
-        name="Reported By", value=f"{ctx.author.mention} ({ctx.author})", inline=False).set_author(
-        name=message.author, icon_url=message.author.avatar_url)
+                          description=f"Reason: {reason}" if reason else "")\
+        .add_field(name="Message Content",
+                   value=f"{message.content[:1900]}{'...' if message.content[:1900] != message.content else ''}",
+                   inline=False)\
+        .add_field( name="Reported By", value=f"{ctx.author.mention} ({ctx.author})", inline=False)\
+        .set_author(name=message.author, icon_url=message.author.avatar_url)
     if message.attachments:
         embed.set_image(url=message.attachments[0].url)
     await ctx.guild.get_channel(Channel.REPORTS_APPEALS).send(embed=embed)
