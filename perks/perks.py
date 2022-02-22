@@ -38,7 +38,7 @@ async def deadChat(ctx, arg):
     global last_ping
     if ctx.channel.slowmode_delay > 5:
         raise PerkError(msg="You cannot use that here")
-    if last_ping + 1800 > time.time():
+    if last_ping + 7200 > time.time():
         raise PerkError(msg="This perk is on cooldown!")
     await ctx.send("<@&749178299518943343>", embed=await Embed(ctx.author, description=arg).set_author(name=ctx.author,
                                                                                                        icon_url=ctx.author.avatar_url).user_colour())
