@@ -127,7 +127,7 @@ async def staffNickChange(ctx, arg):
         except discord.Forbidden:
             pass
 
-@perk(name="rainbow", description=f"Change the colour of the <@&{Role.RAINBOW}> role", aliases=["roleColour"], cost=20, require_arg=True)
+@perk(name="rainbow", description=f"Change the colour of the <@&{Role.RAINBOW}> role", aliases=["roleColour"], cost=10, require_arg=True)
 async def rainbow_role(ctx: commands.Context, arg: str):
     global last_rainbow
     if time.time() - last_rainbow < 60*15:
