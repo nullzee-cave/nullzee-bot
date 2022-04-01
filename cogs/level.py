@@ -214,7 +214,10 @@ class Levelling(commands.Cog, name="levelling"):
         string += f"\nPoints: {random.randint(0, 2000):,}"
         string += f"\nTotal XP: {random.randint(0, (sum([round(50 * z ** 1.5) for z in range(1, user_data['level'])]) + user_data['experience']) * 2):,}"
         string += f"\nMinutes in VC: {random.randint(0, user_data['vc_minutes'] * 2):,}"
-        embed = await Embed(user, title=f"Level: {str(round(user_data['level']))}", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley",
+        # embed = await Embed(user, title=f"Level: {str(round(user_data['level']))}", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley",
+        #                     description=string).user_colour()
+        embed = await Embed(user, title=f"Level: {random.randint(1, 200)}",
+                            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley",
                             description=string).user_colour()
         embed.set_author(name=user, icon_url=user.avatar_url)
         await ctx.send(embed=embed)
