@@ -191,7 +191,7 @@ class Levelling(commands.Cog, name="levelling"):
                                                                                       "last_points"] + 100))}})
                 await message.channel.send(
                     # f":tada: Congrats {message.author.mention}, you levelled up to level {lvl_start + 1}!")
-                    f":tada: Congrats {message.author.mention}, you levelled up to level {random.randint(1, 200)}")
+                    f":tada: Congrats {message.author.mention}, you levelled up to level {random.randint(1, 200)}!")
                 if str(lvl_start + 1) in Role.LevelRoles.LEVELS:
                     role = message.guild.get_role(int(Role.LevelRoles.LEVELS[str(lvl_start + 1)]))
                     await message.author.add_roles(role)
