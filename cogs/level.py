@@ -190,8 +190,8 @@ class Levelling(commands.Cog, name="levelling"):
                                                                                   user_data[
                                                                                       "last_points"] + 100))}})
                 await message.channel.send(
-                    # f":tada: Congrats {message.author.mention}, you levelled up to level {lvl_start + 1}!")
-                    f":tada: Congrats {message.author.mention}, you levelled up to level {random.randint(-1000000, 1000000)}!")
+                    f":tada: Congrats {message.author.mention}, you levelled up to level {lvl_start + 1}!")
+                    
                 if str(lvl_start + 1) in Role.LevelRoles.LEVELS:
                     role = message.guild.get_role(int(Role.LevelRoles.LEVELS[str(lvl_start + 1)]))
                     await message.author.add_roles(role)
@@ -204,20 +204,13 @@ class Levelling(commands.Cog, name="levelling"):
         user_data = await userColl.find_one({"_id": str(user.id)})
         if not user_data:
             return await ctx.send("This user has no level")
-        # string = f"XP: {round(user_data['experience']):,}/{round(50 * (round(user_data['level']) ** 1.5)):,}"
-        # string += f"\nWeekly XP: {round(user_data['weekly']):,}"
-        # string += f"\nPoints: {user_data['points']:,}"
-        # string += f"\nTotal XP: {(sum([round(50 * z ** 1.5) for z in range(1, user_data['level'])]) + user_data['experience']):,}"
-        # string += f"\nMinutes in VC: {user_data['vc_minutes']:,}"
-        string = f"XP: {random.randint(0, round(50 * (user_data['level'] ** 1.5)) - 1):,}/{round(50 * (round(user_data['level']) ** 1.5)):,}"
-        string += f"\nWeekly XP: {random.randint(-1000000000, 1000000000):,}"
-        string += f"\nPoints: {random.randint(-2000000, 2000000):,}"
-        string += f"\nTotal XP: {random.randint(-(sum([round(50 * z ** 1.5) for z in range(1, user_data['level'])]) + user_data['experience']) * 20, (sum([round(50 * z ** 1.5) for z in range(1, user_data['level'])]) + user_data['experience']) * 20):,}"
-        string += f"\nMinutes in VC: {random.randint(-user_data['vc_minutes'] * 20, user_data['vc_minutes'] * 20):,}"
-        # embed = await Embed(user, title=f"Level: {str(round(user_data['level']))}", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley",
-        #                     description=string).user_colour()
-        embed = await Embed(user, title=f"Level: {random.randint(-1000000, 1000000)}",
-                            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley",
+        string = f"XP: {round(user_data['experience']):,}/{round(50 * (round(user_data['level']) ** 1.5)):,}"
+        string += f"\nWeekly XP: {round(user_data['weekly']):,}"
+        string += f"\nPoints: {user_data['points']:,}"
+        string += f"\nTotal XP: {(sum([round(50 * z ** 1.5) for z in range(1, user_data['level'])]) + user_data['experience']):,}"
+        string += f"\nMinutes in VC: {user_data['vc_minutes']:,}"
+        
+        embed = await Embed(user, title=f"Level: {str(round(user_data['level']))}", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley",
                             description=string).user_colour()
         embed.set_author(name=user, icon_url=user.avatar_url)
         await ctx.send(embed=embed)
@@ -242,21 +235,13 @@ class Levelling(commands.Cog, name="levelling"):
 
         desired_total_xp = level_xp(wanted_level)
         embed = await Embed(user, title="XP Calculator").user_colour()
-        # embed.add_field(name="Desired Level",
-        #                 value=f"XP until desired level: {(sum([round(50 * z ** 1.5) for z in range(level, wanted_level)]) - xp):,}\nXP of desired level: {(level_xp(wanted_level)):,}")
-        # embed.add_field(name="Total XP Stats",
-        #                 value=f"Total XP of desired level: {(total_xp(wanted_level)):,}\nYour total XP: {(total_xp(level) + xp):,}",
-        #                 inline=False)
-        # embed.add_field(name="Next Level",
-        #                 value=f"XP until next level: {(level_xp(level) - xp):,}\nXP of next level: {(level_xp(level + 1)):,}",
-        #                 inline=False)
         embed.add_field(name="Desired Level",
-                        value=f"XP until desired level: {random.randint(-(sum([round(50 * z ** 1.5) for z in range(level, wanted_level)]) - xp) * 50, (sum([round(50 * z ** 1.5) for z in range(level, wanted_level)]) - xp) * 50):,}\nXP of desired level: {random.randint(-level_xp(wanted_level) * 50, level_xp(wanted_level) * 50):,}")
+                        value=f"XP until desired level: {(sum([round(50 * z ** 1.5) for z in range(level, wanted_level)]) - xp):,}\nXP of desired level: {(level_xp(wanted_level)):,}")
         embed.add_field(name="Total XP Stats",
-                        value=f"Total XP of desired level: {random.randint(-total_xp(wanted_level) * 50, total_xp(wanted_level) * 50):,}\nYour total XP: {random.randint(-(total_xp(level) + xp) * 50, (total_xp(level) + xp) * 50):,}",
+                        value=f"Total XP of desired level: {(total_xp(wanted_level)):,}\nYour total XP: {(total_xp(level) + xp):,}",
                         inline=False)
         embed.add_field(name="Next Level",
-                        value=f"XP until next level: {random.randint(-(level_xp(level) - xp) * 50, (level_xp(level) - xp) * 50):,}\nXP of next level: {random.randint(-level_xp(level + 1) * 50, level_xp(level + 1) * 50):,}",
+                        value=f"XP until next level: {(level_xp(level) - xp):,}\nXP of next level: {(level_xp(level + 1)):,}",
                         inline=False)
         await ctx.send(embed=embed)
 
