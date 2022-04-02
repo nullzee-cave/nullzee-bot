@@ -99,8 +99,7 @@ def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="
     for i, user in enumerate(users):
         if not (member := guild.get_member(int(user["_id"]))):
             continue
-        # entries.append(f"**{lb_pos}: {member}** - {prefix}{user[key]:,}{suffix}\n")
-        entries.append(f"**{lb_pos}: {member}** - {prefix}{random.randint(-round(user[key] if user[key] > 0 else 1) * 50 if key != 'level' else 1000000, round(user[key] if user[key] > 0 else 1) * 50 if key != 'level' else 1000000):,}{suffix}\n")
+        entries.append(f"**{lb_pos}: {member}** - {prefix}{user[key]:,}{suffix}\n")
         lb_pos += 1
     embeds = [discord.Embed(colour=0x00FF00).set_author(name=title, icon_url=guild.icon_url)]
     values = [""]
