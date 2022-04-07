@@ -394,7 +394,7 @@ def stringToSeconds(_string):
         "m": 60,
         "s": 1,
     }
-    regex = r" ?(?P<time>(?P<number>\d+) ?(?P<period>d|h|m|s)) ?"
+    regex = r" ?(?P<time>(?P<number>\d+) ?(?P<period>w|d|h|m|s)) ?"
     _string = _string.lower()
     match = re.match(regex, _string)
     if match is None:
