@@ -51,6 +51,10 @@ class Giveaway(commands.Cog, name="giveaway"):
         await ctx.send("How long will the giveaway last?")
         time_msg = await self.get_input(ctx)
         giveaway_time = await TimeConverter().convert(ctx, time_msg.content)
+        if giveaway_time < 10800 or
+        (giveaway_time > 604800 and channel.id not in [Channel.GIVEAWAY, Channel.STAFF_ANNOUNCEMENTS]) or
+        (giveaway_time > 1209600 and channel.id in [Channel.GIVEAWAY, Channel.STAFF_ANNOUNCEMENTS]):
+            return await ctx.send("Giveaways can last a minimum of 3 hours and a maximum of 1 week (or 2 for large giveaways).")
 
         await ctx.send("How many winners will there be?")
         winner_count_msg = await self.get_input(ctx)
@@ -244,7 +248,7 @@ class Giveaway(commands.Cog, name="giveaway"):
             await ctx.send("Could not find that giveaway")
 
     @commands.command(hidden=True)
-    @staff_or_trainee
+    @commands.has_role(Role.ADMIN)
     async def start(self, ctx, timer: TimeConverter, winners: str, donor: discord.Member, *, prize: str):
         """Quickly start a giveaway with limited options"""
         winners = int(winners.replace('w', ''))
