@@ -16,6 +16,13 @@ class UselessCommands(commands.Cog, name='Useless Commands'):
         embed = await Embed(ctx.author, description=f'{ctx.author.mention} shakes their head').user_colour()
         await ctx.send(embed=embed)
         
+    @commands.command(aliases=["majoroof", "bigoof"])
+    async def oof(self, ctx):
+        embed = await Embed(ctx.author,
+                            description=f"<:robloxbighead:968095802742419496> O O F") \
+                      .user_colour()
+        await ctx.send(embed=embed)
+
     @commands.command(aliases=["failed", "fail"])
     async def mistake(self, ctx):
         embed = await Embed(ctx.author,
