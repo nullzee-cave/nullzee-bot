@@ -25,7 +25,7 @@ class Logging(commands.Cog):
         embed = Embed(message.author, colour=discord.Colour.dark_orange(),
                       ).auto_author().set_footer(
             text=f"Message ID: {message.id}, Channel ID: {message.channel.id}, Author ID: {message.author.id}")
-        embed.description = f"**Message deleted in {message.channel.mention} by {message.author.mention}:**\n" \
+        embed.description = f"**Message deleted in {message.channel.mention} from {message.author.mention}:**\n" \
                             f"{truncated_content}{'...' if truncated_content != content else ''}"
         if message.attachments:
             for attachment in message.attachments:
