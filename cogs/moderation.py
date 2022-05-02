@@ -59,7 +59,7 @@ class Moderation(commands.Cog, name="Moderation"):
     @staff_or_trainee
     async def unmute(self, ctx, user: discord.Member, *, reason: str = "none"):
         """Unmute a user"""
-        await moderationColl.delete_many({"offender_id": user.id, "type": "mute"})
+        await moderationColl.update_many({"offender_id": user.id, "type": "mute"}, {"$set": {"expired": True}})
         await user.remove_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]), reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
         await moderationUtils.end_log(self.bot, {"type": "mute", "offender_id": user.id}, moderator=ctx.author,
                                       reason=reason)
