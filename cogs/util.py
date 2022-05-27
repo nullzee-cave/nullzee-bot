@@ -24,6 +24,7 @@ from helpers.events import Emitter
 
 class Util(commands.Cog, name="Other"):
     """Other useful commands"""
+
     # and listeners
 
     def __init__(self, bot, hidden):
@@ -67,8 +68,8 @@ class Util(commands.Cog, name="Other"):
         before_ids = [z.id for z in before.roles]
         after_ids = [z.id for z in after.roles]
         if ((Role.TWITCH_SUB in before_ids and Role.TWITCH_SUB not in after_ids) or (
-             Role.BOOSTER in before_ids and Role.BOOSTER not in after_ids)) and (
-             Role.RETIRED_SUPPORTER not in after_ids):
+                Role.BOOSTER in before_ids and Role.BOOSTER not in after_ids)) and (
+                Role.RETIRED_SUPPORTER not in after_ids):
             await after.add_roles(after.guild.get_role(Role.RETIRED_SUPPORTER))
 
     @commands.command()
@@ -451,14 +452,16 @@ class Util(commands.Cog, name="Other"):
 
                     skill_averages.append(math.trunc(sum([Skyblock.SKILL_XP_REQUIREMENTS.index(
                         utils.level_from_table(profile["members"][user][f"experience_skill_{skill}"],
-                                               Skyblock.SKILL_XP_REQUIREMENTS[:50] if skill in Skyblock.MAX_LEVEL_50_SKILLS else Skyblock.SKILL_XP_REQUIREMENTS)
-                    )+1 for skill in skills]) / len(skills)))
+                                               Skyblock.SKILL_XP_REQUIREMENTS[
+                                               :50] if skill in Skyblock.MAX_LEVEL_50_SKILLS else Skyblock.SKILL_XP_REQUIREMENTS)
+                    ) + 1 for skill in skills]) / len(skills)))
 
                     if "slayer_bosses" in profile["members"][user]:
                         slayer_bosses = profile["members"][user]["slayer_bosses"]
                         for slayer in slayer_bosses:
                             try:
-                                if "level_7" in slayer_bosses[slayer]["claimed_levels"]:
+                                if "level_7" in slayer_bosses[slayer]["claimed_levels"] and \
+                                        "level_7_special" in slayer_bosses[slayer]["claimed_levels"]:
                                     slayers.append(7)
                                 if "level_9" in slayer_bosses[slayer]["claimed_levels"]:
                                     slayers.append(9)
@@ -471,14 +474,17 @@ class Util(commands.Cog, name="Other"):
                             if pet["tier"] in Skyblock.PET_TIERS:
                                 if pet["type"] not in pets:
                                     if pet["heldItem"] in ["PET_ITEM_TOY_JERRY"]:
-                                        pets[pet["type"]] = Skyblock.PET_TIERS[Skyblock.PET_TIERS.index(pet["tier"])+1]
+                                        pets[pet["type"]] = Skyblock.PET_TIERS[
+                                            Skyblock.PET_TIERS.index(pet["tier"]) + 1]
                                     else:
                                         pets[pet["type"]] = pet["tier"]
                                 else:
-                                    if Skyblock.PET_TIERS.index(pet["tier"]) > Skyblock.PET_TIERS.index(pets[pet["type"]]):
+                                    if Skyblock.PET_TIERS.index(pet["tier"]) > Skyblock.PET_TIERS.index(
+                                            pets[pet["type"]]):
                                         # TODO: find the id for tier boosts and add it to the following line
                                         if pet["heldItem"] in ["PET_ITEM_TOY_JERRY"]:
-                                            pets[pet["type"]] = Skyblock.PET_TIERS[Skyblock.PET_TIERS.index(pet["tier"])+1]
+                                            pets[pet["type"]] = Skyblock.PET_TIERS[
+                                                Skyblock.PET_TIERS.index(pet["tier"]) + 1]
                                         else:
                                             pets[pet["type"]] = pet["tier"]
                             else:
@@ -491,9 +497,12 @@ class Util(commands.Cog, name="Other"):
                         pet_score = profile_pet_score
 
                     if "experience" in profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"]:
-                        if profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"]["experience"] > catacombs_xp:
-                            catacombs_xp = profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"]["experience"]
-                            catacombs_level = Skyblock.CATACOMBS_XP_REQUIREMENTS.index(utils.level_from_table(catacombs_xp, Skyblock.CATACOMBS_XP_REQUIREMENTS)) + 1
+                        if profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"][
+                            "experience"] > catacombs_xp:
+                            catacombs_xp = profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"][
+                                "experience"]
+                            catacombs_level = Skyblock.CATACOMBS_XP_REQUIREMENTS.index(
+                                utils.level_from_table(catacombs_xp, Skyblock.CATACOMBS_XP_REQUIREMENTS)) + 1
                 except KeyError:
                     pass
         roles = []
@@ -553,7 +562,8 @@ class Util(commands.Cog, name="Other"):
     async def tags_command(self, ctx: commands.Context):
         """View a list of all saved tags"""
         tags = "\n".join([f'+ {z["name"]} : {", ".join(z["aliases"])}' for z in self.tags])
-        await ctx.send(f"All available tags: ```diff\n{tags}\n```", allowed_mentions=discord.AllowedMentions(roles=False, everyone=False))
+        await ctx.send(f"All available tags: ```diff\n{tags}\n```",
+                       allowed_mentions=discord.AllowedMentions(roles=False, everyone=False))
 
     @commands.command(hidden=True)
     @staff_only
@@ -562,7 +572,8 @@ class Util(commands.Cog, name="Other"):
         check = lambda message: message.channel.id == ctx.channel.id and message.author.id == ctx.author.id
         await ctx.send("Send a comma-delimited list of aliases for this tag")
         try:
-            aliases = [*map(str.strip, (await self.bot.wait_for('message', check=check, timeout=120.0)).content.split(','))]
+            aliases = [
+                *map(str.strip, (await self.bot.wait_for('message', check=check, timeout=120.0)).content.split(','))]
             await ctx.send("Send the response for this tag")
             response = (await self.bot.wait_for('message', check=check, timeout=300)).content
         except asyncio.TimeoutError:
