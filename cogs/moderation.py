@@ -45,7 +45,7 @@ class Moderation(commands.Cog, name="Moderation"):
         payload = payloads.mute_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason)
         message = await ctx.send(embed=moderationUtils.chatEmbed(ctx, payload))
         payload = payloads.insert_message(payload, message)
-        await user.add_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]), reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
+        await user.add_roles(ctx.guild.get_role((await moderationUtils.get_config())["mutedRole"]), reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
         await moderationColl.insert_one(payload)
         await moderationUtils.log(self.bot, payload)
         time_string = payload["duration_string"]
@@ -60,7 +60,7 @@ class Moderation(commands.Cog, name="Moderation"):
     async def unmute(self, ctx, user: discord.Member, *, reason: str = "none"):
         """Unmute a user"""
         await moderationColl.update_many({"offender_id": user.id, "type": "mute"}, {"$set": {"expired": True}})
-        await user.remove_roles(ctx.guild.get_role((await moderationUtils.get_config())["muteRole"]), reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
+        await user.remove_roles(ctx.guild.get_role((await moderationUtils.get_config())["mutedRole"]), reason=f"mod: {ctx.author} | reason: {reason[:400]}{'...' if len(reason) > 400 else ''}")
         await moderationUtils.end_log(self.bot, {"type": "mute", "offender_id": user.id}, moderator=ctx.author,
                                       reason=reason)
         await ctx.send(embed=discord.Embed(description=f"unmuted {user}", colour=discord.Colour.green()))

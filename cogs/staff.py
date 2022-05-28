@@ -301,7 +301,7 @@ class Staff(commands.Cog):
 
     @config.command(hidden=True)
     async def mutedRole(self, ctx, *, role: discord.Role):
-        await moderationColl.update_one({"_id": "config"}, {"$set": {"muteRole": role.id}})
+        await moderationColl.update_one({"_id": "config"}, {"$set": {"mutedRole": role.id}})
 
     @config.command(hidden=True)
     async def deleteWarnsAfter(self, ctx, _time: TimeConverter):

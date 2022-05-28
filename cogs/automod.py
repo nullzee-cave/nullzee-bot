@@ -90,7 +90,7 @@ class Automod(commands.Cog):
     async def on_member_join(self, member):
         await moderationUtils.automod_name(member)
         if await moderationColl.find_one({"offender_id": member.id, "active": True, "type": "mute"}):
-            await member.add_roles(member.guild.get_role((await moderationUtils.get_config())["muteRole"]))
+            await member.add_roles(member.guild.get_role((await moderationUtils.get_config())["mutedRole"]))
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):

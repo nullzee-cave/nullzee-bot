@@ -101,7 +101,7 @@ async def end_punishment(bot, payload, moderator, reason):
         guild = bot.get_guild(Misc.GUILD)
         if payload["type"] == "mute":
             member = guild.get_member(payload["offender_id"])
-            await member.remove_roles(guild.get_role((await get_config())["muteRole"]))
+            await member.remove_roles(guild.get_role((await get_config())["mutedRole"]))
         elif payload["type"] == "ban":
             await guild.unban(BannedUser(payload["offender_id"]), reason="punishment ended")
         await end_log(bot, payload, moderator=moderator, reason=reason)
