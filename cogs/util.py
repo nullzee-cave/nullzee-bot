@@ -15,7 +15,7 @@ import random
 from discord.ext.commands.cooldowns import BucketType
 import time
 import datetime
-from api_key import moderation_coll, HYPIXEL_API_KEY, DEV_ID
+from api_key import moderation_coll, HYPIXEL_API_KEY, DEV_ID, user_coll
 from helpers.utils import Embed, strfdelta, staff_only, HelpConverter
 import mathterpreter
 
@@ -197,8 +197,9 @@ class Util(commands.Cog, name="Other"):
                             value=f"#{embed_colour}" if not embed_colour.startswith("#") else embed_colour,
                             inline=False)
         else:
+            user_data = await user_coll.find_one({"_id": str(user.id)})
             embed.add_field(name="0 Roles", value="N/A", inline=False)
-            embed.add_field(name="Embed Colour", value="N/A")
+            embed.add_field(name="Embed Colour", value=user_data["embed_colour"] if user_data else "N/A")
         embed.set_footer(text=user.id)
         embed.set_thumbnail(url=user.avatar_url)
         embed.auto_author()
