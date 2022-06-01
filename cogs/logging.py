@@ -6,7 +6,7 @@ from helpers.constants import Channel
 from helpers.utils import Embed
 
 
-class Logging(commands.Cog):
+class Logging(commands.Cog, name="Logging"):
     """The message logging system"""
 
     def __init__(self, bot: commands.Bot):
@@ -22,8 +22,9 @@ class Logging(commands.Cog):
         content = message.content if message.content else ""
         truncated_content = content[:1900]
         files = []
-        embed = Embed(message.author, colour=discord.Colour.dark_orange(),
-                      ).auto_author().set_footer(
+        embed = Embed(message.author, colour=discord.Colour.dark_orange())
+        embed.auto_author()
+        embed.set_footer(
             text=f"Message ID: {message.id}, Channel ID: {message.channel.id}, Author ID: {message.author.id}")
         embed.description = f"**Message deleted in {message.channel.mention} from {message.author.mention}:**\n" \
                             f"{truncated_content}{'...' if truncated_content != content else ''}"
@@ -57,7 +58,7 @@ class Logging(commands.Cog):
                 change = char[0]
                 if change in ("+", "-"):
                     if change != last_change:
-                        output += '`'
+                        output += "`"
                         output += char[::2]
                         last_change = change
                     else:
@@ -65,19 +66,19 @@ class Logging(commands.Cog):
                 else:
                     if last_change:
                         last_change = ""
-                        output += '`'
+                        output += "`"
                     output += char[-1]
             if len(output) > 1800:
                 output = f"{output[:1500]}..."
         else:
             output = f"**Before:**\n{before.content}\n**After:**\n{after.content}"
 
-        embed = Embed(after.author, colour=discord.Colour.orange(),
-                      description=f"**[Message]({after.jump_url}) edited in {after.channel.mention} by {after.author.mention}:**\n{output}"
-                      ).set_footer(
-            text=f"Message ID: {after.id}, Channel ID: {after.channel.id}, Author ID: {after.author.id}"
-        ).auto_author().timestamp_now()
-
+        embed = Embed(after.author,
+                      description=f"**[Message]({after.jump_url}) edited in {after.channel.mention} "
+                                  f"by {after.author.mention}:**\n{output}",
+                      colour=discord.Colour.orange())
+        embed.set_footer(text=f"Message ID: {after.id}, Channel ID: {after.channel.id}, Author ID: {after.author.id}")
+        embed.auto_author().timestamp_now()
         await before.guild.get_channel(Channel.MESSAGE_LOGS).send(embed=embed)
 
 

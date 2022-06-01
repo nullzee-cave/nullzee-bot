@@ -6,10 +6,10 @@ from discord.ext.commands import BucketType
 from achievements.achievements import achievements
 from achievements.images import achievement_page, achievement_timeline, achievement_timeline_animated, BackgroundMeta, \
     background_preview, BackgroundConverter, BoxBorderMeta, BoxBorderConverter, box_border_preview
-from api_key import userColl
+from api_key import user_coll
 from helpers.constants import Role
 from helpers.events import Emitter, Subscriber
-from helpers.utils import get_user, ShallowContext, getFileJson, Embed, saveFileJson
+from helpers.utils import get_user, ShallowContext, get_file_json, Embed, save_file_json
 from math import ceil
 import typing
 import os
@@ -21,7 +21,48 @@ import imageio
 
 subscriber = Subscriber()
 
-class Achievements(commands.Cog):
+
+def generate_static_background_previews():
+    data = BackgroundMeta.get()
+    previews = []
+    for bg in data:
+        if BackgroundMeta.get()[bg].preview:
+            previews.append(imageio.v2.imread(background_preview(bg)))
+    imageio.mimsave(f"image_cache/static_background_previews/animated.gif", previews, fps=0.5)
+
+
+def generate_static_boxborder_previews():
+    data = BoxBorderMeta.get()
+    previews = []
+    for bg in data:
+        if BoxBorderMeta.get()[bg].preview:
+            previews.append(imageio.v2.imread(box_border_preview(bg)))
+    imageio.mimsave(f"image_cache/static_boxborder_previews/animated.gif", previews, fps=0.5)
+
+
+def generate_static_pages():
+    images = []
+    for i in range(ceil(len({k: v for k, v in achievements.items() if "hidden" not in v}) / 3)):
+        images.append(imageio.v2.imread(achievement_page(i, f"image_cache/static_achievements/page_{i}.png")))
+    imageio.mimsave(f"image_cache/static_achievements/animated.gif", images, fps=0.5)
+
+
+async def get_inventory(user, inv, name):
+    user_data = await get_user(user)
+    bgs = user_data["achievement_inventory"][inv]
+    return await Embed(user, title=f"Your {name} inventory", description="\n".join(bgs)).user_colour()
+
+
+async def get_bg_inv(user):
+    return await get_inventory(user, "backgrounds", "background")
+
+
+async def get_bb_inv(user):
+    return await get_inventory(user, "box_borders", "box-border")
+
+
+# TODO: merge bb_shop and bg_shop with a generic achievement_shop function
+class Achievements(commands.Cog, name="Achievements"):
     """The achievements system"""
 
     def __init__(self, bot):
@@ -29,9 +70,9 @@ class Achievements(commands.Cog):
         self.bot: commands.Bot = bot
         self.emitter = Emitter()
         self.clear_image_cache.start()
-        self.generate_static_pages()
-        self.generate_static_background_previews()
-        self.generate_static_boxborder_previews()
+        generate_static_pages()
+        generate_static_background_previews()
+        generate_static_boxborder_previews()
 
     def cog_unload(self):
         self.clear_image_cache.cancel()
@@ -51,39 +92,6 @@ class Achievements(commands.Cog):
                         os.remove(image_filename)
                     os.remove(filename)
 
-    def generate_static_background_previews(self):
-        data = BackgroundMeta.get()
-        previews = []
-        for bg in data:
-            if BackgroundMeta.get()[bg].preview:
-                previews.append(imageio.imread(background_preview(bg)))
-        imageio.mimsave(f"image_cache/static_background_previews/animated.gif", previews, fps=0.5)
-
-    def generate_static_boxborder_previews(self):
-        data = BoxBorderMeta.get()
-        previews = []
-        for bg in data:
-            if BoxBorderMeta.get()[bg].preview:
-                previews.append(imageio.imread(box_border_preview(bg)))
-        imageio.mimsave(f"image_cache/static_boxborder_previews/animated.gif", previews, fps=0.5)
-
-    def generate_static_pages(self):
-        images = []
-        for i in range(ceil(len({k: v for k, v in achievements.items() if "hidden" not in v}) / 3)):
-            images.append(imageio.imread(achievement_page(i, f"image_cache/static_achievements/page_{i}.png")))
-        imageio.mimsave(f'image_cache/static_achievements/animated.gif', images, fps=0.5)
-
-    async def get_bg_inv(self, user):
-        return await self.get_inventory(user, "backgrounds", "background")
-
-    async def get_bb_inv(self, user):
-        return await self.get_inventory(user, "box_borders", "box-border")
-
-    async def get_inventory(self, user, inv, name):
-        user_data = await get_user(user)
-        bgs = user_data["achievement_inventory"][inv]
-        return await Embed(user, title=f"Your {name} inventory", description="\n".join(bgs)).user_colour()
-
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.type == discord.MessageType.pins_add:
@@ -99,9 +107,9 @@ class Achievements(commands.Cog):
     async def on_command_completion(self, ctx):
         await self.emitter.emit("command", ctx, ctx.command.name)
 
-    @commands.command(aliases=["lac"])
+    @commands.command(name="listachievements", aliases=["lac"])
     @commands.cooldown(10, 1, BucketType.user)
-    async def listachievements(self, ctx, page: int = None):
+    async def list_achievements(self, ctx, page: int = None):
         try:
             file_loc = "image_cache/static_achievements/" + (f"page_{page - 1}.png" if page else "animated.gif")
             await ctx.send(file=discord.File(file_loc))
@@ -121,7 +129,7 @@ class Achievements(commands.Cog):
                         role_checks.append(Role[role.upper()] in role_ids)
                     if not ((cos_data.role_req_strategy == "all" and False in role_checks) or (True not in role_checks)):
                         new_cosmetics[cosmetic_name].append(cos)
-        await userColl.update_one(
+        await user_coll.update_one(
             {"_id": str(ctx.author.id)},
             {"$addToSet": {f"achievement_inventory.{k}": {"$each": v} for k, v in new_cosmetics.items()}}
         )
@@ -146,49 +154,53 @@ class Achievements(commands.Cog):
             await ctx.send(file=discord.File(f"{user_page_path}_{page}.png"))
             if not did_create:
                 return
-            cache_data = getFileJson(user_page_path)
+            cache_data = get_file_json(user_page_path)
             cache_data["regen_animated"] = True
-            saveFileJson(cache_data, user_page_path)
+            save_file_json(cache_data, user_page_path)
 
-    @commands.command()
-    async def achievementhelp(self, ctx):
-        await ctx.send(embed=discord.Embed(
-            title="Achievements",
-            colour=0x00ff00,
-        ).add_field(
+    @commands.command(name="achievementhelp", aliases=["achievementshelp", "achelp"])
+    async def achievement_help(self, ctx):
+        """Explains how the achievement system works"""
+        embed = discord.Embed(title="Achievements", colour=0x00ff00)
+        embed.add_field(
             name="How it works",
             value="You can complete achievements by doing various things within the server, such as sending messages "
                   "or gaining roles. Each achievement will reward you with a certain number of \"achievement points\", "
                   "these can be used to purchase background images and borders for the achievement commands",
             inline=False
-        ).add_field(
+        )
+        embed.add_field(
             name="Commands",
             value="`-listachievements` : view a list of all non-hidden achievements\n"
                   "`-achievements` : view a timeline of your achievements",
             inline=False
-        ).add_field(
+        )
+        embed.add_field(
             name="Borders",
             value="The border around your achievement timeline changes as you complete more achievements",
             inline=False
-        ).add_field(
+        )
+        embed.add_field(
             name="Cosmetics",
             value="There are several cosmetic items that you can earn/purchase. There are exclusive backgrounds for "
                   "nitro boosters and twitch subs for example. You can buy cosmetics with \"achievement points\" "
                   "using the commands below",
             inline=False
-        ).add_field(
+        )
+        embed.add_field(
             name="Cosmetic commands",
             value="`-backgrounds` : view all commands for changing your background image\n"
                   "`-boxborder` : view all commands for changing your box-border\n"
                   "`-inventory` : view both your background and box-border inventory at once",
             inline=False
-        ))
+        )
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=["inv"])
     async def inventory(self, ctx):
         """View all of your achievement backgrounds and box borders"""
-        bg_embed = (await self.get_bg_inv(ctx.author)).set_footer(text="page 1 of 2")
-        bb_embed = (await self.get_bb_inv(ctx.author)).set_footer(text="page 2 of 2")
+        bg_embed = (await get_bg_inv(ctx.author)).set_footer(text="page 1 of 2")
+        bb_embed = (await get_bb_inv(ctx.author)).set_footer(text="page 2 of 2")
         msg = await ctx.send(embed=bg_embed)
         await Paginator(self.bot, msg, embeds=[bg_embed, bb_embed], timeout=60, use_extend=False, only=ctx.author).start()
 
@@ -197,7 +209,7 @@ class Achievements(commands.Cog):
         """Boxborder related commands"""
         await ctx.send(embed=discord.Embed(
             title="-boxBorder",
-            description="\n".join([f":arrow_right: `{ctx.prefix}boxBorder {z.name} {z.signature}`"
+            description="\n".join([f":arrow_right: `{ctx.PREFIX}boxBorder {z.name} {z.signature}`"
                                    for z in self.box_border.commands]),
             colour=0x00ff00
         ))
@@ -224,7 +236,7 @@ class Achievements(commands.Cog):
     @box_border.command(name="inventory", aliases=["inv"])
     async def bb_inventory(self, ctx):
         """View your boxborders"""
-        embed = await self.get_bb_inv(ctx.author)
+        embed = await get_bb_inv(ctx.author)
         await ctx.send(embed=embed)
 
     @box_border.command(name="select", aliases=["equip"])
@@ -233,7 +245,7 @@ class Achievements(commands.Cog):
         user_data = await get_user(ctx.author)
         if item not in user_data["achievement_inventory"]["box_borders"]:
             return await ctx.send("You have not unlocked that border yet!")
-        await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"box_border": item}})
+        await user_coll.update_one({"_id": str(ctx.author.id)}, {"$set": {"box_border": item}})
         await ctx.send(f"Successfully set your current box-border to `{item}`")
 
     @box_border.command(name="purchase", aliases=["buy"])
@@ -247,7 +259,7 @@ class Achievements(commands.Cog):
             return await ctx.send("This border is not purchasable")
         if item_data.cost > user_data["achievement_points"]:
             return await ctx.send("You cannot afford this!")
-        await userColl.update_one({"_id": str(ctx.author.id)}, {"$push": {"achievement_inventory.box_borders": item},
+        await user_coll.update_one({"_id": str(ctx.author.id)}, {"$push": {"achievement_inventory.box_borders": item},
                                                                 "$inc": {"achievement_points": -item_data.cost}})
         await ctx.send(f"Successfully purchased `{item}` for {item_data.cost} achievement points")
 
@@ -256,7 +268,7 @@ class Achievements(commands.Cog):
         """Background related commands"""
         await ctx.send(embed=discord.Embed(
             title="-background",
-            description="\n".join([f":arrow_right: `{ctx.prefix}background {z.name} {z.signature}`"
+            description="\n".join([f":arrow_right: `{ctx.PREFIX}background {z.name} {z.signature}`"
                                    for z in self.background.commands]),
             colour=0x00ff00
         ))
@@ -283,7 +295,7 @@ class Achievements(commands.Cog):
     @background.command(name="inventory", aliases=["inv"])
     async def bg_inventory(self, ctx):
         """View your backgrounds"""
-        embed = await self.get_bg_inv(ctx.author)
+        embed = await get_bg_inv(ctx.author)
         await ctx.send(embed=embed)
 
     @background.command(name="select", aliases=["equip"])
@@ -292,7 +304,7 @@ class Achievements(commands.Cog):
         user_data = await get_user(ctx.author)
         if item not in user_data["achievement_inventory"]["backgrounds"]:
             return await ctx.send("You have not unlocked that background yet!")
-        await userColl.update_one({"_id": str(ctx.author.id)}, {"$set": {"background_image": item}})
+        await user_coll.update_one({"_id": str(ctx.author.id)}, {"$set": {"background_image": item}})
         await ctx.send(f"Successfully set your current background image to `{item}`")
 
     @background.command(name="purchase", aliases=["buy"])
@@ -306,8 +318,8 @@ class Achievements(commands.Cog):
             return await ctx.send("This image is not purchasable")
         if item_data.cost > user_data["achievement_points"]:
             return await ctx.send("You cannot afford this!")
-        await userColl.update_one({"_id": str(ctx.author.id)}, {"$push": {"achievement_inventory.backgrounds": item},
-                                                                "$inc": {"achievement_points": -item_data.cost}})
+        await user_coll.update_one({"_id": str(ctx.author.id)}, {"$push": {"achievement_inventory.backgrounds": item},
+                                                                 "$inc": {"achievement_points": -item_data.cost}})
         await ctx.send(f"Successfully purchased `{item}` for {item_data.cost} achievement points")
 
 

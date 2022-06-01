@@ -1,10 +1,12 @@
+import typing
+
 from discord.ext import commands
 
 perk_list = []
 
 
-def register_perk(perk):
-    perk_list.append(perk)
+def register_perk(_perk):
+    perk_list.append(_perk)
 
 
 class Perk:
@@ -20,8 +22,8 @@ class Perk:
         return arg.lower() == self.name.lower() or arg.lower() in [z.lower() for z in self.aliases]
 
 
-def perk(*, name: str = None, description: str = None, aliases=None, cost: int = 0, require_arg: bool=False):
-    name = name
+def perk(*, name: str = None, aliases=None, description: str = None,
+         cost: typing.Union[int, str] = 0, require_arg: bool = False):
 
     def decorator(func):
         _name = name if name else func.__name__
@@ -39,9 +41,9 @@ def perk(*, name: str = None, description: str = None, aliases=None, cost: int =
 
 class PerkConverter(commands.Converter):
     async def convert(self, ctx, argument) -> Perk:
-        for perk in perk_list:
-            if perk.match_name(argument):
-                return perk
+        for _perk in perk_list:
+            if _perk.match_name(argument):
+                return _perk
         raise commands.UserInputError()
 
 

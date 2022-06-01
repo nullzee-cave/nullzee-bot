@@ -12,10 +12,67 @@ from helpers.utils import TimeConverter, RoleConverter, list_one, role_ids, list
     get_user, GiveawayError, staff_or_trainee
 from datetime import datetime
 
-from api_key import giveawayColl
+from api_key import giveaway_coll, DEV_ID
 
 
-class Giveaway(commands.Cog, name="giveaway"):
+async def check_requirements(giveaway, user):
+    reqs = giveaway["requirements"]
+    if reqs["booster"]:
+        if not list_one(role_ids(user.roles), Role.BOOSTER, Role.TWITCH_SUB, Role.RETIRED_SUPPORTER):
+            return False
+    if reqs["roles"]:
+        if reqs["role_type"] == 2 and not list_one(role_ids(user.roles), *reqs["roles"]):
+            return False
+        elif reqs["role_type"] == 1 and not list_every(role_ids(user.roles), *reqs["roles"]):
+            return False
+    if reqs["level"]:
+        user_data = await get_user(user)
+        if user_data["level"] < reqs["level"]:
+            return False
+    return True
+
+
+async def roll_giveaway(guild, giveaway, winner_count=None):
+    winner_count = winner_count or giveaway["winner_count"]
+    channel = guild.get_channel(giveaway["channel"])
+    message = await channel.fetch_message(int(giveaway["_id"]))
+    donor = guild.get_member(giveaway["donor"])
+    reaction_users = []
+    if not channel or not message:
+        await guild.get_channel(Channel.STAFF_ANNOUNCEMENTS).send(f"GIVEAWAY FAILED: {giveaway['_id']}\nINTERNAL ERROR")
+    for i in message.reactions:
+        async for user in i.users():
+            reaction_users.append(user)
+    reaction_users = [z for z in reaction_users if isinstance(z, discord.Member)]
+    winners = []
+    await giveaway_coll.update_one({"_id": giveaway["_id"]}, {"$set": {"active": False}})
+    for count in range(winner_count):
+        x = False
+        attempts = 0
+        while not x:
+            this_winner = random.choice(reaction_users)
+            x = await check_requirements(giveaway, this_winner) and this_winner not in winners
+            attempts += 1
+            if attempts > 50:
+                return await message.reply("Could not determine a winner.")
+        winners.append(this_winner)
+    embed = message.embeds[0]
+    embed.set_footer(text=f"ended at:")
+    embed.timestamp = datetime.now()
+    winner_string = "\n".join([z.mention for z in winners])
+    embed.description = f"Donated by: {donor.mention}\nWinners:{winner_string}"
+    embed.colour = discord.Colour.darker_grey()
+    await message.edit(embed=embed)
+    await message.reply(
+        f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{giveaway['content']}**!!")
+    for winner in winners:
+        await winner.add_roles(message.guild.get_role(
+            Role.LARGE_GIVEAWAY_WIN if message.channel.id == Channel.GIVEAWAY
+            else Role.MINI_GIVEAWAY_WIN
+        ))
+
+
+class Giveaway(commands.Cog, name="Giveaway"):
     """The giveaway system, and all related commands"""
 
     def __init__(self, bot, hidden):
@@ -27,7 +84,7 @@ class Giveaway(commands.Cog, name="giveaway"):
         def check(m):
             return m.channel == ctx.channel and m.author == ctx.author
         try:
-            msg = await self.bot.wait_for('message', timeout=60, check=check)
+            msg = await self.bot.wait_for("message", timeout=60, check=check)
             if msg.content.lower() == "cancel":
                 raise GiveawayError("Giveaway creation cancelled")
         except asyncio.TimeoutError:
@@ -42,7 +99,7 @@ class Giveaway(commands.Cog, name="giveaway"):
         role_reqs = []
         level = 0
         role_req_strategy = 1
-        requirement_string = ''
+        requirement_string = ""
 
         await ctx.send("In which channel would you like to host the giveaway?")
         channel_msg = await self.get_input(ctx)
@@ -54,7 +111,8 @@ class Giveaway(commands.Cog, name="giveaway"):
         if giveaway_time < 10800 or \
           (giveaway_time > 604800 and channel.id not in [Channel.GIVEAWAY, Channel.STAFF_ANNOUNCEMENTS]) or \
           (giveaway_time > 1209600 and channel.id in [Channel.GIVEAWAY, Channel.STAFF_ANNOUNCEMENTS]):
-            return await ctx.send("Giveaways can last a minimum of 3 hours and a maximum of 1 week (or 2 for large giveaways).")
+            return await ctx.send(
+                "Giveaways can last a minimum of 3 hours and a maximum of 1 week (or 2 for large giveaways).")
 
         await ctx.send("How many winners will there be?")
         winner_count_msg = await self.get_input(ctx)
@@ -109,7 +167,8 @@ class Giveaway(commands.Cog, name="giveaway"):
         if req:
             if role_reqs:
                 if len(role_reqs) > 1:
-                    requirement_string += "Must have the following roles: \n" if role_req_strategy == 1 else "Must have one of the following roles: \n"
+                    requirement_string += "Must have the following roles: \n" if role_req_strategy == 1 else \
+                                          "Must have one of the following roles: \n"
                     requirement_string += "\n".join([f"-{z.mention}" for z in role_reqs]) + "\n"
                 else:
                     requirement_string = f"- Must have the role: {role_reqs[0].mention}\n"
@@ -127,86 +186,31 @@ class Giveaway(commands.Cog, name="giveaway"):
                                             winner_count=winner_count, role_req_strategy=role_req_strategy,
                                             roles=role_ids(role_reqs), level=level,
                                             booster=booster, content=content, donor=donor)
-        await giveawayColl.insert_one(payload)
+        await giveaway_coll.insert_one(payload)
         await ctx.send(f"Giveaway created!\n{msg.jump_url}")
         await donor.add_roles(ctx.guild.get_role(
-            Role.LARGE_GIVEAWAY_DONOR if ctx.channel.id == Channel.GIVEAWAY
+            Role.GODLY_GIVEAWAY_DONOR if ctx.channel.id == Channel.GIVEAWAY
             else Role.MINI_GIVEAWAY_DONOR
         ))
-
-    async def check_requirements(self, giveaway, user):
-        reqs = giveaway["requirements"]
-        if reqs["booster"]:
-            if not list_one(role_ids(user.roles), Role.BOOSTER, Role.TWITCH_SUB, Role.RETIRED_SUPPORTER):
-                return False
-        if reqs["roles"]:
-            if reqs["role_type"] == 2 and not list_one(role_ids(user.roles), *reqs["roles"]):
-                return False
-            elif reqs["role_type"] == 1 and not list_every(role_ids(user.roles), *reqs["roles"]):
-                return False
-        if reqs["level"]:
-            user_data = await get_user(user)
-            if user_data["level"] < reqs["level"]:
-                return False
-        return True
-
-    async def roll_giveaway(self, guild, giveaway, winner_count=None):
-        winner_count = winner_count or giveaway["winner_count"]
-        channel = guild.get_channel(giveaway["channel"])
-        message = await channel.fetch_message(int(giveaway["_id"]))
-        donor = guild.get_member(giveaway["donor"])
-        reaction_users = []
-        if not channel or not message:
-            await guild.get_channel(Channel.STAFF_ANNOUNCEMENTS).send(f"GIVEAWAY FAILED: {giveaway['_id']}\nINTERNAL ERROR")
-        for i in message.reactions:
-            async for user in i.users():
-                reaction_users.append(user)
-        reaction_users = [z for z in reaction_users if isinstance(z, discord.Member)]
-        winners = []
-        await giveawayColl.update_one({"_id": giveaway["_id"]}, {"$set": {"active": False}})
-        for count in range(winner_count):
-            x = False
-            attempts = 0
-            while not x:
-                this_winner = random.choice(reaction_users)
-                x = await self.check_requirements(giveaway, this_winner) and this_winner not in winners
-                attempts += 1
-                if attempts > 50:
-                    return await message.reply("Could not determine a winner.")
-            winners.append(this_winner)
-        embed = message.embeds[0]
-        embed.set_footer(text=f"ended at:")
-        embed.timestamp = datetime.now()
-        winner_string = "\n".join([z.mention for z in winners])
-        embed.description = f'Donated by: {donor.mention}\nWinners:{winner_string}'
-        embed.colour = discord.Colour.darker_grey()
-        await message.edit(embed=embed)
-        await message.reply(
-            f"Congratulations {', '.join([z.mention for z in winners])}, you won the **{giveaway['content']}**!!")
-        for winner in winners:
-            await winner.add_roles(message.guild.get_role(
-                Role.LARGE_GIVEAWAY_WIN if message.channel.id == Channel.GIVEAWAY
-                else Role.MINI_GIVEAWAY_WIN
-            ))
 
     @commands.command(hidden=True)
     @staff_or_trainee
     async def roll(self, ctx, message: discord.Message):
         """Roll a giveaway early"""
-        giveaway = await giveawayColl.find_one({"_id": str(message.id), "active": True})
+        giveaway = await giveaway_coll.find_one({"_id": str(message.id), "active": True})
         if giveaway:
             await ctx.send("rolling giveaway")
-            await self.roll_giveaway(ctx.guild, giveaway)
+            await roll_giveaway(ctx.guild, giveaway)
         else:
             await ctx.send("Could not find that giveaway")
 
-    @commands.command(hidden=True)
+    @commands.command(name="gdelete", hidden=True)
     @staff_or_trainee
-    async def gdelete(self, ctx, message: discord.Message):
+    async def delete_giveaway(self, ctx, message: discord.Message):
         """Delete a giveaway"""
-        giveaway = await giveawayColl.find_one({"active": True, "_id": str(message.id)})
+        giveaway = await giveaway_coll.find_one({"active": True, "_id": str(message.id)})
         if giveaway:
-            await giveawayColl.update_one({"_id": str(message.id)}, {"$set": {"active": False}})
+            await giveaway_coll.update_one({"_id": str(message.id)}, {"$set": {"active": False}})
             await ctx.send("Stopped the giveaway")
             try:
                 msg = await ctx.guild.get_channel(int(giveaway["channel"])).fetch_message(int(giveaway["_id"]))
@@ -218,16 +222,16 @@ class Giveaway(commands.Cog, name="giveaway"):
 
     @commands.command(name="gdeleteid", hidden=True)
     @staff_or_trainee
-    async def gdelete_by_id(self, ctx, _id: int):
+    async def delete_giveaway_by_id(self, ctx, _id: int):
         """
         Delete a giveaway by ID
 
         Added so I can stop manually deleting them when someone
         doesn't use the command and the bot starts throwing errors
         """
-        giveaway = await giveawayColl.find_one({"active": True, "_id": str(_id)})
+        giveaway = await giveaway_coll.find_one({"active": True, "_id": str(_id)})
         if giveaway:
-            await giveawayColl.update_one({"_id": str(_id)}, {"$set": {"active": False}})
+            await giveaway_coll.update_one({"_id": str(_id)}, {"$set": {"active": False}})
             await ctx.send("Stopped the giveaway")
             try:
                 msg = await ctx.guild.get_channel(int(giveaway["channel"])).fetch_message(int(giveaway["_id"]))
@@ -237,45 +241,45 @@ class Giveaway(commands.Cog, name="giveaway"):
         else:
             await ctx.send("Could not find that giveaway")
 
-    @commands.command(hidden=True)
+    @commands.command(name="reroll", hidden=True)
     @staff_or_trainee
-    async def reroll(self, ctx, message: discord.Message):
+    async def reroll_giveaway(self, ctx, message: discord.Message):
         """Reroll one winner of a giveaway"""
-        giveaway = await giveawayColl.find_one({"active": False, "_id": str(message.id)})
+        giveaway = await giveaway_coll.find_one({"active": False, "_id": str(message.id)})
         if giveaway:
-            await self.roll_giveaway(ctx.guild, giveaway, 1)
+            await roll_giveaway(ctx.guild, giveaway, 1)
         else:
             await ctx.send("Could not find that giveaway")
 
-    @commands.command(hidden=True)
+    @commands.command(name="start", hidden=True)
     @commands.has_role(Role.ADMIN)
-    async def start(self, ctx, timer: TimeConverter, winners: str, donor: discord.Member, *, prize: str):
+    async def start_giveaway(self, ctx, timer: TimeConverter, winners: str, donor: discord.Member, *, prize: str):
         """Quickly start a giveaway with limited options"""
-        winners = int(winners.replace('w', ''))
+        winners = int(winners.replace("w", ""))
         if winners > 10:
             return
         embed = discord.Embed(title=prize, description=f"React with :tada: to enter!\nDonated by {donor.mention}",
-                              color=discord.Color.green()).set_footer(text=f"{winners} winners, ends at")
+                              color=discord.Color.green())
+        embed.set_footer(text=f"{winners} winners, ends at")
         timer += math.trunc(time.time())
         embed.timestamp = datetime.fromtimestamp(timer)
         msg = await ctx.channel.send(embed=embed)
         await msg.add_reaction(u"\U0001F389")
         payload = payloads.giveaway_payload(ctx, msg, channel=ctx.channel, giveaway_time=timer,
-                                            winner_count=winners,
-                                            content=prize, donor=donor)
-        await giveawayColl.insert_one(payload)
+                                            winner_count=winners, content=prize, donor=donor)
+        await giveaway_coll.insert_one(payload)
         await ctx.message.delete()
 
     @tasks.loop(minutes=2)
     async def auto_roll_giveaways(self):
-        giveaways = [z async for z in giveawayColl.find({"active": True})]
+        giveaways = [z async for z in giveaway_coll.find({"active": True})]
         for giveaway in giveaways:
             if time.time() > giveaway["ends"]:
                 guild = self.bot.get_guild(Misc.GUILD)
                 try:
-                    await self.roll_giveaway(guild, giveaway)
+                    await roll_giveaway(guild, giveaway)
                 except Exception as e:
-                    await self.bot.get_guild(Misc.GUILD).get_member(540939418933133312).send(f"\nGiveaway failed to roll: `{giveaway['_id']}`")
+                    await self.bot.get_guild(Misc.GUILD).get_member(DEV_ID).send(f"\nGiveaway failed to roll: `{giveaway['_id']}`")
                     print(f"\nGiveaway failed to roll: {giveaway['_id']}")
                     traceback.print_tb(e.__traceback__)
 

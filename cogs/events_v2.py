@@ -38,7 +38,7 @@ class Event:
     participants: typing.Dict[str, discord.Member]
 
 
-class Events(commands.Cog, name="events"):
+class Events(commands.Cog, name="Events"):
     """All commands related to events that are hosted in Nullzee's Cave"""
 
     def __init__(self, bot):
@@ -46,10 +46,14 @@ class Events(commands.Cog, name="events"):
         self.hidden = False
         self.event: Event = None
 
-    @commands.command()
+    @commands.command(name="joinevent")
     @commands.guild_only()
-    async def joinEvent(self, ctx: commands.Context):
+    async def join_event(self, ctx: commands.Context):
         """Join a currently running event"""
+
+        def check(msg):
+            return msg.author.id == ctx.author.id and msg.channel.id == dm_channel.id
+
         if self.event is None:
             return await ctx.send("There is no event active!")
         if ctx.author in self.event.participants.values():
@@ -58,7 +62,6 @@ class Events(commands.Cog, name="events"):
             dm_channel = (await ctx.author.send("What will your IGN be?")).channel
         except discord.Forbidden:
             return await ctx.send(f"{ctx.author.mention} Please enable DMs from server members")
-        check = lambda msg: msg.author.id == ctx.author.id and msg.channel.id == dm_channel.id
         try:
             ign = (await self.bot.wait_for("message", check=check, timeout=60)).content
         except asyncio.TimeoutError:
@@ -71,33 +74,33 @@ class Events(commands.Cog, name="events"):
 
         channel = self.event.channel
         channel = channel if channel else self.event.owner
-        await channel.send(embed=discord.Embed(colour=discord.Colour.green(),
-                                               description=f"{ctx.author.mention} "
-                                                           f"({ctx.author}) signed up for the event with the IGN `{ign}`"
-                                               ))
+        embed = discord.Embed(colour=discord.Colour.green(),
+                              description=f"{ctx.author.mention} "
+                                          f"({ctx.author}) signed up for the event with the IGN `{ign}`")
+        await channel.send(embed=embed)
         await ctx.author.send(f"You have signed up for the event as `{ign}`. "
                               "Please use the name you selected above or you will be kicked from the game"
                               f"\n{self.event.arg}")
 
-    @commands.command()
+    @commands.command(name="startevent")
     @event_perms_check
-    async def startEvent(self, ctx: commands.Context, arg: str, channel: discord.TextChannel = None):
+    async def start_event(self, ctx: commands.Context, arg: str, channel: discord.TextChannel = None):
         """Start a new event"""
         if self.event is not None:
             return await ctx.send("There is already an active event!")
         self.event = Event(ctx.author, channel, arg, {})
         await ctx.send("Event started")
 
-    @commands.command()
+    @commands.command(name="endevent")
     @event_perms_check
-    async def endEvent(self, ctx: commands.Context):
+    async def end_event(self, ctx: commands.Context):
         """End a currently running event"""
         self.event = None
         await ctx.send("Event ended")
 
-    @commands.command()
+    @commands.command(name="eventign")
     @event_perms_check
-    async def eventIgn(self, ctx: commands.Context, ign: str):
+    async def event_ign(self, ctx: commands.Context, ign: str):
         """Check which user signed up with a specific ign"""
         if not self.event:
             return await ctx.send("There is no event active")

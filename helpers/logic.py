@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 
-T = typing.TypeVar('T')
+T = typing.TypeVar("T")
 
 
 class BooleanLogic:

@@ -4,7 +4,7 @@ import typing
 
 import aiohttp
 
-from api_key import userColl
+from api_key import user_coll
 import discord
 import json
 import datetime
@@ -33,9 +33,9 @@ def event_hoster_staff_check(ctx):
 staff_only = commands.check(staff_check)
 
 staff_or_trainee = commands.check(
-    lambda ctx: ctx.guild and ctx.guild.id == Misc.GUILD and
-                (Role.ADMIN in (roles := [z.id for z in ctx.author.roles]) or
-                 Role.STAFF in roles or Role.TRAINEE in roles))
+    lambda ctx: ctx.guild and ctx.guild.id == Misc.GUILD and (
+            Role.ADMIN in (roles := [z.id for z in ctx.author.roles]) or
+            Role.STAFF in roles or Role.TRAINEE in roles))
 
 event_hoster_or_staff = commands.check(event_hoster_staff_check)
 
@@ -65,7 +65,7 @@ def strfdelta(tdelta, fmt):
 
 async def get_user(user):
     try:
-        await userColl.insert_one({
+        await user_coll.insert_one({
             "_id": str(user.id),
             # levelling data
             "experience": 0,
@@ -88,12 +88,11 @@ async def get_user(user):
             "vc_minutes": 0,
         })
     finally:
-        return await userColl.find_one({"_id": str(user.id)})
+        return await user_coll.find_one({"_id": str(user.id)})
 
 
 def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="", suffix="",
-                      title="Nullzee's cave leaderboard",
-                      field_name="Gain XP by chatting"):
+                      title="Nullzee's cave leaderboard", field_name="Gain XP by chatting"):
     entries = []
     lb_pos = 1
     for i, user in enumerate(users):
@@ -112,8 +111,8 @@ def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="
             values.append("")
     embeds = embeds[:16]
     for i, embed in enumerate(embeds):
-        embed.set_footer(text=f"page {i + 1} of {len(embeds)}").add_field(name=field_name, value=values[i],
-                                                                          inline=False)
+        embed.set_footer(text=f"page {i + 1} of {len(embeds)}")
+        embed.add_field(name=field_name, value=values[i], inline=False)
     return embeds
 
 
@@ -126,18 +125,18 @@ def deep_update_dict(d, u):
     return d
 
 
-def nanoId(length=20):
-    return ''.join(
+def nano_id(length=20):
+    return "".join(
         random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(length))
 
 
-def getFileJson(filename="config"):
+def get_file_json(filename="config"):
     with open(f"{filename}.json") as f:
         return json.load(f)
 
 
-def saveFileJson(data, filename="config"):
-    with open(f"{filename}.json", 'w') as f:
+def save_file_json(data, filename="config"):
+    with open(f"{filename}.json", "w") as f:
         json.dump(data, f)
 
 
@@ -186,7 +185,7 @@ class HelpConverter(commands.Converter):
         argument = argument.replace(" ", "").replace("_", "")
         ctx.guild = ctx.bot.get_guild(Misc.GUILD)
         ctx.author = ctx.guild.get_member(ctx.author.id)
-        for cog in [ctx.bot.get_cog(z) for z in ctx.bot.cogs]:
+        for cog in [ctx.bot.get_cog(z) for z in ctx.bot.COGS]:
             if argument.lower() == cog.qualified_name.lower().replace(" ", "").replace("_", ""):
                 if (cog.hidden and not staff_check(ctx)) or cog.get_commands() == []:
                     break
@@ -200,7 +199,7 @@ class HelpConverter(commands.Converter):
 
 
 class RoleConverter(commands.Converter):
-    abbreviations = {"vc lord": Role.VC_LORD, "godly giveaway donator": Role.LARGE_GIVEAWAY_DONOR}
+    abbreviations = {"vc lord": Role.VC_LORD, "godly giveaway donator": Role.GODLY_GIVEAWAY_DONOR}
 
     async def convert(self, ctx: commands.Context, argument: str) -> discord.Role:
         role = None
@@ -227,8 +226,8 @@ class RoleConverter(commands.Converter):
                                                                        enumerate(candidates)]),
                                                 colour=discord.Colour.green()))
                         try:
-                            res: discord.Message = await ctx.bot.wait_for('message', check=lambda
-                                msg: msg.author.id == ctx.author.id and msg.channel.id == ctx.channel.id, timeout=60)
+                            res = await ctx.bot.wait_for("message", check=lambda
+                                  msg: msg.author.id == ctx.author.id and msg.channel.id == ctx.channel.id, timeout=60)
                             number = int(res.content)
                             role = candidates[number - 1]
                             await decision_msg.delete()
@@ -289,7 +288,7 @@ class ItemNotFound(commands.BadArgument):
         return discord.Embed(title=":x: Item not found :x:", description=self.msg, colour=0xff0000)
 
 
-def jsonMetaConverter(meta):
+def json_meta_converter(meta):
     class JsonMetaConverter(commands.Converter):
         async def convert(self, ctx, argument):
             if argument.lower() in meta.get():
@@ -302,7 +301,7 @@ def jsonMetaConverter(meta):
     return JsonMetaConverter
 
 
-def jsonMeta(filepath, defaults):
+def json_meta(filepath, defaults):
     class JsonMeta:
 
         __filepath = filepath
@@ -364,7 +363,7 @@ def min_level(level: int):
         if Role.RETIRED_SUPPORTER in (
                 roles := [z.id for z in ctx.author.roles]) or Role.BOOSTER in roles or Role.TWITCH_SUB in roles:
             return True
-        user = await userColl.find_one({"_id": str(ctx.author.id)})
+        user = await user_coll.find_one({"_id": str(ctx.author.id)})
         if not user:
             return False
         if user["level"] < level:
@@ -378,14 +377,14 @@ class TimeConverter(commands.Converter):
     async def convert(self, ctx, argument):
         if isinstance(argument, int):
             return argument
-        _time = stringToSeconds(argument)
+        _time = string_to_seconds(argument)
         if _time:
             return _time
         else:
             raise commands.UserInputError
 
 
-def stringToSeconds(_string):
+def string_to_seconds(_string):
     _time = 0
     times = {
         "w": 604800,
@@ -400,8 +399,8 @@ def stringToSeconds(_string):
     if match is None:
         return None
     while match:
-        _time += int(match.group('number')) * times[match.group('period')]
-        _string = _string[len(match.group('time')):]
+        _time += int(match.group("number")) * times[match.group("period")]
+        _string = _string[len(match.group("time")):]
         match = re.match(regex, _string)
     return _time
 

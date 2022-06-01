@@ -2,9 +2,9 @@ import re
 
 import discord
 import datetime
-from api_key import moderationColl
+from api_key import moderation_coll
 
-from helpers.utils import getFileJson, saveFileJson, Embed
+from helpers.utils import get_file_json, Embed
 from helpers.constants import Channel, Misc
 
 DELETE_WARNS_AFTER = 1209600
@@ -37,7 +37,7 @@ lockdown_data = {}
 
 async def update_config():
     global doc
-    doc = await moderationColl.find_one({"_id": "config"})
+    doc = await moderation_coll.find_one({"_id": "config"})
 
 
 async def get_config():
@@ -72,7 +72,7 @@ async def send_report(ctx, message, reason):
         .add_field(name="Message Content",
                    value=f"{message.content[:1900]}{'...' if message.content[:1900] != message.content else ''}",
                    inline=False)\
-        .add_field( name="Reported By", value=f"{ctx.author.mention} ({ctx.author})", inline=False)\
+        .add_field(name="Reported By", value=f"{ctx.author.mention} ({ctx.author})", inline=False)\
         .set_author(name=message.author, icon_url=message.author.avatar_url)
     if message.attachments:
         embed.set_image(url=message.attachments[0].url)
@@ -80,7 +80,7 @@ async def send_report(ctx, message, reason):
 
 
 async def warn_punishments(ctx, user):
-    warns = [z async for z in moderationColl.find({"offender_id": user.id, "expired": False})]
+    warns = [z async for z in moderation_coll.find({"offender_id": user.id, "expired": False})]
     config = await get_config()
     score = sum([SEVERITY[z["type"]] for z in warns if z["type"] == "warn" or z["mod_id"] != ctx.bot.user.id])
     punishment = config["punishForWarns"][str(score)] if str(score) in config["punishForWarns"] else None
@@ -90,7 +90,8 @@ async def warn_punishments(ctx, user):
         return
     ctx.author = ctx.guild.me
     cmd = ctx.bot.get_command(punishment["type"].lower())
-    if not cmd: return
+    if not cmd:
+        return
     if cmd.name == "kick":
         return await ctx.invoke(cmd, user, reason=f"{score} warnings")
     await ctx.invoke(cmd, user, punishment["duration"], reason=f"{score} warnings")
@@ -109,15 +110,15 @@ async def end_punishment(bot, payload, moderator, reason):
         return
 
 
-def chatEmbed(ctx, payload):
+def chat_embed(ctx, payload):
     offender = ctx.bot.get_user(payload["offender_id"])
-    embed = discord.Embed(title=f'**{PAST_PARTICIPLES[payload["type"]]}**', colour=COLOURS[payload["type"]],
+    embed = discord.Embed(title=f"**{PAST_PARTICIPLES[payload['type']]}**", colour=COLOURS[payload["type"]],
                           description=payload["reason"] if payload["reason"] else "")\
         .set_author(name=offender, icon_url=offender.avatar_url)
     return embed
 
 
-def massBanChatEmbed(ctx, payload):
+def mass_ban_chat_embed(ctx, payload):
     mod = ctx.guild.get_member(payload["mod_id"])
     embed = discord.Embed(title="Mass Ban", colour=COLOURS["ban"],
                           description=payload["offenders_string"][:1900] + ("\n..." if len(payload["offenders_string"]) > 400 else ""))\
@@ -155,8 +156,9 @@ async def log(bot, payload):
 async def log_mass(bot, payload):
     log_lockdown(bot, payload)
     dt = datetime.datetime.now()
-    with open(f"mass_bans/{dt.strftime('%M-%S--%d%m%y')}.txt", 'w') as f:
-        f.write(f"Mass Ban\n{dt.strftime('%M:%S %d/%m/%Y')}\n\n" + "\n".join([f"{z} - {z.id}" for z in payload["offenders"]]))
+    with open(f"mass_bans/{dt.strftime('%M-%S--%d%m%y')}.txt", "w") as f:
+        f.write(f"Mass Ban\n{dt.strftime('%M:%S %d/%m/%Y')}\n\n" + "\n".join(
+                [f"{z} - {z.id}" for z in payload["offenders"]]))
     mod = bot.get_user(payload["mod_id"])
     embed = discord.Embed(title=f"Mass {payload['type']}", colour=COLOURS[payload["type"]])
     embed.add_field(name="Reason", value=f"Mass {payload['type']}", inline=False)
@@ -177,7 +179,7 @@ async def log_channel_lock(ctx, channel, _type):
 
 
 def log_lockdown(bot, payload):
-    bot_config = getFileJson("config")
+    bot_config = get_file_json("config")
     if not bot_config["lockdown"]:
         return
     if payload["type"].upper() not in ["BAN", "KICK"]:

@@ -3,7 +3,7 @@ from re import search
 
 import discord
 
-from api_key import userColl
+from api_key import user_coll, PREFIX
 from helpers.events import Subscriber
 from helpers.utils import get_user, list_one, role_ids
 from helpers.constants import Role, Channel
@@ -13,6 +13,7 @@ ACHIEVEMENT_BORDERS = {
     0.5: "silver",
     0.8: "gold"
 }
+
 achievements = {
     "Hello, World!": {
         "listeners": {
@@ -26,7 +27,7 @@ achievements = {
     },
     "Level Collector I": {
         "listeners": {
-            "level_up": lambda _, level: level>= 10
+            "level_up": lambda _, level: level >= 10
         },
         "description": "Reach level 10",
         "value": 5,
@@ -118,7 +119,7 @@ achievements = {
         "listeners": {
             "points_spent": lambda _, name: name == "staffNickChange"
         },
-        "description": "Purchase staffNickChange from -shop",
+        "description": f"Purchase StaffNickChange from {PREFIX}shop",
         "value": 5,
     },
     "Frugal I": {
@@ -137,8 +138,8 @@ achievements = {
     },
     "Frugal III": {
         "listeners": {
-        "point_earned": lambda _, points: points >= 300
-    },
+            "point_earned": lambda _, points: points >= 300
+        },
         "description": "Save up 300 points",
         "value": 20,
     },
@@ -146,7 +147,7 @@ achievements = {
         "listeners": {
             "points_spent": lambda _, name: name == "deadChatPing"
         },
-        "description": "Purchase deadChatPing from -shop",
+        "description": f"Purchase DeadChatPing from {PREFIX}shop",
         "value": 5,
     },
     "Up to date": {
@@ -173,7 +174,7 @@ achievements = {
         "listeners": {
             "update_roles": lambda _, roles: Role.MINI_GIVEAWAY_DONOR in role_ids(roles)
         },
-        "description": "Donate for a mini-giveaway",
+        "description": "Donate for a mini giveaway",
         "value": 5,
         "db_rewards": {
             "experience": 250,
@@ -182,7 +183,7 @@ achievements = {
     },
     "Generous II": {
         "listeners": {
-            "update_roles": lambda _, roles: Role.LARGE_GIVEAWAY_DONOR in role_ids(roles)
+            "update_roles": lambda _, roles: Role.GODLY_GIVEAWAY_DONOR in role_ids(roles)
         },
         "description": "Donate for a large giveaway",
         "value": 10,
@@ -224,14 +225,14 @@ achievements = {
     },
     "Colourful": {
         "listeners": {
-            "points_spent": lambda _, name: name == "embedColour"
+            "points_spent": lambda _, name: name == "EmbedColour"
         },
         "description": "Change your embed colour",
         "value": 3
     },
     "Even more colourful": {
         "listeners": {
-            "points_spent": lambda _, name: name == "rainbow"
+            "points_spent": lambda _, name: name == "Rainbow"
         },
         "description": "Change the rainbow role colour",
         "value": 5
@@ -241,7 +242,7 @@ achievements = {
             "message": lambda msg: msg.guild and msg.author.guild_permissions.manage_messages,
             "update_roles": lambda ctx, _: ctx.author.guild_permissions.manage_messages
         },
-        "description": "Get any staff position ",
+        "description": "Get any staff position",
         "value": -1,
         "db_rewards": {
             "experience": -69
@@ -254,58 +255,57 @@ achievements = {
                 540953289219375146) in ctx.message.mentions and "help" in ctx.message.content
         },
         "hidden": True,
-        "value": 3,
+        "value": 3
     },
     "New person": {
-        "description": "Be on the server for more than a week",
         "listeners": {
             "message": lambda msg: msg.guild and msg.author.joined_at.timestamp() + 604800 < time.time()
         },
+        "description": "Be on the server for more than a week",
         "value": 2
     },
     "Getting older": {
-        "description": "Be on the server for more than a month",
         "listeners": {
             "message": lambda msg: msg.guild and msg.author.joined_at.timestamp() + 2628000 < time.time()
         },
+        "description": "Be on the server for more than a month",
         "value": 5
     },
     "Old man": {
-        "description": "Be on the server for over half a year",
         "listeners": {
             "message": lambda msg: msg.guild and msg.author.joined_at.timestamp() + 15768000 < time.time()
         },
+        "description": "Be on the server for over half a year",
         "value": 10
     },
     "QOTD Responder": {
-        "description": "Answer a QOTD for the first time",
         "listeners": {
             "message": lambda msg: msg.channel.id == Channel.QOTD_ANSWERS
         },
+        "description": "Answer a QOTD for the first time",
         "value": 3
     },
     "OG member": {
-        "description": "Have a legacy role",
         "listeners": {
             "update_roles": lambda _, roles: list_one(role_ids(roles), *Role.legacy())
         },
+        "description": "Have a legacy role",
         "value": 5
     },
     "Event winner": {
-        "description": "Win an event",
         "listeners": {
             "update_roles": lambda _, roles: Role.EVENT_WINNER in role_ids(roles)
         },
+        "description": "Win an event",
         "value": 10
     },
     "Nullzee knowledge": {
-        "description": "Buy AskNullzee once",
         "listeners": {
             "points_spent": lambda _, name: name == "AskNullzee",
         },
+        "description": "Buy AskNullzee once",
         "value": 5
     },
-    # TODO: integrate new waste system to emit waste event with points spent
     "Waste": {
         "listeners": {
             "waste": lambda _, points: points >= 50
@@ -327,173 +327,170 @@ achievements = {
         "description": "Waste 250+ points",
         "value": 15
     },
-
     "Hypixel Linked": {
-        "description": "Link hypixel and discord accounts",
         "listeners": {
             "hypixel_link": lambda _: True
         },
+        "description": "Link hypixel and discord accounts",
         "value": 5
     },
     "Advertising Champ": {
-        "description": "Send an advertisement in #self-promo",
         "listeners": {
             "message": lambda msg: msg.channel.id == Channel.SELF_PROMO
         },
+        "description": "Send an advertisement in #self-promo",
         "value": 2,
         "hidden": True,
     },
     "VC Afker": {
-        "description": "Have a month total time in VCs",
         "listeners": {
             "vc_minute_gain": lambda _, minutes: minutes > 43800
         },
+        "description": "Have a month total time in VCs",
         "value": 15
     },
     # TODO: these on twitch bot
     "Stream viewer": {
-        "description": "have 24h watchtime in Nullzee's stream",
         "listeners": {},
+        "description": "Have 24h watchtime in Nullzee's stream",
         "value": 5
     },
     "Stream fan": {
-        "description": "have 3 Days watchtime in Nullzee's stream",
         "listeners": {},
+        "description": "Have 3 Days watchtime in Nullzee's stream",
         "value": 10
     },
     "Kindness": {
-        "description": "Say Hi to the bot",
         "listeners": {
             "message": lambda ctx: ctx.guild and ctx.guild.me in ctx.message.mentions and (
                     "hi" in ctx.message.content.lower() or "hello" in ctx.message.content.lower())
         },
+        "description": "Say Hi to the bot",
         "value": 2
     },
     "Talented": {
-        "description": "Produce something pretty cool",
         "listeners": {
             "update_roles": lambda _, roles: Role.TALENTED in role_ids(roles)
         },
+        "description": "Produce something pretty cool",
         "value": 5
     },
     "QOTD suggestion": {
-        "description": "Suggest a QOTD from the shop",
         "listeners": {
-            "points_spent": lambda _, name: name == "qotd"
+            "points_spent": lambda _, name: name == "QOTD"
         },
+        "description": "Suggest a QOTD from the shop",
         "value": 5
     },
     "Generic": {
-        "description": "Send a \"Dirt to...\" message",
         "listeners": {
             "message": lambda ctx: search("dirt to (.{4,})", ctx.message.content.lower())
         },
+        "description": "Send a \"Dirt to...\" message",
         "value": 3,
         "hidden": True
     },
     "Nullzee Simp": {
-        "description": "Have the mega fan role",
         "listeners": {
             "update_roles": lambda _, roles: Role.SkyblockRole.MEGA_FAN in role_ids(roles)
         },
+        "description": "Have the mega fan role",
         "value": 3,
 
     },
     "Gooby": {
-        "description": "use the -gooby command",
         "listeners": {
             "command": lambda _, name: name == "gooby"
         },
+        "description": f"Use the {PREFIX}gooby command",
         "value": 4,
         "hidden": True
     },
     "Crikey": {
-        "description": "use the -crikey command",
         "listeners": {
             "command": lambda _, name: name == "crikey"
         },
+        "description": f"Use the {PREFIX}crikey command",
         "value": 4,
         "hidden": True
     },
     "Wholesome": {
-        "description": "use the -hug command",
         "listeners": {
             "command": lambda _, name: name == "hug"
         },
+        "description": f"Use the {PREFIX}hug command",
         "value": 4,
         "hidden": True
     },
     "Twitch Main": {
         "listeners": {},
         "description": "",
-        "hidden": True,
-        "value": 0
+        "value": 0,
+        "hidden": True
     },
-
     "Never gonna give you up": {
         "listeners": {
             "message": lambda ctx: list_one(ctx.message.content, "https://youtube.com/watch?v=dQw4w9WgXcQ")
         },
         "description": "",
-        "hidden": True,
-        "value": 4
+        "value": 4,
+        "hidden": True
     },
     "Fairy soul imposter": {
         "listeners": {
             "message": lambda ctx: ctx.message.content.lower().startswith("-claimroles timedeo")
         },
         "description": "",
-        "hidden": True,
-        "value": 4
+        "value": 4,
+        "hidden": True
     },
     "Nullzee advertisement": {
         "listeners": {
             "message": lambda ctx: ctx.channel.id == Channel.SELF_PROMO and "discord.gg/nullzee" in ctx.message.content.lower()
         },
         "description": "",
-        "hidden": True,
-        "value": 4
+        "value": 4,
+        "hidden": True
     },
     "Cute": {
         "listeners": {
             "message": lambda ctx: ctx.channel.id == Channel.PETS and ctx.message.attachments
         },
         "description": "",
-        "hidden": True,
-        "value": 5
+        "value": 5,
+        "hidden": True
     },
     "Vanity": {
         "listeners": {
             "command": lambda _, name: name == "avatar"
         },
         "description": "",
-        "hidden": True,
-        "value": 3
+        "value": 3,
+        "hidden": True
     },
     "Gamer": {
         "listeners": {
             "level_up": lambda ctx, _: ctx.channel.id == Channel.BOT_GAMES
         },
         "description": "",
-        "hidden": True,
-        "value": 5
+        "value": 5,
+        "hidden": True
     },
     "Muted": {
         "listeners": {
             "message": lambda ctx: ctx.channel.id == Channel.NO_MIC and ctx.author.voice and ctx.author.voice.self_mute
         },
         "description": "",
-        "hidden": True,
-        "value": 5
+        "value": 5,
+        "hidden": True
     },
     "Childish": {
-        "description": "Write `8008135` on a particular calculator",
-        "hidden": False,
-        "value": 2,
         "listeners": {
             "message": lambda ctx: ctx.command and ctx.command.name == "maths" and "8008135" in ctx.message.content
-        }
-
+        },
+        "description": "Write `8008135` on a particular calculator",
+        "value": 2,
+        "hidden": False
     },
 
 }
@@ -505,20 +502,20 @@ async def award_achievement(ctx, data, name):
     if name in data["achievements"]:
         return
     string = ""
-    if "cb" in achievements[name]:
-        await achievements[name]["cb"](ctx)
+    # if "cb" in achievements[name]:
+    #     await achievements[name]["cb"](ctx)
     if "response" in achievements[name]:
         await ctx.send(achievements[name]["response"].format(ctx))
     if "db_rewards" in achievements[name]:
-        await userColl.update_one({"_id": str(ctx.author.id)}, {"$inc": achievements[name]["db_rewards"]})
+        await user_coll.update_one({"_id": str(ctx.author.id)}, {"$inc": achievements[name]["db_rewards"]})
         string += f" and earned {','.join(f'{v} {k}' for k, v in achievements[name]['db_rewards'].items())}"
     channel = ctx.author if "hidden" in achievements[name] and achievements[name]["hidden"] else ctx
     try:
         await channel.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
     except discord.Forbidden:
         return
-    await userColl.update_one({"_id": str(ctx.author.id)},
-                              {"$set": {f"achievements.{name}": time.time()},
+    await user_coll.update_one({"_id": str(ctx.author.id)},
+                               {"$set": {f"achievements.{name}": time.time()},
                                "$inc": {"achievement_points": achievements[name]["value"]}})
 
 
