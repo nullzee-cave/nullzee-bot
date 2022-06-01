@@ -168,30 +168,46 @@ class Staff(commands.Cog, name="Staff"):
 
     @commands.command(aliases=["clear"], hidden=True)
     @staff_or_trainee
-    async def purge(self, ctx, user: MemberUserConverter = None, limit: int = 0):
+    async def purge(self, ctx, user: typing.Optional[MemberUserConverter] = None, limit: int = 0):
         """Purge messages in a channel"""
         if limit <= 0:
             raise commands.UserInputError
 
-        def check(m):
-            if user is not None:
-                return not m.pinned and m.author.id == user.id
-            else:
+        if user is None:
+            def check(m):
                 return not m.pinned
 
-        if user.id != ctx.author.id:
-            await ctx.channel.purge(limit=1, check=lambda msg: msg.author.id == ctx.author.id)
-            await ctx.channel.purge(limit=limit, check=check)
-        else:
             await ctx.channel.purge(limit=limit + 1, check=check)
-        await asyncio.sleep(1)
-        chat_embed = discord.Embed(description=f"Cleared {limit} messages", color=0xfb00fd)
-        chat_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=chat_embed)
-        log_embed = discord.Embed(title="Purge", description=f"{limit} messages cleared from {ctx.channel.mention}")
-        log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-        log_channel = ctx.guild.get_channel(Channel.MOD_LOGS)
-        await log_channel.send(embed=log_embed)
+
+            await asyncio.sleep(1)
+            chat_embed = discord.Embed(description=f"Cleared {limit} messages", color=0xfb00fd)
+            chat_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            await ctx.send(embed=chat_embed)
+            log_embed = discord.Embed(title="Purge", description=f"{limit} messages cleared from {ctx.channel.mention}")
+            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            log_channel = ctx.guild.get_channel(Channel.MOD_LOGS)
+            await log_channel.send(embed=log_embed)
+        else:
+            await ctx.message.delete()
+            to_delete = []
+            async for message in ctx.channel.history():
+                if len(to_delete) >= limit:
+                    break
+                if message.author.id == user.id:
+                    to_delete.append(message)
+            await ctx.channel.delete_messages(to_delete)
+
+            await asyncio.sleep(1)
+            chat_embed = discord.Embed(description=f"Cleared {limit} messages from {user.mention}", color=0xfb00fd)
+            chat_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            await ctx.send(embed=chat_embed)
+            log_embed = discord.Embed(title="Purge",
+                                      description=f"{limit} messages from {user.mention} "
+                                                  f"cleared from {ctx.channel.mention}")
+            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            log_channel = ctx.guild.get_channel(Channel.MOD_LOGS)
+            await log_channel.send(embed=log_embed)
+
 
     @commands.command(hidden=True, name="eval", aliases=["eval_fn", "-e"])
     async def eval_fn(self, ctx, *, cmd):
