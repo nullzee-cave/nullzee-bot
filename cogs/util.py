@@ -110,7 +110,7 @@ class Util(commands.Cog, name="Other"):
         count = 0
         tree = logic.BooleanLogic.OperationBuilder(tokens, lambda item, items: item in items).build()
         async with ctx.typing():
-            for member in ctx.guild.member_count:
+            for member in ctx.guild.members:
                 if tree.evaluate(member.roles):
                     count += 1
         embed = discord.Embed(title="Role list search", colour=discord.Colour.blurple())
@@ -149,11 +149,11 @@ class Util(commands.Cog, name="Other"):
         """View some information about the server"""
         embed = await Embed(ctx.author).user_colour()
         embed.add_field(name="Owner:", value=f"{ctx.guild.owner}", inline=False)
-        embed.add_field(name="Members:", value=len(ctx.guild.member_count), inline=True)
+        embed.add_field(name="Members:", value=ctx.guild.member_count, inline=True)
         embed.add_field(name="Roles:", value=len(ctx.guild.roles) - 1, inline=True)
         bots = 0
         moderators = 0
-        for member in ctx.guild.member_count:
+        for member in ctx.guild.members:
             if member.bot:
                 bots += 1
             elif member.guild_permissions.manage_messages:
@@ -302,7 +302,7 @@ class Util(commands.Cog, name="Other"):
     @commands.command(name="membercount", aliases=["members"])
     async def member_count(self, ctx):
         """Displays the number of members in the server"""
-        await ctx.send(str(len(ctx.guild.member_count)))
+        await ctx.send(str(ctx.guild.member_count))
 
     @commands.command()
     async def ping(self, ctx):
