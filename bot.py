@@ -13,7 +13,7 @@ import traceback
 from helpers.utils import get_user, staff_only, TimeConverter, ItemNotFound, HelpError, GiveawayError
 
 intents = discord.Intents.default()
-intents.member_count = True
+intents.members = True
 
 
 def fmt_time():
