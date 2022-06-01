@@ -37,7 +37,7 @@ class Staff(commands.Cog, name="Staff"):
             return
         embed = discord.Embed(title=f"UNAUTHORISED GUILD JOIN", colour=discord.Colour.red())
         embed.add_field(name="guild info",
-                        value=f"ID: {guild.id}\nname: {guild.name}\nmembers: {guild.member_count}", inline=False)
+                        value=f"ID: {guild.id}\nName: {guild.name}\nMembers: {guild.member_count}", inline=False)
         embed.add_field(name="owner", value=f"{guild.owner} ({guild.owner.id})", inline=False)
         try:
             embed.add_field(name="invite", value=str(await [z for z in guild.channels if

@@ -51,7 +51,7 @@ class Levelling(commands.Cog, name="Levelling"):
     async def check_level_one_role(self):
         guild = self.bot.get_guild(Misc.GUILD)
         role = guild.get_role(int(Role.LevelRoles.LEVELS["1"]))
-        for member in guild.member_count:
+        for member in guild.members:
             if not member.pending and role not in member.roles:
                 await member.add_roles(role)
 
