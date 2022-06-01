@@ -266,7 +266,7 @@ class Util(commands.Cog, name="Other"):
     async def update_member_counter(self):
         channel: discord.VoiceChannel = self.bot.get_guild(Misc.GUILD).get_channel(
             constants.Channel.MEMBER_COUNT_VC)
-        member_count = len(channel.guild.member_count)
+        member_count = channel.guild.member_count
         if channel.name != f"Members: {member_count}":
             await channel.edit(name=f"Members: {member_count}")
 
