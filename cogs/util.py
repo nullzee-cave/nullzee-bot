@@ -201,7 +201,8 @@ class Util(commands.Cog, name="Other"):
             embed_colour = f"#{user_data['embed_colour']}" if user_data else "N/A"
             embed.add_field(name="0 Roles", value="N/A", inline=False)
             embed.add_field(name="Embed Colour", value=embed_colour)
-            embed.colour = discord.Colour(int(user_data["embed_colour"], base=16))
+            if user_data:
+                embed.colour = discord.Colour(int(user_data["embed_colour"], base=16))
         embed.set_footer(text=user.id)
         embed.set_thumbnail(url=user.avatar_url)
         embed.auto_author()
