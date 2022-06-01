@@ -7,9 +7,12 @@ from discord.ext import commands
 import re
 
 from helpers.constants import Channel, Role, Category
-from helpers.utils import staff_check, Embed, staff_only, getFileJson, saveFileJson, MessageOrReplyConverter
+from helpers.utils import staff_check, Embed, staff_only, get_file_json, save_file_json, MessageOrReplyConverter
 
 TICKET_TOPIC_REGEX = r"opened by (?P<user>.+#\d{4}) \((?P<user_id>\d+)\) at (?P<time>.+)"
+
+# TODO: make use of a library to create transcripts
+# Potentially https://github.com/mahtoid/DiscordChatExporterPy
 
 
 def restrict_ticket_command_usage(ctx: commands.Context, raise_on_false=True):
@@ -26,7 +29,7 @@ def restrict_ticket_command_usage(ctx: commands.Context, raise_on_false=True):
             raise commands.MissingPermissions(["manage_ticket"])
         else:
             return False
-    if str(ctx.author.id) == str(match.group('user_id')):
+    if str(ctx.author.id) == str(match.group("user_id")):
         return True
     if raise_on_false:
         raise commands.MissingPermissions(["manage_ticket"])
@@ -39,12 +42,12 @@ def markdown(string):
     changed = True
     this_result = string
     while changed:
-        result = re.sub(r"(?<!\\)`(.+)`", r'<code class="inline">\1</code>', result)
+        result = re.sub(r"(?<!\\)`(.+)`", r"code class=\"inline\">\1</code>", result)
         result = re.sub(r"(?<!\\)~~(.+)~~", r"<s>\1</s>", result)
         result = re.sub(r"(?<!\\)\*\*(.+)\*\*", r"<b>\1</b>", result)
         result = re.sub(r"(?<!\\)\*(.+)\*", r"<i>\1</i>", result)
         result = re.sub(r"(?<!\\)__(.+)__", r"<u>\1</u>", result)
-        result = re.sub(r"(?<!\\)\\n", '<br>', result)
+        result = re.sub(r"(?<!\\)\\n", "<br>", result)
         changed = result != this_result
         this_result = result
     return result
@@ -57,21 +60,21 @@ def transcribe(messages):
         html += f"{message.author} | {message.created_at.strftime('%d/%m/%y %H:%M')}: {message.content}\n"
     html += "</p>"
     html += "<style>"
-    with open('assets/transcripts.css') as f:
+    with open("assets/transcripts.css") as f:
         html += f.read()
     html += "</style>"
-    html += '<div class="background theme-dark">'
-    html += '<script>window.onload = () => window.scrollTo(0,document.body.scrollHeight);</script>'
-    html += f'<h1>Start of transcript</h1><br>'
+    html += "<div class=\"background theme-dark\">"
+    html += "<script>window.onload = () => window.scrollTo(0,document.body.scrollHeight);</script>"
+    html += f"<h1>Start of transcript</h1><br>"
     cur_auth_id = 0
 
     for message in messages:
         message: discord.Message
         if message.author.id != cur_auth_id:
-            html += '<div class="message-separator"></div>'
-            html += '<div class="message">'
+            html += "<div class=\"message-separator\"></div>"
+            html += "<div class=\"message\">"
         else:
-            html += '<div class="message-only">'
+            html += "<div class=\"message-only\">"
         if message.author.id != cur_auth_id:
             html += next_author(message.author, message.created_at)
         if message.content:
@@ -82,13 +85,13 @@ def transcribe(messages):
             html += generate_attachments(message.attachments)
         html += "</div>"
         cur_auth_id = message.author.id
-    html += '<h2>End of transcript</h2>'
+    html += "<h2>End of transcript</h2>"
     html += "</div>"
     return html
 
 
 def generate_content(message):
-    return f'<div class="message-content">{markdown(message.clean_content)}</div>'
+    return f"<div class=\"message-content\">{markdown(message.clean_content)}</div>"
 
 
 def generate_embed(embed: discord.Embed):
@@ -125,10 +128,10 @@ def generate_embed(embed: discord.Embed):
                                         </div>
     """
     if embed.fields:
-        html += '<div class="embed-fields">'
+        html += "<div class=\"embed-fields\">"
         for field in embed.fields:
             html += f"""
-                                            <div class="embed-field{' embed-field-inline' if field.inline else ''}">
+                                            <div class=\"embed-field{" embed-field-inline" if field.inline else ""}\">
                                                 <div class="embed-field-name">
                                                     {field.name}
                                                 </div>
@@ -177,7 +180,7 @@ def generate_embed(embed: discord.Embed):
 
 
 def generate_attachments(attachments):
-    return ''.join([f'<img class="image-attachment" src={a.url}>' for a in attachments])
+    return "".join([f"<img class=\"image-attachment\" src={a.url}>" for a in attachments])
 
 
 def next_author(author, timestamp):
@@ -185,8 +188,8 @@ def next_author(author, timestamp):
         <img src="{author.avatar_url}"
             class="avatar">
         <div class="message-header">
-            <span class="username"><b>{author}{'<span class="bot-tag">BOT</span>' if author.bot else ''}</b></span>
-            <span class="timestamp">{timestamp.strftime('%d/%m/%y %H:%M')}</span>
+            <span class="username"><b>{author}{'<span class="bot-tag">BOT</span>' if author.bot else ""}</b></span>
+            <span class="timestamp">{timestamp.strftime("%d/%m/%y %H:%M")}</span>
         </div>
 
     """
@@ -219,8 +222,8 @@ ticket_types = {
 }
 
 
-class Tickets(commands.Cog):
-    """The tickets system, and all related commands"""
+class Tickets(commands.Cog, name="Tickets"):
+    """The ticket system, and all related commands"""
 
     def __init__(self, bot):
         self.hidden = False
@@ -229,25 +232,25 @@ class Tickets(commands.Cog):
         self.load_message_ids()
 
     def load_message_ids(self):
-        self.message_ids = getFileJson("config")["ticket_messages"]
+        self.message_ids = get_file_json("config")["ticket_messages"]
 
-    @commands.command(hidden=True)
+    @commands.command(name="addticketmessage", hidden=True)
     @staff_only
-    async def addTicketMessage(self, ctx, message: discord.Message):
+    async def add_ticket_message(self, ctx, message: discord.Message):
         """Add a message that should trigger ticket creation"""
-        config = getFileJson("config")
+        config = get_file_json("config")
         config["ticket_messages"].append(message.id)
-        saveFileJson(config, "config")
+        save_file_json(config, "config")
         self.load_message_ids()
         await ctx.send("Successfully added message")
 
-    @commands.command(hidden=True)
+    @commands.command(name="removeticketmessage", hidden=True)
     @staff_only
-    async def removeTicketMessage(self, ctx, message: discord.Message):
+    async def remove_ticket_message(self, ctx, message: discord.Message):
         """Remove a message from those that can trigger ticket creation"""
-        config = getFileJson("config")
+        config = get_file_json("config")
         config["ticket_messages"].remove(message.id)
-        saveFileJson(config, "config")
+        save_file_json(config, "config")
         self.load_message_ids()
         await ctx.send("Successfully removed message")
 
@@ -259,7 +262,7 @@ class Tickets(commands.Cog):
             guild: discord.Guild = self.bot.get_guild(payload.guild_id)
             msg: discord.Message = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
             await msg.remove_reaction(payload.emoji, payload.member)
-            in_lockdown = getFileJson("config")["lockdown"]
+            in_lockdown = get_file_json("config")["lockdown"]
             if in_lockdown:
                 return await payload.member.send("Unable to create ticket: `Server in lockdown!`")
             cat: discord.CategoryChannel = guild.get_channel(Category.TICKETS)
@@ -287,7 +290,7 @@ class Tickets(commands.Cog):
                 except discord.Forbidden:
                     return
                 try:
-                    message = await self.bot.wait_for('message',
+                    message = await self.bot.wait_for("message",
                                                       check=lambda m: m.channel.id == msg.channel.id and
                                                                       m.author.id == payload.member.id,
                                                       timeout=300.0)
@@ -307,7 +310,8 @@ class Tickets(commands.Cog):
             channel: discord.TextChannel = await guild.create_text_channel(
                 f"{payload.member.name}-{payload.member.discriminator}",
                 category=guild.get_channel(Channel.OPEN_TICKET),
-                topic=f"opened by {payload.member} ({payload.member.id}) at {datetime.datetime.now().strftime('%d/%m/%y %H:%M')}",
+                topic=f"opened by {payload.member} ({payload.member.id}) at "
+                      f"{datetime.datetime.now().strftime('%d/%m/%y %H:%M')}",
                 overwrites={
                     guild.default_role: discord.PermissionOverwrite(
                         read_messages=False),
@@ -326,21 +330,31 @@ class Tickets(commands.Cog):
             start = await channel.send(f"<@&{Role.TICKET_PING}> {payload.member.mention}", embed=embed)
             await start.pin()
             await payload.member.send(f"Ticket created! {start.jump_url}")
-            await guild.get_channel(Channel.MOD_LOGS).send(
-                embed=Embed(
-                    payload.member,
-                    colour=0x00ff00,
-                    title="Ticket opened",
-                    description=f"{channel.name}\nReason: {ticket_types[str(payload.emoji)]['name']}"
-                ).auto_author()
-            )
+            embed = Embed(payload.member, colour=0x00ff00, title="Ticket opened",
+                          description=f"{channel.name}\nReason: {ticket_types[str(payload.emoji)]['name']}")
+            embed.auto_author()
+            log_channel = guild.get_channel(Channel.MOD_LOGS)
+            log_channel.send(embed=embed)
 
-    @commands.command()
-    async def adduser(self, ctx: commands.Context, *, member: discord.Member):
+    @commands.command(name="add_user")
+    async def add_user(self, ctx: commands.Context, *, member: discord.Member):
         """Add a user to a ticket"""
         restrict_ticket_command_usage(ctx)
         await ctx.channel.set_permissions(member, read_messages=True)
         await ctx.send(f"{ctx.author.mention} added {member.mention} to this ticket")
+
+    @commands.command(name="removeuser")
+    async def remove_user(self, ctx: commands.Context, *, member: discord.Member):
+        """Remove a user from a ticket"""
+        restrict_ticket_command_usage(ctx)
+        string = f"{ctx.author.mention} removed {member.mention} from this ticket"
+        member_ctx = ctx
+        # noinspection PyPropertyAccess
+        member_ctx.author = member
+        if restrict_ticket_command_usage(member_ctx, raise_on_false=False):
+            raise commands.MissingPermissions(["manage_tickets"])
+        await ctx.channel.set_permissions(member, read_messages=False)
+        await ctx.send(string)
 
     @commands.command()
     async def pin(self, ctx: commands.Context, message: str = "none"):
@@ -358,23 +372,10 @@ class Tickets(commands.Cog):
         await ctx.send("Unpinned!")
 
     @commands.command()
-    async def removeuser(self, ctx: commands.Context, *, member: discord.Member):
-        """Remove a user from a ticket"""
-        restrict_ticket_command_usage(ctx)
-        string = f"{ctx.author.mention} removed {member.mention} from this ticket"
-        member_ctx = ctx
-        # noinspection PyPropertyAccess
-        member_ctx.author = member
-        if restrict_ticket_command_usage(member_ctx, raise_on_false=False):
-            raise commands.MissingPermissions(["manage_tickets"])
-        await ctx.channel.set_permissions(member, read_messages=False)
-        await ctx.send(string)
-
-    @commands.command()
     async def close(self, ctx, *, reason: str = None):
         """Close a ticket"""
         restrict_ticket_command_usage(ctx)
-        with open(f"transcripts/{ctx.channel.name}.html", 'w', encoding="utf-8") as f:
+        with open(f"transcripts/{ctx.channel.name}.html", "w", encoding="utf-8") as f:
             f.write(transcribe(reversed([z async for z in ctx.channel.history(limit=500)])))
         user = re.search(TICKET_TOPIC_REGEX, ctx.channel.topic)
         user = int(user.group("user_id"))
@@ -385,16 +386,12 @@ class Tickets(commands.Cog):
         except (discord.Forbidden, discord.NotFound, AttributeError):
             pass
         await ctx.channel.delete()
-        await ctx.guild.get_channel(Channel.MOD_LOGS).send(
-            embed=Embed(
-                ctx.author,
-                colour=0xff0000,
-                title="Ticket closed",
-                description=f"{ctx.channel.name}\nReason: {reason}"
-            ).auto_author(),
-            file=discord.File(f"transcripts/{ctx.channel.name}.html", "transcript.html")
-        )
-        # await mod_logs.send(file=discord.File(f"transcripts/{ctx.author}.html", "transcript.html"))
+        embed = Embed(ctx.author, colour=0xff0000, title="Ticket closed",
+                      description=f"{ctx.channel.name}\nReason: {reason}")
+        embed.auto_author()
+        log_channel = ctx.guild.get_channel(Channel.MOD_LOGS)
+        await log_channel.send(embed=embed,
+                               file=discord.File(f"transcripts/{ctx.channel.name}.html", "transcript.html"))
 
 
 def setup(bot):

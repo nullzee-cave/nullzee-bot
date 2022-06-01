@@ -7,3 +7,4 @@ EZPaginator
 Pillow
 mathterpreter
 imageio
+pymongo

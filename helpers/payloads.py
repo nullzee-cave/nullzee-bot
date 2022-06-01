@@ -10,7 +10,7 @@ def insert_message(payload, message):
 
 def warn_payload(*, offender_id, mod_id, reason):
     return {
-        "id": utils.nanoId(),
+        "id": utils.nano_id(),
         "offender_id": offender_id,
         "mod_id": mod_id,
         "type": "warn",
@@ -22,7 +22,7 @@ def warn_payload(*, offender_id, mod_id, reason):
 
 def mute_payload(*, offender_id, mod_id, reason, duration):
     return {
-        "id": utils.nanoId(),
+        "id": utils.nano_id(),
         "offender_id": offender_id,
         "mod_id": mod_id,
         "type": "mute",
@@ -40,7 +40,7 @@ def mute_payload(*, offender_id, mod_id, reason, duration):
 
 def ban_payload(*, offender_id, mod_id, reason, duration, _id = None):
     return {
-        "id": _id if _id else utils.nanoId(),
+        "id": _id if _id else utils.nano_id(),
         "offender_id": offender_id,
         "mod_id": mod_id,
         "type": "ban",
@@ -58,7 +58,7 @@ def ban_payload(*, offender_id, mod_id, reason, duration, _id = None):
 
 def mass_ban_payload(*, offenders, mod_id, reason, duration, _id):
     return {
-        "id": _id if _id else utils.nanoId(),
+        "id": _id if _id else utils.nano_id(),
         "offenders": offenders,
         "offenders_string": "\n".join([f'{z.mention} - {z.id}' for z in offenders]),
         "mod_id": mod_id,
@@ -76,7 +76,7 @@ def mass_ban_payload(*, offenders, mod_id, reason, duration, _id):
 
 def kick_payload(*, offender_id, mod_id, reason):
     return {
-        "id": utils.nanoId(),
+        "id": utils.nano_id(),
         "offender_id": offender_id,
         "mod_id": mod_id,
         "type": "kick",
