@@ -59,12 +59,12 @@ class Staff(commands.Cog, name="Staff"):
         if user.pending:
             embed = discord.Embed(title="True", description=f"{user.mention} has not completed member screening",
                                   colour=user.colour)
-            embed.set_author(name=user, icon_url=user.avatar_url)
+            embed.set_author(name=user, icon_url=user.avatar)
             return await ctx.send(embed=embed)
         elif not user.pending:
             embed = discord.Embed(title="False", description=f"{user.mention} has completed member screening",
                                   colour=user.colour)
-            embed.set_author(name=user, icon_url=user.avatar_url)
+            embed.set_author(name=user, icon_url=user.avatar)
             return await ctx.send(embed=embed)
         else:
             return await ctx.send("you've somehow managed to make a binary value not be true or false, congrats")
@@ -181,10 +181,10 @@ class Staff(commands.Cog, name="Staff"):
 
             await asyncio.sleep(1)
             chat_embed = discord.Embed(description=f"Cleared {limit} messages", color=0xfb00fd)
-            chat_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            chat_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
             await ctx.send(embed=chat_embed)
             log_embed = discord.Embed(title="Purge", description=f"{limit} messages cleared from {ctx.channel.mention}")
-            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
             log_channel = ctx.guild.get_channel(Channel.MOD_LOGS)
             await log_channel.send(embed=log_embed)
         else:
@@ -199,12 +199,12 @@ class Staff(commands.Cog, name="Staff"):
 
             await asyncio.sleep(1)
             chat_embed = discord.Embed(description=f"Cleared {limit} messages from {user.mention}", color=0xfb00fd)
-            chat_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            chat_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
             await ctx.send(embed=chat_embed)
             log_embed = discord.Embed(title="Purge",
                                       description=f"{limit} messages from {user.mention} "
                                                   f"cleared from {ctx.channel.mention}")
-            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
             log_channel = ctx.guild.get_channel(Channel.MOD_LOGS)
             await log_channel.send(embed=log_embed)
 
@@ -519,5 +519,5 @@ class Staff(commands.Cog, name="Staff"):
         await ctx.message.delete()
 
 
-def setup(bot):
-    bot.add_cog(Staff(bot, True))
+async def setup(bot):
+    await bot.add_cog(Staff(bot, True))

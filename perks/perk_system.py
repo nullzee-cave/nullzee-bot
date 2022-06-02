@@ -29,7 +29,7 @@ def perk(*, name: str = None, aliases=None, description: str = None,
     def decorator(func):
         _name = name if name else func.__name__
         _aliases = aliases if aliases else []
-        this_perk = Perk(_name, description, _aliases, cost, require_arg, func)
+        this_perk = Perk(_name, _aliases, description, cost, require_arg, func)
         register_perk(this_perk)
 
         def wrapper(*args, **kwargs):

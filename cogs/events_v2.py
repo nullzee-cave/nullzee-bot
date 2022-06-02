@@ -110,5 +110,5 @@ class Events(commands.Cog, name="Events"):
         await ctx.send(f"{user.mention} ({user}) signed up with this IGN")
 
 
-def setup(bot):
-    bot.add_cog(Events(bot))
+async def setup(bot):
+    await bot.add_cog(Events(bot))

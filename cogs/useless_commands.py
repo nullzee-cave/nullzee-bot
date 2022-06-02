@@ -118,5 +118,5 @@ class UselessCommands(commands.Cog, name="Useless Commands"):
         await ctx.send(embed=embed)
         
 
-def setup(bot):
-    bot.add_cog(UselessCommands(bot, False))
+async def setup(bot):
+    await bot.add_cog(UselessCommands(bot, False))

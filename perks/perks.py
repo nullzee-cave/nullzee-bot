@@ -18,7 +18,7 @@ staff_nick_changes = {}
       cost=10, require_arg=True)
 async def ask_nullzee(ctx, arg):
     embed = Embed(ctx.author, description=arg)
-    await embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url).user_colour()
+    await embed.set_author(name=ctx.author, icon_url=ctx.author.avatar).user_colour()
     msg = await ctx.guild.get_channel(Channel.ASK_NULLZEE).send(embed=embed)
     await ctx.send(embed=await Embed(ctx.author, title="Bought!", url=msg.jump_url).user_colour())
 
@@ -42,8 +42,9 @@ async def dead_chat(ctx, arg):
     if last_ping + 7200 > time.time():
         raise PerkError(msg="This perk is on cooldown!")
     embed = Embed(ctx.author, description=arg)
-    await embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url).user_colour()
-    await ctx.send(f"<@&{Role.DEAD_CHAT_PING}>", embed=embed)
+    await embed.set_author(name=ctx.author, icon_url=ctx.author.avatar).user_colour()
+    # await ctx.send(f"<@&{Role.DEAD_CHAT_PING}>", embed=embed)
+    await ctx.send(f"ping", embed=embed)
     last_ping = time.time()
 
 
@@ -55,7 +56,7 @@ async def qotd(ctx, arg):
     config["qotd"] = (datetime.datetime.now() - datetime.datetime.utcfromtimestamp(0)).days
     save_file_json(config, "config")
     embed = discord.Embed(description=arg, color=discord.Color.orange())
-    embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+    embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
     await ctx.guild.get_channel(Channel.STAFF_CHAT).send(embed=embed)
 
 
@@ -126,7 +127,7 @@ async def staff_nick_change(ctx, arg):
         await ctx.send("get banned nerd")
     else:
         try:
-            if list_one(member.roles, [ctx.guild.get_role(Role.STAFF), ctx.guild.get_role(Role.TRAINEE)]):
+            if list_one(member.roles, ctx.guild.get_role(Role.STAFF), ctx.guild.get_role(Role.TRAINEE)):
                 await member.edit(nick=f"✰ {content}")
             else:
                 raise PerkError(msg="I can't change a twitch mod's nick!")
@@ -139,7 +140,7 @@ async def staff_nick_change(ctx, arg):
             pass
 
 
-@perk(name="rainbow", aliases=["rolecolour"], description=f"Change the colour of the <@&{Role.RAINBOW}> role",
+@perk(name="Rainbow", aliases=["rolecolour"], description=f"Change the colour of the <@&{Role.RAINBOW}> role",
       cost=10, require_arg=True)
 async def rainbow_role(ctx: commands.Context, arg: str):
     global last_rainbow
