@@ -86,6 +86,10 @@ class Automod(commands.Cog, name="Automod"):
             if warn["timestamp"] + (await moderation_utils.get_config())["deleteWarnsAfter"] < time.time():
                 await moderation_coll.update_one(warn, {"$set": {"expired": True}})
 
+    @delete_warns.before_loop
+    async def before_delete_warns(self):
+        await self.bot.wait_until_ready()
+
     @tasks.loop(minutes=1)
     async def timed_punishments(self):
         async for punishment in moderation_coll.find({"active": True, "permanent": False}):
@@ -93,6 +97,10 @@ class Automod(commands.Cog, name="Automod"):
                 await moderation_utils.end_punishment(self.bot, punishment, moderator="automod",
                                                       reason="Punishment served")
                 await moderation_coll.update_one(punishment, {"$set": {"active": False}})
+
+    @timed_punishments.before_loop
+    async def before_timed_punishments(self):
+        await self.bot.wait_until_ready()
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -105,5 +113,5 @@ class Automod(commands.Cog, name="Automod"):
         await moderation_utils.automod_name(after)
 
 
-def setup(bot):
-    bot.add_cog(Automod(bot, True))
+async def setup(bot):
+    await bot.add_cog(Automod(bot, True))

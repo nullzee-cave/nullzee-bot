@@ -69,5 +69,5 @@ class Points(commands.Cog, name="Points"):
         await Emitter().emit("points_changed", ctx, points)
 
 
-def setup(bot):
-    bot.add_cog(Points(bot, False))
+async def setup(bot):
+    await bot.add_cog(Points(bot, False))

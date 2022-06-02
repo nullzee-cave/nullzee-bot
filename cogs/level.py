@@ -1,3 +1,5 @@
+import typing
+
 from discord.ext import commands, tasks
 import json
 import asyncio
@@ -47,6 +49,10 @@ class Levelling(commands.Cog, name="Levelling"):
                     if not all(role is None for role in to_add):
                         await member.add_roles(*to_add)
 
+    @vc_tracker.before_loop
+    async def before_vc_tracker(self):
+        await self.bot.wait_until_ready()
+
     @tasks.loop(hours=1)
     async def check_level_one_role(self):
         guild = self.bot.get_guild(Misc.GUILD)
@@ -54,6 +60,10 @@ class Levelling(commands.Cog, name="Levelling"):
         for member in guild.members:
             if not member.pending and role not in member.roles:
                 await member.add_roles(role)
+
+    @check_level_one_role.before_loop
+    async def before_check_level_one_role(self):
+        await self.bot.wait_until_ready()
 
     @commands.command(name="linktwitch")
     async def link_twitch(self, ctx, username: str):
@@ -100,12 +110,12 @@ class Levelling(commands.Cog, name="Levelling"):
         multipliers = f"Global: {self.global_multiplier}\n"
         multipliers += "\n".join([f"<#{z}> : {self.multipliers[z]}" for z in self.multipliers if
                                   (self.multipliers[z] != 1 and
-                                   ctx.guild.get_channel(int(z)).category.id not in [Category.ARCHIVED_CHATS])])
+                                   ctx.guild.get_channel_or_thread(int(z)).category.id not in [Category.ARCHIVED_CHATS])])
         await ctx.send(embed=discord.Embed(title="Current XP multipliers", description=multipliers))
 
     @commands.command(hidden=True)
     @staff_only
-    async def multiplier(self, ctx, channel: discord.TextChannel, value: float):
+    async def multiplier(self, ctx, channel: typing.Union[discord.TextChannel, discord.Thread], value: float):
         """Change the xp multiplier of a channel"""
         if value < -0.5 or value > 10:
             return await ctx.send("please resign.")
@@ -136,6 +146,10 @@ class Levelling(commands.Cog, name="Levelling"):
             save_file_json(config)
             self.update_multipliers()
 
+    @boost_multiplier_end.before_loop
+    async def before_boost_multiplier_end(self):
+        await self.bot.wait_until_ready()
+
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.type == discord.MessageType.premium_guild_subscription:
@@ -155,9 +169,14 @@ class Levelling(commands.Cog, name="Levelling"):
             user_data = await get_user(message.author)
             ctx = await self.bot.get_context(message)
             await Emitter().emit("message", ctx, user_data=user_data)
+            multiplier = None
             if str(message.channel.id) in self.multipliers:
                 multiplier = self.multipliers[str(message.channel.id)]
-            else:
+            elif isinstance(message.channel, discord.Thread):
+                if str(message.channel.parent) in self.multipliers and \
+                   self.multipliers[str(message.channel.parent)] < 1:
+                    multiplier = self.multipliers[str(message.channel.parent)]
+            if multiplier is None:
                 multiplier = 1
             if message.attachments:
                 base_exp = 30
@@ -218,7 +237,7 @@ class Levelling(commands.Cog, name="Levelling"):
                             url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley",
                             description=string)
         await embed.user_colour()
-        embed.set_author(name=user, icon_url=user.avatar_url)
+        embed.set_author(name=user, icon_url=user.avatar)
         await ctx.send(embed=embed)
 
     @commands.command(name="hffl", aliases=["howfarfromlevel"])
@@ -254,42 +273,46 @@ class Levelling(commands.Cog, name="Levelling"):
     @commands.guild_only()
     async def weekly_leaderboard(self, ctx):
         """View the server's weekly XP leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild,
-                                   [z async for z in user_coll.find({}).sort("weekly", pymongo.DESCENDING)],
-                                   key="weekly", suffix=" XP")
-        msg = await ctx.send(embed=embeds[0])
+        async with ctx.channel.typing():
+            embeds = leaderboard_pages(self.bot, ctx.guild,
+                                       [z async for z in user_coll.find({}).sort("weekly", pymongo.DESCENDING)],
+                                       key="weekly", suffix=" XP")
+            msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
     @commands.command(name="vcleaderboard", aliases=["vclb"])
     @commands.guild_only()
     async def vc_leaderboard(self, ctx):
         """View the server's vc minute leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild,
-                                   [z async for z in user_coll.find({}).sort("vc_minutes", pymongo.DESCENDING)],
-                                   key="vc_minutes", suffix=" minutes",
-                                   title="Voice Activity leaderboard",
-                                   field_name="Talk in a voice channel to gain time")
-        msg = await ctx.send(embed=embeds[0])
+        async with ctx.channel.typing():
+            embeds = leaderboard_pages(self.bot, ctx.guild,
+                                       [z async for z in user_coll.find({}).sort("vc_minutes", pymongo.DESCENDING)],
+                                       key="vc_minutes", suffix=" minutes",
+                                       title="Voice Activity leaderboard",
+                                       field_name="Talk in a voice channel to gain time")
+            msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
-    @commands.command(name="pointsleaderboard", aliases=["plb"])
+    @commands.command(name="pointsleaderboard", aliases=["plb", "ptlb", "pointleaderboard"])
     @commands.guild_only()
     async def points_leaderboard(self, ctx):
         """View the server's points leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild,
-                                   [z async for z in user_coll.find({}).sort("points", pymongo.DESCENDING)],
-                                   key="points", suffix=" points",
-                                   title="Points leaderboard", field_name="Gain 1 point every 1000 XP")
-        msg = await ctx.send(embed=embeds[0])
+        async with ctx.channel.typing():
+            embeds = leaderboard_pages(self.bot, ctx.guild,
+                                       [z async for z in user_coll.find({}).sort("points", pymongo.DESCENDING)],
+                                       key="points", suffix=" points",
+                                       title="Points leaderboard", field_name="Gain 1 point every 1000 XP")
+            msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
     @commands.command(aliases=["lb"])
     @commands.guild_only()
     async def leaderboard(self, ctx):
         """View the server's XP leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in user_coll.find({}).sort(
-            [("level", pymongo.DESCENDING), ("experience", pymongo.DESCENDING)])], prefix="level ")
-        msg = await ctx.send(embed=embeds[0])
+        async with ctx.channel.typing():
+            embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in user_coll.find({}).sort(
+                [("level", pymongo.DESCENDING), ("experience", pymongo.DESCENDING)])], prefix="level ")
+            msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
     @commands.command(name="weeklyreset", aliases=["resetweekly"], hidden=True)
@@ -326,6 +349,10 @@ class Levelling(commands.Cog, name="Levelling"):
     #         with open("users.json", "w") as f:
     #             json.dump(users, f)
     #         await self.bot.get_guild(667953033929293855).get_channel(667957285837864960).send(embed=discord.Embed(description="Weekly XP leaderboard was reset"), color=discord.Color.blue())
+    #
+    # @weekly_reset.before_loop
+    # async def before_weekly_reset(self):
+    #     await self.bot.wait_until_ready()
 
     @commands.command(name="levelbackup", hidden=True)
     @commands.has_role(Role.ADMIN)
@@ -388,5 +415,5 @@ class Levelling(commands.Cog, name="Levelling"):
         await response_msg.delete()
 
 
-def setup(bot):
-    bot.add_cog(Levelling(bot, False))
+async def setup(bot):
+    await bot.add_cog(Levelling(bot, False))

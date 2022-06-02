@@ -34,14 +34,14 @@ async def check_requirements(giveaway, user):
 
 async def roll_giveaway(guild, giveaway, winner_count=None):
     winner_count = winner_count or giveaway["winner_count"]
-    channel = guild.get_channel(giveaway["channel"])
+    channel = guild.get_channel_or_thread(giveaway["channel"])
     message = await channel.fetch_message(int(giveaway["_id"]))
     donor = guild.get_member(giveaway["donor"])
     reaction_users = []
     if not channel or not message:
         await guild.get_channel(Channel.STAFF_ANNOUNCEMENTS).send(f"GIVEAWAY FAILED: {giveaway['_id']}\nINTERNAL ERROR")
-    for i in message.reactions:
-        async for user in i.users():
+    for reaction in message.reactions:
+        async for user in reaction.users():
             reaction_users.append(user)
     reaction_users = [z for z in reaction_users if isinstance(z, discord.Member)]
     winners = []
@@ -213,7 +213,7 @@ class Giveaway(commands.Cog, name="Giveaway"):
             await giveaway_coll.update_one({"_id": str(message.id)}, {"$set": {"active": False}})
             await ctx.send("Stopped the giveaway")
             try:
-                msg = await ctx.guild.get_channel(int(giveaway["channel"])).fetch_message(int(giveaway["_id"]))
+                msg = await ctx.guild.get_channel_or_thread(int(giveaway["channel"])).fetch_message(int(giveaway["_id"]))
                 await msg.edit(content="*[giveaway deleted]*", embed=None)
             except:
                 pass
@@ -234,7 +234,7 @@ class Giveaway(commands.Cog, name="Giveaway"):
             await giveaway_coll.update_one({"_id": str(_id)}, {"$set": {"active": False}})
             await ctx.send("Stopped the giveaway")
             try:
-                msg = await ctx.guild.get_channel(int(giveaway["channel"])).fetch_message(int(giveaway["_id"]))
+                msg = await ctx.guild.get_channel_or_thread(int(giveaway["channel"])).fetch_message(int(giveaway["_id"]))
                 await msg.edit(content="*[giveaway deleted]*", embed=None)
             except discord.NotFound:
                 pass
@@ -281,8 +281,12 @@ class Giveaway(commands.Cog, name="Giveaway"):
                 except Exception as e:
                     await self.bot.get_guild(Misc.GUILD).get_member(DEV_ID).send(f"\nGiveaway failed to roll: `{giveaway['_id']}`")
                     print(f"\nGiveaway failed to roll: {giveaway['_id']}")
-                    traceback.print_tb(e.__traceback__)
+                    print("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+
+    @auto_roll_giveaways.before_loop
+    async def before_auto_roll_giveaways(self):
+        await self.bot.wait_until_ready()
 
 
-def setup(bot):
-    bot.add_cog(Giveaway(bot, True))
+async def setup(bot):
+    await bot.add_cog(Giveaway(bot, True))
