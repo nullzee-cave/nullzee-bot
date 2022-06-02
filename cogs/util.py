@@ -408,7 +408,7 @@ class Util(commands.Cog, name="Other"):
         except:
             pass
 
-    @commands.command()
+    @commands.command(name="claimroles")
     @commands.cooldown(2, 60, BucketType.user)
     async def claim_roles(self, ctx, ign: str):
         """Claim roles for in-game achievement"""
