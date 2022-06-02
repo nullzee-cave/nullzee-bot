@@ -100,13 +100,13 @@ def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="
             continue
         entries.append(f"**{lb_pos}: {member}** - {prefix}{user[key]:,}{suffix}\n")
         lb_pos += 1
-    embeds = [discord.Embed(colour=0x00FF00).set_author(name=title, icon_url=guild.icon_url)]
+    embeds = [discord.Embed(colour=0x00FF00).set_author(name=title, icon_url=guild.icon)]
     values = [""]
     embed_index = 0
     for i, entry in enumerate(entries):
         values[embed_index] += entry
         if not ((i + 1) % 15) and i != 0:
-            embeds.append(discord.Embed(colour=0x00FF00).set_author(name=title, icon_url=guild.icon_url))
+            embeds.append(discord.Embed(colour=0x00FF00).set_author(name=title, icon_url=guild.icon))
             embed_index += 1
             values.append("")
     embeds = embeds[:16]
@@ -142,7 +142,7 @@ def save_file_json(data, filename="config"):
 
 class MessageOrReplyConverter(commands.Converter):
 
-    async def convert(self, ctx: commands.Context, argument: str):
+    async def convert(self, ctx: commands.Context, argument: str) -> discord.Message:
         message: discord.Message = None
         try:
             message = await commands.MessageConverter().convert(ctx, argument)
@@ -350,7 +350,7 @@ class Embed(discord.Embed):
         return self
 
     def auto_author(self):
-        self.set_author(name=self.user.__str__(), icon_url=self.user.avatar_url)
+        self.set_author(name=self.user.__str__(), icon_url=self.user.avatar)
         return self
 
     def timestamp_now(self):

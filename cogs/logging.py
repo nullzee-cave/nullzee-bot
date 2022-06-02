@@ -39,7 +39,7 @@ class Logging(commands.Cog, name="Logging"):
         if len(files) != 0:
             kwargs["files"] = files
 
-        channel: discord.TextChannel = message.guild.get_channel(Channel.MESSAGE_LOGS)
+        channel = message.guild.get_channel(Channel.MESSAGE_LOGS)
         await channel.send(**kwargs)
 
     @commands.Cog.listener()
@@ -82,5 +82,5 @@ class Logging(commands.Cog, name="Logging"):
         await before.guild.get_channel(Channel.MESSAGE_LOGS).send(embed=embed)
 
 
-def setup(bot: commands.Bot):
-    bot.add_cog(Logging(bot))
+async def setup(bot: commands.Bot):
+    await bot.add_cog(Logging(bot))
