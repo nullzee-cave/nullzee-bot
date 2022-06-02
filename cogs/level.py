@@ -273,42 +273,46 @@ class Levelling(commands.Cog, name="Levelling"):
     @commands.guild_only()
     async def weekly_leaderboard(self, ctx):
         """View the server's weekly XP leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild,
-                                   [z async for z in user_coll.find({}).sort("weekly", pymongo.DESCENDING)],
-                                   key="weekly", suffix=" XP")
-        msg = await ctx.send(embed=embeds[0])
+        async with ctx.channel.typing():
+            embeds = leaderboard_pages(self.bot, ctx.guild,
+                                       [z async for z in user_coll.find({}).sort("weekly", pymongo.DESCENDING)],
+                                       key="weekly", suffix=" XP")
+            msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
     @commands.command(name="vcleaderboard", aliases=["vclb"])
     @commands.guild_only()
     async def vc_leaderboard(self, ctx):
         """View the server's vc minute leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild,
-                                   [z async for z in user_coll.find({}).sort("vc_minutes", pymongo.DESCENDING)],
-                                   key="vc_minutes", suffix=" minutes",
-                                   title="Voice Activity leaderboard",
-                                   field_name="Talk in a voice channel to gain time")
-        msg = await ctx.send(embed=embeds[0])
+        async with ctx.channel.typing():
+            embeds = leaderboard_pages(self.bot, ctx.guild,
+                                       [z async for z in user_coll.find({}).sort("vc_minutes", pymongo.DESCENDING)],
+                                       key="vc_minutes", suffix=" minutes",
+                                       title="Voice Activity leaderboard",
+                                       field_name="Talk in a voice channel to gain time")
+            msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
-    @commands.command(name="pointsleaderboard", aliases=["plb"])
+    @commands.command(name="pointsleaderboard", aliases=["plb", "ptlb", "pointleaderboard"])
     @commands.guild_only()
     async def points_leaderboard(self, ctx):
         """View the server's points leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild,
-                                   [z async for z in user_coll.find({}).sort("points", pymongo.DESCENDING)],
-                                   key="points", suffix=" points",
-                                   title="Points leaderboard", field_name="Gain 1 point every 1000 XP")
-        msg = await ctx.send(embed=embeds[0])
+        async with ctx.channel.typing():
+            embeds = leaderboard_pages(self.bot, ctx.guild,
+                                       [z async for z in user_coll.find({}).sort("points", pymongo.DESCENDING)],
+                                       key="points", suffix=" points",
+                                       title="Points leaderboard", field_name="Gain 1 point every 1000 XP")
+            msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
     @commands.command(aliases=["lb"])
     @commands.guild_only()
     async def leaderboard(self, ctx):
         """View the server's XP leaderboard"""
-        embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in user_coll.find({}).sort(
-            [("level", pymongo.DESCENDING), ("experience", pymongo.DESCENDING)])], prefix="level ")
-        msg = await ctx.send(embed=embeds[0])
+        async with ctx.channel.typing():
+            embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in user_coll.find({}).sort(
+                [("level", pymongo.DESCENDING), ("experience", pymongo.DESCENDING)])], prefix="level ")
+            msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
 
     @commands.command(name="weeklyreset", aliases=["resetweekly"], hidden=True)

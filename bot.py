@@ -7,7 +7,7 @@ from datetime import datetime
 import time
 import math
 from api_key import TOKEN, PREFIX, COGS
-from helpers.constants import Role, Channel
+from helpers.constants import Role, Channel, Misc
 from perks.perk_system import PerkError
 import traceback
 from helpers.utils import get_user, staff_only, TimeConverter, ItemNotFound, HelpError, GiveawayError
@@ -104,6 +104,7 @@ async def on_command_error(ctx, error):
             roles = error.missing_roles
         else:
             roles = [error.missing_role]
+        roles = [bot.get_guild(Misc.GUILD).get_role(z).mention for z in roles]
         embed = discord.Embed(title=":x: Error! You must have one of these roles: :x:",
                               description="\n".join(roles), colour=0xff0000)
         return await ctx.send(embed=embed)
