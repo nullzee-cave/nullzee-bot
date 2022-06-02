@@ -161,9 +161,8 @@ class Util(commands.Cog, name="Other"):
         embed.add_field(name="Moderators:", value=moderators, inline=True)
         embed.add_field(name="Bots:", value=bots, inline=True)
         embed.add_field(name="Boosts:", value=len(ctx.guild.premium_subscribers), inline=True)
-        embed.add_field(name="Emojis:", value=str(ctx.guild.emoji).capitalize(), inline=True)
-        current_date = datetime.datetime.now()
-        time_since_creation = current_date - ctx.guild.created_at
+        embed.add_field(name="Emojis:", value=len(ctx.guild.emojis), inline=True)
+        time_since_creation = discord.utils.utcnow() - ctx.guild.created_at
         template = ""
         if int(strfdelta(time_since_creation, "%Y")) > 1:
             template += f"%Y years, "
