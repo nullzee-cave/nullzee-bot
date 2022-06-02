@@ -185,7 +185,7 @@ class HelpConverter(commands.Converter):
         argument = argument.replace(" ", "").replace("_", "")
         ctx.guild = ctx.bot.get_guild(Misc.GUILD)
         ctx.author = ctx.guild.get_member(ctx.author.id)
-        for cog in [ctx.bot.get_cog(z) for z in ctx.bot.COGS]:
+        for cog in [ctx.bot.get_cog(z) for z in ctx.bot.cogs]:
             if argument.lower() == cog.qualified_name.lower().replace(" ", "").replace("_", ""):
                 if (cog.hidden and not staff_check(ctx)) or cog.get_commands() == []:
                     break

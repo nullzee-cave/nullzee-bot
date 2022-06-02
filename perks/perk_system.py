@@ -10,7 +10,7 @@ def register_perk(_perk):
 
 
 class Perk:
-    def __init__(self, name, description, aliases, cost, require_arg, func):
+    def __init__(self, name, aliases, description, cost, require_arg, func):
         self.name = name
         self.aliases = aliases
         self.description = description
@@ -24,6 +24,7 @@ class Perk:
 
 def perk(*, name: str = None, aliases=None, description: str = None,
          cost: typing.Union[int, str] = 0, require_arg: bool = False):
+    name = name
 
     def decorator(func):
         _name = name if name else func.__name__
