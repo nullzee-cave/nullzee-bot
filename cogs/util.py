@@ -347,7 +347,7 @@ class Util(commands.Cog, name="Other"):
             help_embed = discord.Embed(title="Help",
                                        description=f"Use `{ctx.PREFIX}help [category|command]` for more information",
                                        colour=0x00FF00)
-            for cog in [ctx.bot.get_cog(z) for z in ctx.bot.COGS]:
+            for cog in [ctx.bot.get_cog(z) for z in ctx.bot.cogs]:
                 if (cog.hidden and not staff_check(ctx)) or cog.get_commands() == []:
                     continue
                 help_embed.add_field(name=f"__{cog.qualified_name.capitalize()}:__", value=cog.__doc__, inline=False)

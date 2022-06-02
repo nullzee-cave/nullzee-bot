@@ -1,9 +1,12 @@
 from discord.ext import commands
 import discord
-from api_key import user_coll
+from api_key import user_coll, PREFIX
 from helpers.utils import get_user, Embed, staff_only
 from perks.perk_system import PerkConverter, perk_list
 from helpers.events import Emitter
+
+# This import is required to create the perks and add them to perk_list
+from perks import perks
 
 
 class Points(commands.Cog, name="Points"):
@@ -22,7 +25,7 @@ class Points(commands.Cog, name="Points"):
             for perk in perk_list:
                 string += f"{perk.name}:  `{perk.cost} points`\n"
             embed = Embed(ctx.author, title=f"Shop - {user['points']} points", description=string, color=0x00FF00)
-            embed.set_footer(text="purchase a perk with -purchase [perk name]")
+            embed.set_footer(text=f"Purchase a perk with {PREFIX}purchase [perk name]")
             await embed.user_colour()
             return await ctx.send(embed=embed)
         else:

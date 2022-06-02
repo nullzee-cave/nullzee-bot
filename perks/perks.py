@@ -59,7 +59,7 @@ async def qotd(ctx, arg):
     await ctx.guild.get_channel(Channel.STAFF_CHAT).send(embed=embed)
 
 
-@perk(name="waste", description="Waste your hard earned points!", cost="dynamic", require_arg=True)
+@perk(name="Waste", description="Waste your hard earned points!", cost="dynamic", require_arg=True)
 async def waste(ctx, arg):
     try:
         val = int(arg)
