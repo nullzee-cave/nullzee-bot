@@ -75,11 +75,6 @@ bot.remove_command("help")
 
 
 @bot.event
-async def on_thread_create(thread):
-    await thread.join()
-
-
-@bot.event
 async def on_command_error(ctx, error):
     # if command has local error handler, return
     if hasattr(ctx.command, "on_error"):
