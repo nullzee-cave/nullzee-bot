@@ -43,8 +43,7 @@ async def dead_chat(ctx, arg):
         raise PerkError(msg="This perk is on cooldown!")
     embed = Embed(ctx.author, description=arg)
     await embed.set_author(name=ctx.author, icon_url=ctx.author.avatar).user_colour()
-    # await ctx.send(f"<@&{Role.DEAD_CHAT_PING}>", embed=embed)
-    await ctx.send(f"ping", embed=embed)
+    await ctx.send(f"<@&{Role.DEAD_CHAT_PING}>", embed=embed)
     last_ping = time.time()
 
 
