@@ -334,7 +334,7 @@ class Tickets(commands.Cog, name="Tickets"):
                           description=f"{channel.name}\nReason: {ticket_types[str(payload.emoji)]['name']}")
             embed.auto_author()
             log_channel = guild.get_channel(Channel.MOD_LOGS)
-            log_channel.send(embed=embed)
+            await log_channel.send(embed=embed)
 
     @commands.command(name="add_user")
     async def add_user(self, ctx: commands.Context, *, member: discord.Member):
