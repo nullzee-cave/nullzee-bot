@@ -288,7 +288,7 @@ class Staff(commands.Cog, name="Staff"):
         embed.description = string
         await ctx.send(embed=embed)
 
-    @commands.command(name="message.json", hidden=True)
+    @commands.command(name="messagejson", hidden=True)
     @staff_only
     async def message_json(self, ctx: commands.Context, message: discord.Message):
         """Returns the given message as a JSON file"""
