@@ -92,6 +92,10 @@ class Achievements(commands.Cog, name="Achievements"):
                         os.remove(image_filename)
                     os.remove(filename)
 
+    @clear_image_cache.before_loop
+    async def before_clear_image_cache(self):
+        await self.bot.wait_until_ready()
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.type == discord.MessageType.pins_add:
@@ -323,5 +327,5 @@ class Achievements(commands.Cog, name="Achievements"):
         await ctx.send(f"Successfully purchased `{item}` for {item_data.cost} achievement points")
 
 
-def setup(bot):
-    bot.add_cog(Achievements(bot))
+async def setup(bot):
+    await bot.add_cog(Achievements(bot))

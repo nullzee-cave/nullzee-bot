@@ -113,7 +113,7 @@ class Util(commands.Cog, name="Other"):
             for member in ctx.guild.members:
                 if tree.evaluate(member.roles):
                     count += 1
-        embed = discord.Embed(title="Role list search", colour=discord.Colour.blurple())
+        embed = discord.Embed(title="Role list search", colour=discord.Colour.og_blurple())
         embed.add_field(name="Query", value=tree.pprint(lambda x: x.mention), inline=False)
         embed.add_field(name="Member count", value=f"{count:,}", inline=False)
         await ctx.send(embed=embed)
@@ -161,7 +161,7 @@ class Util(commands.Cog, name="Other"):
         embed.add_field(name="Moderators:", value=moderators, inline=True)
         embed.add_field(name="Bots:", value=bots, inline=True)
         embed.add_field(name="Boosts:", value=len(ctx.guild.premium_subscribers), inline=True)
-        embed.add_field(name="Region:", value=str(ctx.guild.region).capitalize(), inline=True)
+        embed.add_field(name="Emojis:", value=str(ctx.guild.emoji).capitalize(), inline=True)
         current_date = datetime.datetime.now()
         time_since_creation = current_date - ctx.guild.created_at
         template = ""
@@ -172,7 +172,7 @@ class Util(commands.Cog, name="Other"):
         template += "%D days, %H hours and %M minutes"
         age_string = strfdelta(time_since_creation, template)
         embed.add_field(name="Server Age:", value=age_string, inline=False)
-        embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
+        embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon)
         embed.set_footer(text=f"ID: {ctx.guild.id} | Created")
         embed.timestamp = ctx.guild.created_at
         await ctx.send(embed=embed)
@@ -204,7 +204,7 @@ class Util(commands.Cog, name="Other"):
             if user_data:
                 embed.colour = discord.Colour(int(user_data["embed_colour"], base=16))
         embed.set_footer(text=user.id)
-        embed.set_thumbnail(url=user.avatar_url)
+        embed.set_thumbnail(url=user.avatar)
         embed.auto_author()
         embed.timestamp_now()
         if is_member:
@@ -226,7 +226,7 @@ class Util(commands.Cog, name="Other"):
         """View a user's avatar"""
         user = user or ctx.author
         embed = Embed(user, title="Avatar")
-        embed.set_image(url=user.avatar_url)
+        embed.set_image(url=user.avatar)
         embed.auto_author()
         await embed.user_colour()
         await ctx.send(embed=embed)
@@ -242,7 +242,7 @@ class Util(commands.Cog, name="Other"):
         location = punishment["message"].split("-")
         msg = f"https://discord.com/channels/{location[0]}/{location[1]}/{location[2]}"
         embed = discord.Embed(title="Punishment appeal", url=msg, description=reason, colour=discord.Colour.orange())
-        embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+        embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
         await self.bot.get_guild(int(location[0])).get_channel(Channel.REPORTS_APPEALS).send(embed=embed)
         await ctx.send("Punishment appeal submitted.")
 
@@ -254,7 +254,7 @@ class Util(commands.Cog, name="Other"):
         with open("suggestions.json") as f:
             suggestions = json.load(f)
         suggestion = await Embed(ctx.author, description=answer, color=0x00FF00).user_colour()
-        suggestion.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+        suggestion.set_author(name=ctx.author, icon_url=ctx.author.avatar)
         suggestion_channel = self.bot.get_guild(Misc.GUILD).get_channel(Channel.POLLS)
         suggestion_msg = await suggestion_channel.send(f"<@&{Role.POLL_PING}>", embed=suggestion)
         suggestions.append(suggestion_msg.id)
@@ -273,6 +273,10 @@ class Util(commands.Cog, name="Other"):
         member_count = channel.guild.member_count
         if channel.name != f"Members: {member_count}":
             await channel.edit(name=f"Members: {member_count}")
+
+    @update_member_counter.before_loop
+    async def before_update_member_counter(self):
+        await self.bot.wait_until_ready()
 
     @tasks.loop(minutes=2)
     async def auto_suggestions(self):
@@ -303,6 +307,10 @@ class Util(commands.Cog, name="Other"):
         with open("suggestions.json", "w") as f:
             json.dump(suggestions, f)
 
+    @auto_suggestions.before_loop
+    async def before_auto_suggestions(self):
+        await self.bot.wait_until_ready()
+
     @commands.command(name="membercount", aliases=["members"])
     async def member_count(self, ctx):
         """Displays the number of members in the server"""
@@ -326,7 +334,7 @@ class Util(commands.Cog, name="Other"):
         ctx.is_help_command = True
         help_embed = None
         if isinstance(arg, commands.Cog):
-            help_embed = discord.Embed(title=arg.qualified_name.capitalize(), description=arg.__doc__, colour=0x00FF00)
+            help_embed = discord.Embed(title=arg.qualified_name.title(), description=arg.__doc__, colour=0x00FF00)
             cog_commands = []
             for command in arg.get_commands():
                 try:
@@ -341,16 +349,16 @@ class Util(commands.Cog, name="Other"):
                                        description=arg.help if arg.help is not None else "No Information",
                                        colour=0x00FF00)
             help_embed.add_field(name="Usage:",
-                                 value=f"`{ctx.PREFIX}{arg.qualified_name} {arg.signature}"
+                                 value=f"`{ctx.prefix}{arg.qualified_name} {arg.signature}"
                                        f"`\n\n`<>` represents required arguments\n`[]` represents optional arguments")
         elif arg is None:
             help_embed = discord.Embed(title="Help",
-                                       description=f"Use `{ctx.PREFIX}help [category|command]` for more information",
+                                       description=f"Use `{ctx.prefix}help [category|command]` for more information",
                                        colour=0x00FF00)
             for cog in [ctx.bot.get_cog(z) for z in ctx.bot.cogs]:
                 if (cog.hidden and not staff_check(ctx)) or cog.get_commands() == []:
                     continue
-                help_embed.add_field(name=f"__{cog.qualified_name.capitalize()}:__", value=cog.__doc__, inline=False)
+                help_embed.add_field(name=f"__{cog.qualified_name.title()}:__", value=cog.__doc__, inline=False)
             help_embed.set_footer(text="Created by pjones123#6025, maintained and continued by Septikai#1676")
         try:
             await ctx.author.send(embed=help_embed)
@@ -388,6 +396,10 @@ class Util(commands.Cog, name="Other"):
     async def auto_toggle_status(self):
         await self.toggle_bot_status()
 
+    @auto_toggle_status.before_loop
+    async def before_auto_toggle_status(self):
+        await self.bot.wait_until_ready()
+
     @commands.command(name="manualtogglestatus", aliases=["togglestatus"], hidden=True)
     @commands.has_role(Role.ADMIN)
     async def manual_toggle_status(self, ctx):
@@ -414,162 +426,162 @@ class Util(commands.Cog, name="Other"):
         """Claim roles for in-game achievement"""
         if ctx.channel.id != Channel.ROLE_COMMANDS:
             return await ctx.send(f"Go to <#{Channel.ROLE_COMMANDS}> for that!")
-        await ctx.trigger_typing()
-        key = HYPIXEL_API_KEY
-        try:
-            mojang = await utils.fetch_json_api(f"https://api.mojang.com/users/profiles/minecraft/{ign}")
-            uuid = mojang["id"]
-        except (aiohttp.ContentTypeError, KeyError):
-            return await ctx.send(f"{ctx.author.mention}, that username could not be found")
-        player_data = await utils.fetch_json_api(f"https://api.hypixel.net/player?uuid={uuid}&key={key}")
-        fail_responses = [f"{str(ctx.author)} doesn't know how to claim roles smh",
-                          f"{str(ctx.author)} messed up somehow ¯\_(ツ)_/¯",
-                          "Blame Septikai#1676 if something messes up"]
-
-        async def send_fail():
+        async with ctx.channel.typing():
+            key = HYPIXEL_API_KEY
             try:
-                embed = discord.Embed(title=":no_entry_sign: Error!",
-                                      description="""In order to automatically claim your roles, you must first link your discord account to your hypixel profile. If you do not know how to do this, refer to the gif below for instructions
-                                      
-                                      Additionally, you must turn on your skyblock api, which can be accessed in the Skyblock Menu ⇒ Settings ⇒ API Settings.
-                                      
-                                      Make sure you check every option. This includes the Bank API which can be turned on in Settings ⇒ Island Settings ⇒ Bank API""",
-                                      color=0xff0000)
-                embed.set_thumbnail(
-                    url="https://yt3.ggpht.com/-G0UwZhD1hRI/AAAAAAAAAAI/AAAAAAAAAAA/Q5bg4hzv6C0/s900-c-k-no/photo.jpg")
-                await ctx.author.send(embed=embed)
-                await ctx.author.send("https://gfycat.com/dentaltemptingleonberger")
-                await ctx.message.delete()
-                return await ctx.send(embed=discord.Embed(title=":no_entry_sign: Error!",
-                                                          description="Could not verify your identity. I've DMed you info",
-                                                          color=0xff0000)
-                                      .set_footer(text=random.choice(fail_responses), icon_url=ctx.author.avatar_url))
-            except discord.Forbidden:
-                await ctx.send(
-                    "Could not verify your identity. Please allow DMs from members of this server then try again",
-                    delete_after=5)
-                return await ctx.message.delete()
+                mojang = await utils.fetch_json_api(f"https://api.mojang.com/users/profiles/minecraft/{ign}")
+                uuid = mojang["id"]
+            except (aiohttp.ContentTypeError, KeyError):
+                return await ctx.send(f"{ctx.author.mention}, that username could not be found")
+            player_data = await utils.fetch_json_api(f"https://api.hypixel.net/player?uuid={uuid}&key={key}")
+            fail_responses = [f"{str(ctx.author)} doesn't know how to claim roles smh",
+                              f"{str(ctx.author)} messed up somehow ¯\_(ツ)_/¯",
+                              "Blame Septikai#1676 if something messes up"]
 
-        try:
-            if player_data["player"]["socialMedia"]["links"]["DISCORD"] != str(ctx.author):
-                return await send_fail()
-        except KeyError:
-            return await send_fail()
-
-        player = await utils.fetch_json_api(f"https://api.hypixel.net/skyblock/profiles?key={key}&uuid={uuid}")
-        souls = []
-        slayers = []
-        skills = ("combat", "farming", "fishing", "foraging", "alchemy", "enchanting", "mining", "taming")
-        skill_averages = [0]
-        catacombs_xp = 0
-        catacombs_level = 0
-        pet_score = 0
-        for profile in player["profiles"]:
-            for user in profile["members"]:
-                if user != uuid:
-                    continue
+            async def send_fail():
                 try:
-                    souls.append(profile["members"][user]["fairy_souls_collected"])
+                    embed = discord.Embed(title=":no_entry_sign: Error!",
+                                          description="""In order to automatically claim your roles, you must first link your discord account to your hypixel profile. If you do not know how to do this, refer to the gif below for instructions
+                                          
+                                          Additionally, you must turn on your skyblock api, which can be accessed in the Skyblock Menu ⇒ Settings ⇒ API Settings.
+                                          
+                                          Make sure you check every option. This includes the Bank API which can be turned on in Settings ⇒ Island Settings ⇒ Bank API""",
+                                          color=0xff0000)
+                    embed.set_thumbnail(
+                        url="https://yt3.ggpht.com/-G0UwZhD1hRI/AAAAAAAAAAI/AAAAAAAAAAA/Q5bg4hzv6C0/s900-c-k-no/photo.jpg")
+                    await ctx.author.send(embed=embed)
+                    await ctx.author.send("https://gfycat.com/dentaltemptingleonberger")
+                    await ctx.message.delete()
+                    return await ctx.send(embed=discord.Embed(title=":no_entry_sign: Error!",
+                                                              description="Could not verify your identity. I've DMed you info",
+                                                              color=0xff0000)
+                                          .set_footer(text=random.choice(fail_responses), icon_url=ctx.author.avatar))
+                except discord.Forbidden:
+                    await ctx.send(
+                        "Could not verify your identity. Please allow DMs from members of this server then try again",
+                        delete_after=5)
+                    return await ctx.message.delete()
 
-                    skill_averages.append(math.trunc(sum([Skyblock.SKILL_XP_REQUIREMENTS.index(
-                        utils.level_from_table(profile["members"][user][f"experience_skill_{skill}"],
-                                               Skyblock.SKILL_XP_REQUIREMENTS[
-                                               :50] if skill in Skyblock.MAX_LEVEL_50_SKILLS else Skyblock.SKILL_XP_REQUIREMENTS)
-                    ) + 1 for skill in skills]) / len(skills)))
+            try:
+                if player_data["player"]["socialMedia"]["links"]["DISCORD"] != str(ctx.author):
+                    return await send_fail()
+            except KeyError:
+                return await send_fail()
 
-                    if "slayer_bosses" in profile["members"][user]:
-                        slayer_bosses = profile["members"][user]["slayer_bosses"]
-                        for slayer in slayer_bosses:
-                            try:
-                                if "level_7" in slayer_bosses[slayer]["claimed_levels"] or \
-                                   "level_7_special" in slayer_bosses[slayer]["claimed_levels"]:
-                                    slayers.append(7)
-                                if "level_9" in slayer_bosses[slayer]["claimed_levels"] or \
-                                   "level_9_special" in slayer_bosses[slayer]["claimed_levels"]:
-                                    slayers.append(9)
-                            except KeyError:
-                                pass
+            player = await utils.fetch_json_api(f"https://api.hypixel.net/skyblock/profiles?key={key}&uuid={uuid}")
+            souls = []
+            slayers = []
+            skills = ("combat", "farming", "fishing", "foraging", "alchemy", "enchanting", "mining", "taming")
+            skill_averages = [0]
+            catacombs_xp = 0
+            catacombs_level = 0
+            pet_score = 0
+            for profile in player["profiles"]:
+                for user in profile["members"]:
+                    if user != uuid:
+                        continue
+                    try:
+                        souls.append(profile["members"][user]["fairy_souls_collected"])
 
-                    pets = {}
-                    if "pets" in profile["members"][user]:
-                        for pet in profile["members"][user]["pets"]:
-                            if pet["tier"] in Skyblock.PET_TIERS:
-                                if pet["type"] not in pets:
-                                    if pet["heldItem"] in ["PET_ITEM_TOY_JERRY"]:
-                                        pets[pet["type"]] = Skyblock.PET_TIERS[
-                                            Skyblock.PET_TIERS.index(pet["tier"]) + 1]
-                                    else:
-                                        pets[pet["type"]] = pet["tier"]
-                                else:
-                                    if Skyblock.PET_TIERS.index(pet["tier"]) > Skyblock.PET_TIERS.index(
-                                            pets[pet["type"]]):
-                                        # TODO: find the id for tier boosts and add it to the following line
+                        skill_averages.append(math.trunc(sum([Skyblock.SKILL_XP_REQUIREMENTS.index(
+                            utils.level_from_table(profile["members"][user][f"experience_skill_{skill}"],
+                                                   Skyblock.SKILL_XP_REQUIREMENTS[
+                                                   :50] if skill in Skyblock.MAX_LEVEL_50_SKILLS else Skyblock.SKILL_XP_REQUIREMENTS)
+                        ) + 1 for skill in skills]) / len(skills)))
+
+                        if "slayer_bosses" in profile["members"][user]:
+                            slayer_bosses = profile["members"][user]["slayer_bosses"]
+                            for slayer in slayer_bosses:
+                                try:
+                                    if "level_7" in slayer_bosses[slayer]["claimed_levels"] or \
+                                       "level_7_special" in slayer_bosses[slayer]["claimed_levels"]:
+                                        slayers.append(7)
+                                    if "level_9" in slayer_bosses[slayer]["claimed_levels"] or \
+                                       "level_9_special" in slayer_bosses[slayer]["claimed_levels"]:
+                                        slayers.append(9)
+                                except KeyError:
+                                    pass
+
+                        pets = {}
+                        if "pets" in profile["members"][user]:
+                            for pet in profile["members"][user]["pets"]:
+                                if pet["tier"] in Skyblock.PET_TIERS:
+                                    if pet["type"] not in pets:
                                         if pet["heldItem"] in ["PET_ITEM_TOY_JERRY"]:
                                             pets[pet["type"]] = Skyblock.PET_TIERS[
                                                 Skyblock.PET_TIERS.index(pet["tier"]) + 1]
                                         else:
                                             pets[pet["type"]] = pet["tier"]
-                            else:
-                                await ctx.guild.get_member(DEV_ID) \
-                                    .send(f"Invalid pet tier: `{pet['tier']}`")
-                    profile_pet_score = 0
-                    for _pet in pets:
-                        profile_pet_score += Skyblock.PET_TIERS.index(pets[_pet]) + 1
-                    if profile_pet_score > pet_score:
-                        pet_score = profile_pet_score
+                                    else:
+                                        if Skyblock.PET_TIERS.index(pet["tier"]) > Skyblock.PET_TIERS.index(
+                                                pets[pet["type"]]):
+                                            # TODO: find the id for tier boosts and add it to the following line
+                                            if pet["heldItem"] in ["PET_ITEM_TOY_JERRY"]:
+                                                pets[pet["type"]] = Skyblock.PET_TIERS[
+                                                    Skyblock.PET_TIERS.index(pet["tier"]) + 1]
+                                            else:
+                                                pets[pet["type"]] = pet["tier"]
+                                else:
+                                    await ctx.guild.get_member(DEV_ID) \
+                                        .send(f"Invalid pet tier: `{pet['tier']}`")
+                        profile_pet_score = 0
+                        for _pet in pets:
+                            profile_pet_score += Skyblock.PET_TIERS.index(pets[_pet]) + 1
+                        if profile_pet_score > pet_score:
+                            pet_score = profile_pet_score
 
-                    if "experience" in profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"]:
-                        if profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"]["experience"] > catacombs_xp:
-                            catacombs_xp = profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"][
-                                "experience"]
-                            catacombs_level = Skyblock.CATACOMBS_XP_REQUIREMENTS.index(
-                                utils.level_from_table(catacombs_xp, Skyblock.CATACOMBS_XP_REQUIREMENTS)) + 1
-                except KeyError:
-                    pass
-        roles = []
-        if max(skill_averages) >= 20:
-            roles.append(Role.SkyblockRole.NOVICE_SKILLER)
-        if max(skill_averages) >= 35:
-            roles.append(Role.SkyblockRole.EXPERIENCED_SKILLER)
-        if max(skill_averages) >= 50:
-            roles.append(Role.SkyblockRole.MASTER_SKILLER)
-        if max(souls) >= 210:
-            roles.append(Role.SkyblockRole.FAIRY)
-        if slayers:
-            roles.append(Role.SkyblockRole.EXPERIENCED_SLAYER)
-            if 9 in slayers:
-                roles.append(Role.SkyblockRole.SEASONED_SLAYER)
-        if pet_score > 100:
-            roles.append(Role.SkyblockRole.MENAGERIST)
-        if catacombs_level >= 20:
-            roles.append(Role.SkyblockRole.CATA_20)
-            if catacombs_level >= 30:
-                roles.append(Role.SkyblockRole.CATA_30)
-                if catacombs_level >= 40:
-                    roles.append(Role.SkyblockRole.CATA_40)
-        embed = discord.Embed(title="Roles added :scroll:", color=0xfb00fd)
-        embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-        embed.set_thumbnail(url=f"https://mc-heads.net/head/{ign}")
-        string = ""
-        roles = [ctx.guild.get_role(role) for role in roles]
-        for role in roles:
-            string += f"\n{role.mention} {'[+]' if role not in ctx.author.roles else ''}"
-        await ctx.author.add_roles(*roles)
-        if not string:
-            return await ctx.send(
-                embed=discord.Embed(title=":hear_no_evil: Oh no!",
-                                    description="You don't qualify for any roles ):",
-                                    color=0xff0000)
-                    .set_footer(text="Think you deserve some roles? Make sure all API settings are enabled")
-                    .set_author(name=ctx.author, icon_url=ctx.author.avatar_url))
-        embed.add_field(
-            name=f"Added {len(roles)} roles for {ctx.author.display_name} as {ign}",
-            value=string, inline=False)
-        embed.set_footer(text="Inaccurate? Make sure all API settings are enabled",
-                         icon_url="https://cdn.discordapp.com/icons/667953033929293855/a_76e58197f9e2e51b8280aa70e31fbbe5.gif?size=1024")
-        await ctx.send(embed=embed)
-        # noinspection SpellCheckingInspection
-        await Emitter().emit("hypixel_link", ctx)
+                        if "experience" in profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"]:
+                            if profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"]["experience"] > catacombs_xp:
+                                catacombs_xp = profile["members"][user]["dungeons"]["dungeon_types"]["catacombs"][
+                                    "experience"]
+                                catacombs_level = Skyblock.CATACOMBS_XP_REQUIREMENTS.index(
+                                    utils.level_from_table(catacombs_xp, Skyblock.CATACOMBS_XP_REQUIREMENTS)) + 1
+                    except KeyError:
+                        pass
+            roles = []
+            if max(skill_averages) >= 20:
+                roles.append(Role.SkyblockRole.NOVICE_SKILLER)
+            if max(skill_averages) >= 35:
+                roles.append(Role.SkyblockRole.EXPERIENCED_SKILLER)
+            if max(skill_averages) >= 50:
+                roles.append(Role.SkyblockRole.MASTER_SKILLER)
+            if max(souls) >= 210:
+                roles.append(Role.SkyblockRole.FAIRY)
+            if slayers:
+                roles.append(Role.SkyblockRole.EXPERIENCED_SLAYER)
+                if 9 in slayers:
+                    roles.append(Role.SkyblockRole.SEASONED_SLAYER)
+            if pet_score > 100:
+                roles.append(Role.SkyblockRole.MENAGERIST)
+            if catacombs_level >= 20:
+                roles.append(Role.SkyblockRole.CATA_20)
+                if catacombs_level >= 30:
+                    roles.append(Role.SkyblockRole.CATA_30)
+                    if catacombs_level >= 40:
+                        roles.append(Role.SkyblockRole.CATA_40)
+            embed = discord.Embed(title="Roles added :scroll:", color=0xfb00fd)
+            embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
+            embed.set_thumbnail(url=f"https://mc-heads.net/head/{ign}")
+            string = ""
+            roles = [ctx.guild.get_role(role) for role in roles]
+            for role in roles:
+                string += f"\n{role.mention} {'[+]' if role not in ctx.author.roles else ''}"
+            await ctx.author.add_roles(*roles)
+            if not string:
+                return await ctx.send(
+                    embed=discord.Embed(title=":hear_no_evil: Oh no!",
+                                        description="You don't qualify for any roles ):",
+                                        color=0xff0000)
+                        .set_footer(text="Think you deserve some roles? Make sure all API settings are enabled")
+                        .set_author(name=ctx.author, icon_url=ctx.author.avatar))
+            embed.add_field(
+                name=f"Added {len(roles)} roles for {ctx.author.display_name} as {ign}",
+                value=string, inline=False)
+            embed.set_footer(text="Inaccurate? Make sure all API settings are enabled",
+                             icon_url="https://cdn.discordapp.com/icons/667953033929293855/a_76e58197f9e2e51b8280aa70e31fbbe5.gif?size=1024")
+            await ctx.send(embed=embed)
+            # noinspection SpellCheckingInspection
+            await Emitter().emit("hypixel_link", ctx)
 
     @commands.command(name="tag")
     async def tag_command(self, ctx: commands.Context, *, tag: str):
@@ -670,7 +682,7 @@ class Util(commands.Cog, name="Other"):
 #             ctx.command.reset_cooldown(ctx)
 #             return await ctx.author.send("Application cancelled")
 #         elif reaction.emoji == "✅":
-#             embed = discord.Embed(title="Staff application", color=discord.Color.green()).set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+#             embed = discord.Embed(title="Staff application", color=discord.Color.green()).set_author(name=ctx.author, icon_url=ctx.author.avatar)
 #             embed.timestamp = datetime.datetime.now()
 #             for answer in answers:
 #                 embed.add_field(name=answer, value=answers[answer], inline=False)
@@ -678,5 +690,5 @@ class Util(commands.Cog, name="Other"):
 #             await ctx.author.send("Application submitted, good luck!")
 
 
-def setup(bot):
-    bot.add_cog(Util(bot, False))
+async def setup(bot):
+    await bot.add_cog(Util(bot, False))
