@@ -113,7 +113,7 @@ class Util(commands.Cog, name="Other"):
             for member in ctx.guild.members:
                 if tree.evaluate(member.roles):
                     count += 1
-        embed = discord.Embed(title="Role list search", colour=discord.Colour.og_blurple())
+        embed = discord.Embed(title="Role List Search", colour=discord.Colour.og_blurple())
         embed.add_field(name="Query", value=tree.pprint(lambda x: x.mention), inline=False)
         embed.add_field(name="Member count", value=f"{count:,}", inline=False)
         await ctx.send(embed=embed)
