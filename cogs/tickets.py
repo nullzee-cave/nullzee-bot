@@ -185,7 +185,7 @@ def generate_attachments(attachments):
 
 def next_author(author, timestamp):
     return f"""
-        <img src="{author.avatar_url}"
+        <img src="{author.avatar}"
             class="avatar">
         <div class="message-header">
             <span class="username"><b>{author}{'<span class="bot-tag">BOT</span>' if author.bot else ""}</b></span>
@@ -259,8 +259,8 @@ class Tickets(commands.Cog, name="Tickets"):
         if payload.message_id not in self.message_ids:
             return
         if str(payload.emoji) in ticket_types:
-            guild: discord.Guild = self.bot.get_guild(payload.guild_id)
-            msg: discord.Message = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
+            guild = self.bot.get_guild(payload.guild_id)
+            msg = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
             await msg.remove_reaction(payload.emoji, payload.member)
             in_lockdown = get_file_json("config")["lockdown"]
             if in_lockdown:
@@ -282,7 +282,7 @@ class Tickets(commands.Cog, name="Tickets"):
                                               "`-close [reason]` : close the ticket\n"
                                               "`-adduser [user]` : add someone else to the ticket\n"
                                               "`-removeuser [user]` : remove someone else from the ticket")
-            embed.set_author(name=payload.member, icon_url=payload.member.avatar_url)
+            embed.set_author(name=payload.member, icon_url=payload.member.avatar)
             images = []
             for question in ticket_types[str(payload.emoji)]["questions"]:
                 try:
@@ -394,5 +394,5 @@ class Tickets(commands.Cog, name="Tickets"):
                                file=discord.File(f"transcripts/{ctx.channel.name}.html", "transcript.html"))
 
 
-def setup(bot):
-    bot.add_cog(Tickets(bot))
+async def setup(bot):
+    await bot.add_cog(Tickets(bot))

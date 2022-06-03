@@ -73,7 +73,7 @@ async def send_report(ctx, message, reason):
                    value=f"{message.content[:1900]}{'...' if message.content[:1900] != message.content else ''}",
                    inline=False)\
         .add_field(name="Reported By", value=f"{ctx.author.mention} ({ctx.author})", inline=False)\
-        .set_author(name=message.author, icon_url=message.author.avatar_url)
+        .set_author(name=message.author, icon_url=message.author.avatar)
     if message.attachments:
         embed.set_image(url=message.attachments[0].url)
     await ctx.guild.get_channel(Channel.REPORTS_APPEALS).send(embed=embed)
@@ -114,7 +114,7 @@ def chat_embed(ctx, payload):
     offender = ctx.bot.get_user(payload["offender_id"])
     embed = discord.Embed(title=f"**{PAST_PARTICIPLES[payload['type']]}**", colour=COLOURS[payload["type"]],
                           description=payload["reason"] if payload["reason"] else "")\
-        .set_author(name=offender, icon_url=offender.avatar_url)
+        .set_author(name=offender, icon_url=offender.avatar)
     return embed
 
 
@@ -122,14 +122,14 @@ def mass_ban_chat_embed(ctx, payload):
     mod = ctx.guild.get_member(payload["mod_id"])
     embed = discord.Embed(title="Mass Ban", colour=COLOURS["ban"],
                           description=payload["offenders_string"][:1900] + ("\n..." if len(payload["offenders_string"]) > 400 else ""))\
-        .set_author(name=mod, icon_url=mod.avatar_url)
+        .set_author(name=mod, icon_url=mod.avatar)
     return embed
 
 
 async def end_log(bot, payload, *, moderator, reason):
     user = bot.get_user(payload["offender_id"])
     embed = discord.Embed(title=f"Un{payload['type']}", colour=discord.Colour.green())\
-        .set_author(name=(user or "not found"), icon_url=(user.avatar_url if hasattr(user, "avatar_url") else ""))\
+        .set_author(name=(user or "not found"), icon_url=(user.avatar if hasattr(user, "avatar") else ""))\
         .set_footer(text=f"Offender ID: {payload['offender_id']}")
     embed.add_field(name="Reason", value=reason, inline=False)
     embed.add_field(name="Moderator", value=moderator if moderator == "Automod" else moderator.mention, inline=False)
@@ -143,7 +143,7 @@ async def log(bot, payload):
     log_lockdown(bot, payload)
     offender = bot.get_user(payload["offender_id"])
     embed = discord.Embed(title=payload["type"].capitalize(), colour=COLOURS[payload["type"]])\
-        .set_author(name=offender, icon_url=offender.avatar_url)
+        .set_author(name=offender, icon_url=offender.avatar)
     embed.add_field(name="Reason", value=payload["reason"], inline=False)
     embed.add_field(name="Moderator", value=f"<@{payload['mod_id']}>", inline=False)
     if "duration" in payload and payload["duration"]:

@@ -70,7 +70,7 @@ def should_regen(json_cache, *, page, user, border, background="default", achiev
                 and page_data["total_pages"] == total_pages
                 and page_data["embed_colour"] == embed_colour
                 and page_data["uname"] == str(user)
-                and page_data["avatar"] == str(user.avatar_url)
+                and page_data["avatar"] == str(user.avatar)
                 and page_data["border_type"] == border
                 and page_data["background_image"] == background
                 and page_data["box_border"] == box_border)
@@ -204,7 +204,7 @@ async def achievement_timeline(user: discord.User, payload, page=1):
             layer = Image.new("RGBA", image.size, "#00FF00")
         image = Image.blend(image, layer, 0.5)
     async with aiohttp.ClientSession() as session:
-        async with session.get(str(user.avatar_url).replace("gif", "png")) as resp:
+        async with session.get(str(user.avatar).replace("gif", "png")) as resp:
             avatar_raw = Image.open(io.BytesIO(await resp.content.read())).convert("RGBA")
     x, y = 50, 100
     box_border = Image.open(
@@ -245,7 +245,7 @@ async def achievement_timeline(user: discord.User, payload, page=1):
                 "achievements": list(achieved_page.keys()),
                 "total_pages": last_page,
                 "uname": str(user),
-                "avatar": str(user.avatar_url),
+                "avatar": str(user.avatar),
                 "border_type": border,
                 "background_image": payload["background_image"],
                 "box_border": box_border_name,
