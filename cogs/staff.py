@@ -12,7 +12,7 @@ from helpers.utils import string_to_seconds as sts, Embed, TimeConverter, staff_
 from helpers.constants import Role, Channel, Misc
 from helpers import moderation_utils
 import asyncio
-from api_key import user_coll, moderation_coll, giveaway_coll, DEV_ID
+from api_key import DEV_ID
 import subprocess
 import typing
 
@@ -29,7 +29,7 @@ class Staff(commands.Cog, name="Staff"):
 
     def __init__(self, bot, hidden):
         self.hidden = hidden
-        self.bot: commands.Bot = bot
+        self.bot = bot
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
@@ -154,14 +154,15 @@ class Staff(commands.Cog, name="Staff"):
     @staff_or_trainee
     async def starboard(self, ctx: commands.Context, msg: discord.Message, *, title: str = ""):
         """Add a message to the starboard"""
-        embed = Embed(msg.author, title=f"{title} | #{ctx.channel.name}", description=msg.content, url=msg.jump_url)
+        embed = Embed(msg.author, title=f"{title} | #{ctx.channel.name}", description=msg.content,
+                      url=msg.jump_url)
         embed.set_footer(text=f"Starred by {ctx.author}").auto_author().timestamp_now()
-        await embed.user_colour()
+        await embed.user_colour(self.bot)
         if msg.attachments:
             embed.set_image(url=msg.attachments[0].url)
         star_message = await ctx.guild.get_channel(Channel.STARBOARD).send(embed=embed)
         embed = Embed(ctx.author, title="Added to starboard!", url=star_message.jump_url)
-        await embed.user_colour()
+        await embed.user_colour(self.bot)
         await ctx.send(embed=embed)
         ctx.author = msg.author
         await Emitter().emit("pinned_starred", ctx)
@@ -208,7 +209,6 @@ class Staff(commands.Cog, name="Staff"):
             log_channel = ctx.guild.get_channel(Channel.MOD_LOGS)
             await log_channel.send(embed=log_embed)
 
-
     @commands.command(hidden=True, name="eval", aliases=["eval_fn", "-e"])
     async def eval_fn(self, ctx, *, cmd):
         """Evaluates input.
@@ -252,9 +252,9 @@ class Staff(commands.Cog, name="Staff"):
                 "discord": discord,
                 "commands": commands,
                 "ctx": ctx,
-                "user_coll": user_coll,
-                "moderation_coll": moderation_coll,
-                "giveaway_coll": giveaway_coll,
+                "user_coll": self.bot.user_coll,
+                "moderation_coll": self.bot.moderation_coll,
+                "giveaway_coll": self.bot.giveaway_coll,
                 "__import__": __import__
             }
 
@@ -315,7 +315,7 @@ class Staff(commands.Cog, name="Staff"):
     async def blist_add(self, ctx, member: discord.Member, command: str):
         """Add a user to the blacklist for a specific command"""
         command = command.replace(ctx.PREFIX, '')
-        await user_coll.update_one({"_id": str(member.id)}, {"$addToSet": {"command_blacklist": command}})
+        await self.bot.user_coll.update_one({"_id": str(member.id)}, {"$addToSet": {"command_blacklist": command}})
         await ctx.send(f"blacklisted `{member}` from using `{ctx.PREFIX}{command}`")
 
     @blacklist.command(hidden=True, name="remove")
@@ -323,7 +323,7 @@ class Staff(commands.Cog, name="Staff"):
     async def blist_remove(self, ctx, member: discord.Member, command: str):
         """Remove a user from the blacklist for a specific command"""
         command = command.replace(ctx.PREFIX, '')
-        await user_coll.update_one({"_id": str(member.id)}, {"$pull": {"command_blacklist": command}})
+        await self.bot.user_coll.update_one({"_id": str(member.id)}, {"$pull": {"command_blacklist": command}})
         await ctx.send(f"unblacklisted `{member}` from using `{ctx.PREFIX}{command}`")
 
     @commands.group(hidden=True, aliases=["-c"])
@@ -335,15 +335,15 @@ class Staff(commands.Cog, name="Staff"):
                 "\n".join([f"- {z.name}{'*' if isinstance(z, commands.Group) else ''}" for z in self.config.commands]))
         else:
             await ctx.send("Successfully updated configuration")
-            await moderation_utils.update_config()
+            await moderation_utils.update_config(self.bot)
 
     @config.command(hidden=True)
     async def mutedRole(self, ctx, *, role: discord.Role):
-        await moderation_coll.update_one({"_id": "config"}, {"$set": {"mutedRole": role.id}})
+        await self.bot.moderation_coll.update_one({"_id": "config"}, {"$set": {"mutedRole": role.id}})
 
     @config.command(hidden=True)
     async def deleteWarnsAfter(self, ctx, _time: TimeConverter):
-        await moderation_coll.update_one({"_id": "config"}, {"$set": {"deleteWarnsAfter": _time}})
+        await self.bot.moderation_coll.update_one({"_id": "config"}, {"$set": {"deleteWarnsAfter": _time}})
 
     @config.group(hidden=True, invoke_without_command=True)
     async def punishForWarns(self, ctx):
@@ -352,12 +352,13 @@ class Staff(commands.Cog, name="Staff"):
 
     @punishForWarns.command(hidden=True, name="add")
     async def p_add(self, ctx, warns: int, duration: TimeConverter, _type="mute"):
-        await moderation_coll.update_one({"_id": "config"}, {
+        await self.bot.moderation_coll.update_one({"_id": "config"}, {
             "$set": {"punishForWarns.{}".format(warns): {"type": _type, "duration": duration}}})
 
     @punishForWarns.command(hidden=True, name="remove")
     async def p_remove(self, ctx, warns: int):
-        await moderation_coll.update_one({"_id": "config"}, {"$unset": {"punishForWarns.{}".format(warns): ""}})
+        await self.bot.moderation_coll.update_one({"_id": "config"},
+                                                  {"$unset": {"punishForWarns.{}".format(warns): ""}})
 
     @config.group(hidden=True, invoke_without_command=True)
     async def automod(self, ctx):
@@ -371,20 +372,23 @@ class Staff(commands.Cog, name="Staff"):
 
     @mentions.command(hidden=True, name="punishment")
     async def m_punishment(self, ctx, action: str = "delete"):
-        await moderation_coll.update_one({"_id": "config"},
-                                         {"$set": {"mentions.action": action if action == "warn" else "delete"}})
+        await self.bot.moderation_coll.update_one({"_id": "config"},
+                                                  {"$set":
+                                                       {"mentions.action": action if action == "warn" else "delete"}})
 
     @mentions.command(hidden=True)
     async def value(self, ctx, val: int):
-        await moderation_coll.update_one({"_id": "config"}, {"$set": {"mentions.val": val}})
+        await self.bot.moderation_coll.update_one({"_id": "config"}, {"$set": {"mentions.val": val}})
 
     @mentions.command(hidden=True, name="allowChannel")
     async def m_allowChannel(self, ctx, channel: discord.TextChannel):
-        await moderation_coll.update_one({"_id": "config"}, {"$push": {"mentions.allowed_channels": channel.id}})
+        await self.bot.moderation_coll.update_one({"_id": "config"},
+                                                  {"$push": {"mentions.allowed_channels": channel.id}})
 
     @mentions.command(hidden=True, name="disallowChannel")
     async def m_disallowChannel(self, ctx, channel: discord.TextChannel):
-        await moderation_coll.update_one({"_id": "config"}, {"$pull": {"mentions.allowed_channels": channel.id}})
+        await self.bot.moderation_coll.update_one({"_id": "config"},
+                                                  {"$pull": {"mentions.allowed_channels": channel.id}})
 
     @automod.group(hidden=True, invoke_without_command=True)
     async def invites(self, ctx):
@@ -393,16 +397,18 @@ class Staff(commands.Cog, name="Staff"):
 
     @invites.command(hidden=True, name="punishment")
     async def i_punishment(self, ctx, action: str = "delete"):
-        await moderation_coll.update_one({"_id": "config"},
-                                         {"$set": {"invites.action": action if action == "warn" else "delete"}})
+        await self.bot.moderation_coll.update_one({"_id": "config"},
+                                                  {"$set": {"invites.action": action if action == "warn" else "delete"}})
 
     @invites.command(hidden=True, name="allowChannel")
     async def i_allowChannel(self, ctx, channel: discord.TextChannel):
-        await moderation_coll.update_one({"_id": "config"}, {"$push": {"invites.allowed_channels": channel.id}})
+        await self.bot.moderation_coll.update_one({"_id": "config"},
+                                                  {"$push": {"invites.allowed_channels": channel.id}})
 
     @invites.command(hidden=True, name="disallowChannel")
     async def i_disallowChannel(self, ctx, channel: discord.TextChannel):
-        await moderation_coll.update_one({"_id": "config"}, {"$pull": {"invites.allowed_channels": channel.id}})
+        await self.bot.moderation_coll.update_one({"_id": "config"},
+                                                  {"$pull": {"invites.allowed_channels": channel.id}})
 
     @automod.group(hidden=True, invoke_without_command=True, case_insensitive=True)
     async def badWords(self, ctx):
@@ -411,11 +417,13 @@ class Staff(commands.Cog, name="Staff"):
 
     @badWords.command(hidden=True, name="add")
     async def b_add(self, ctx, word: str, action: str = "delete"):
-        await moderation_coll.update_one({"_id": "config"}, {"$set": {"badWords.{}".format(word.lower()): action}})
+        await self.bot.moderation_coll.update_one({"_id": "config"},
+                                                  {"$set": {"badWords.{}".format(word.lower()): action}})
 
     @badWords.command(hidden=True, name="remove")
     async def b_remove(self, ctx, word: str):
-        await moderation_coll.update_one({"_id": "config"}, {"$unset": {"badWords.{}".format(word.lower()): ""}})
+        await self.bot.moderation_coll.update_one({"_id": "config"},
+                                                  {"$unset": {"badWords.{}".format(word.lower()): ""}})
 
     @automod.group(hidden=True, invoke_without_command=True, case_insensitive=True)
     async def scamLinks(self, ctx):
@@ -429,8 +437,8 @@ class Staff(commands.Cog, name="Staff"):
             return await ctx.send("Invalid link format")
         formatted_link = f"https?;//{split_link[2].replace('.', ',')}"
         await ctx.send(f"Added `http(s)://{split_link[2]}` to automod")
-        await moderation_coll.update_one({"_id": "config"},
-                                         {"$set": {"scamLinks.{}".format(formatted_link.lower()): action}})
+        await self.bot.moderation_coll.update_one({"_id": "config"},
+                                                  {"$set": {"scamLinks.{}".format(formatted_link.lower()): action}})
 
     @scamLinks.command(hidden=True, name="removeLink")
     async def s_remove(self, ctx, link: str):
@@ -439,8 +447,8 @@ class Staff(commands.Cog, name="Staff"):
             return await ctx.send("Invalid link format")
         formatted_link = f"https?;//{split_link[2].replace('.', ',')}"
         await ctx.send(f"Removed `http(s)://{split_link[2]}` to automod")
-        await moderation_coll.update_one({"_id": "config"},
-                                         {"$unset": {"scamLinks.{}".format(formatted_link.lower()): ""}})
+        await self.bot.moderation_coll.update_one({"_id": "config"},
+                                                  {"$unset": {"scamLinks.{}".format(formatted_link.lower()): ""}})
 
     # whiteListedServers = ["667953033929293855","722421169311187037"]
     #
@@ -465,7 +473,7 @@ class Staff(commands.Cog, name="Staff"):
     async def sbinfo(self, ctx, category: str):
         """Skyblock Resources commands"""
         try:
-            _id = (await moderation_coll.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
+            _id = (await self.bot.moderation_coll.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
         except KeyError:
             return await ctx.send("Could not find that category")
         url = f"https://discord.com/channels/{Misc.GUILD}/{Channel.SB_RES}/{_id}"
@@ -480,7 +488,8 @@ class Staff(commands.Cog, name="Staff"):
         f"""Create a new category in <#{Channel.SB_RES}>"""
         msg: discord.Message = await ctx.guild.get_channel(Channel.SB_RES).send(
             embed=discord.Embed(title=name, description=description, colour=0x00FF00))
-        await moderation_coll.update_one({"_id": "config"}, {"$set": {f"sbinfoMessages.{name.lower()}": msg.id}})
+        await self.bot.moderation_coll.update_one({"_id": "config"},
+                                                  {"$set": {f"sbinfoMessages.{name.lower()}": msg.id}})
         await ctx.send("Successfully created category")
         await ctx.message.delete()
 
@@ -489,7 +498,7 @@ class Staff(commands.Cog, name="Staff"):
     async def sbi_add(self, ctx: commands.Context, category: str, name: str, *, description: str):
         f"""Add a field to a category in <#{Channel.SB_RES}"""
         try:
-            _id = (await moderation_coll.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
+            _id = (await self.bot.moderation_coll.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
         except KeyError:
             return await ctx.send("Could not find that category")
         msg: discord.Message = await ctx.guild.get_channel(Channel.SB_RES).fetch_message(_id)
@@ -503,7 +512,7 @@ class Staff(commands.Cog, name="Staff"):
     async def sbi_edit(self, ctx, category: str, param: str, *, value):
         f"""Edit a category in <#{Channel.SB_RES}"""
         try:
-            _id = (await moderation_coll.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
+            _id = (await self.bot.moderation_coll.find_one({"_id": "config"}))["sbinfoMessages"][category.lower()]
         except KeyError:
             return await ctx.send("Could not find that category")
         msg: discord.Message = await ctx.guild.get_channel(Channel.SB_RES).fetch_message(_id)

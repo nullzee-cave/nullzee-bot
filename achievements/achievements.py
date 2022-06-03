@@ -3,7 +3,7 @@ from re import search
 
 import discord
 
-from api_key import user_coll, PREFIX
+from api_key import PREFIX
 from helpers.events import Subscriber
 from helpers.utils import get_user, list_one, role_ids
 from helpers.constants import Role, Channel
@@ -508,14 +508,14 @@ async def award_achievement(ctx, data, name):
     if "response" in achievements[name]:
         await ctx.send(achievements[name]["response"].format(ctx))
     if "db_rewards" in achievements[name]:
-        await user_coll.update_one({"_id": str(ctx.author.id)}, {"$inc": achievements[name]["db_rewards"]})
+        await ctx.bot.user_coll.update_one({"_id": str(ctx.author.id)}, {"$inc": achievements[name]["db_rewards"]})
         string += f" and earned {','.join(f'{v} {k}' for k, v in achievements[name]['db_rewards'].items())}"
     channel = ctx.author if "hidden" in achievements[name] and achievements[name]["hidden"] else ctx
     try:
         await channel.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
     except discord.Forbidden:
         return
-    await user_coll.update_one({"_id": str(ctx.author.id)},
+    await ctx.bot.user_coll.update_one({"_id": str(ctx.author.id)},
                                {"$set": {f"achievements.{name}": time.time()},
                                "$inc": {"achievement_points": achievements[name]["value"]}})
 
@@ -541,6 +541,6 @@ async def listen(event, ctx, *args, **kwargs):
                     award_queue[ctx.author.id].append(achievement)
             else:
                 award_queue[ctx.author.id] = [achievement]
-            user_data = user_data or await get_user(ctx.author)
+            user_data = user_data or await get_user(ctx.bot, ctx.author)
             await award_achievement(ctx, user_data, achievement)
             award_queue[ctx.author.id].remove(achievement)

@@ -277,7 +277,7 @@ async def achievement_timeline_animated(user: discord.User, payload):
             key=lambda fname: int(fname.split("_")[1][:-4])):
         if filename.endswith(".png") and filename.startswith(str(user.id)):
             file_path = os.path.join(image_dir, filename)
-            pages.append(imageio.imread(file_path))
+            pages.append(imageio.v2.imread(file_path))
     imageio.mimsave(f"image_cache/user_achievements/{user.id}_animated.gif", pages, fps=0.5)
     with open(f"{user_page_path}.json") as f:
         cache_data = json.load(f)

@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands, tasks
-from api_key import moderation_coll
 import time
 from helpers import moderation_utils, utils
 import re
@@ -13,13 +12,13 @@ class Automod(commands.Cog, name="Automod"):
 
     def __init__(self, bot, hidden):
         self.hidden = hidden
-        self.bot: commands.Bot = bot
+        self.bot = bot
         self.delete_warns.start()
         self.timed_punishments.start()
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await moderation_utils.update_config()
+        await moderation_utils.update_config(self.bot)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -29,7 +28,7 @@ class Automod(commands.Cog, name="Automod"):
             return
         ctx = await self.bot.get_context(message)
         ctx.author = message.guild.me
-        config = await moderation_utils.get_config()
+        config = await moderation_utils.get_config(self.bot)
         if config["mentions"]["val"] <= len(message.mentions) and \
            message.channel.id not in config["mentions"]["allowed_channels"]:
             if config["mentions"]["action"] == "warn":
@@ -82,9 +81,9 @@ class Automod(commands.Cog, name="Automod"):
 
     @tasks.loop(minutes=1)
     async def delete_warns(self):
-        async for warn in moderation_coll.find({"expired": False}):
-            if warn["timestamp"] + (await moderation_utils.get_config())["deleteWarnsAfter"] < time.time():
-                await moderation_coll.update_one(warn, {"$set": {"expired": True}})
+        async for warn in self.bot.moderation_coll.find({"expired": False}):
+            if warn["timestamp"] + (await moderation_utils.get_config(self.bot))["deleteWarnsAfter"] < time.time():
+                await self.bot.moderation_coll.update_one(warn, {"$set": {"expired": True}})
 
     @delete_warns.before_loop
     async def before_delete_warns(self):
@@ -92,11 +91,11 @@ class Automod(commands.Cog, name="Automod"):
 
     @tasks.loop(minutes=1)
     async def timed_punishments(self):
-        async for punishment in moderation_coll.find({"active": True, "permanent": False}):
+        async for punishment in self.bot.moderation_coll.find({"active": True, "permanent": False}):
             if punishment["ends"] < time.time():
                 await moderation_utils.end_punishment(self.bot, punishment, moderator="automod",
                                                       reason="Punishment served")
-                await moderation_coll.update_one(punishment, {"$set": {"active": False}})
+                await self.bot.moderation_coll.update_one(punishment, {"$set": {"active": False}})
 
     @timed_punishments.before_loop
     async def before_timed_punishments(self):
@@ -104,13 +103,13 @@ class Automod(commands.Cog, name="Automod"):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        await moderation_utils.automod_name(member)
-        if await moderation_coll.find_one({"offender_id": member.id, "active": True, "type": "mute"}):
-            await member.add_roles(member.guild.get_role((await moderation_utils.get_config())["mutedRole"]))
+        await moderation_utils.automod_name(self.bot, member)
+        if await self.bot.moderation_coll.find_one({"offender_id": member.id, "active": True, "type": "mute"}):
+            await member.add_roles(member.guild.get_role((await moderation_utils.get_config(self.bot))["mutedRole"]))
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        await moderation_utils.automod_name(after)
+        await moderation_utils.automod_name(self.bot, after)
 
 
 async def setup(bot):

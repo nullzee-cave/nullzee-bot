@@ -8,11 +8,11 @@ import time
 import math
 import datetime
 from EZPaginator import Paginator
+
 from helpers.utils import get_user, Embed, get_file_json, leaderboard_pages, staff_only, ShallowContext, \
     save_file_json, clean_message_content, remove_emojis, event_hoster_or_staff, role_ids
 from helpers.constants import Category, Role, Channel, Misc
 from helpers.events import Emitter
-from api_key import user_coll
 import pymongo
 
 
@@ -21,7 +21,7 @@ class Levelling(commands.Cog, name="Levelling"):
 
     def __init__(self, bot, hidden):
         self.hidden = hidden
-        self.bot: commands.Bot = bot
+        self.bot = bot
         self.multipliers = {}
         self.global_multiplier = 1.0
         self.update_multipliers()
@@ -40,9 +40,9 @@ class Levelling(commands.Cog, name="Levelling"):
             for member in channel.members:
                 member: discord.Member
                 if not member.bot:
-                    user_data = await get_user(member)
-                    await Emitter().emit("vc_minute_gain", await ShallowContext.create(member), user_data["vc_minutes"])
-                    await user_coll.update_one({"_id": str(member.id)}, {"$inc": {"vc_minutes": 1}})
+                    user_data = await get_user(self.bot, member)
+                    await Emitter().emit("vc_minute_gain", await ShallowContext.create(self.bot, member), user_data["vc_minutes"])
+                    await self.bot.user_coll.update_one({"_id": str(member.id)}, {"$inc": {"vc_minutes": 1}})
                     to_add = [guild.get_role(int(Role.LevelRoles.VC_ROLES[z])) for z in
                               Role.LevelRoles.VC_ROLES if user_data["vc_minutes"] > int(z) and
                               int(Role.LevelRoles.VC_ROLES[z]) not in role_ids(member.roles)]
@@ -68,7 +68,7 @@ class Levelling(commands.Cog, name="Levelling"):
     @commands.command(name="linktwitch")
     async def link_twitch(self, ctx, username: str):
         """Link your twitch to your discord to start gaining xp in twitch chat"""
-        await user_coll.update_one({"_id": str(ctx.author.id)},
+        await self.bot.user_coll.update_one({"_id": str(ctx.author.id)},
                                    {"$set": {"twitch_name": username.lower(), "twitch_verified": False}})
         await ctx.send(embed=discord.Embed(
             description=f"You have linked your discord account to your twitch account. "
@@ -82,7 +82,7 @@ class Levelling(commands.Cog, name="Levelling"):
         # This is so unbelievably scuffed and broken that it's not even funny
         if before.pending and not after.pending:
             # roles = [after.guild.get_role(Role.LevelRoles.LEVELS["1"])]
-            user_data = await user_coll.find_one({"_id": str(after.id)})
+            user_data = await self.bot.user_coll.find_one({"_id": str(after.id)})
             # role_ids = []
             if user_data:
                 level = user_data["level"]
@@ -166,7 +166,7 @@ class Levelling(commands.Cog, name="Levelling"):
         if message.author.bot:
             return
         else:
-            user_data = await get_user(message.author)
+            user_data = await get_user(self.bot, message.author)
             ctx = await self.bot.get_context(message)
             await Emitter().emit("message", ctx, user_data=user_data)
             multiplier = None
@@ -191,21 +191,21 @@ class Levelling(commands.Cog, name="Levelling"):
                 points_bonus = 1 if user_data["experience"] > user_data["last_points"] + 1000 else 0
                 if points_bonus:
                     await Emitter().emit("point_earned", ctx, user_data["points"] + 1, user_data=user_data)
-                await user_coll.update_one({"_id": str(message.author.id)},
+                await self.bot.user_coll.update_one({"_id": str(message.author.id)},
                                            {"$inc": {"experience": exp, "weekly": weekly_exp, "points": points_bonus},
                                            "$set": {"last_message": time.time(),
                                                     "last_points": user_data["experience"] + exp if points_bonus else
                                                     user_data["last_points"]}})
-                user_data = await user_coll.find_one({"_id": str(message.author.id)})
+                user_data = await self.bot.user_coll.find_one({"_id": str(message.author.id)})
             else:
-                user_data = await user_coll.find_one({"_id": str(message.author.id)})
+                user_data = await self.bot.user_coll.find_one({"_id": str(message.author.id)})
 
             experience = user_data["experience"]
             lvl_start = user_data["level"]
             lvl_end = 50 * (lvl_start ** 1.5)
             if experience > lvl_end:
                 await Emitter().emit("level_up", ctx, lvl_start + 1, user_data=user_data)
-                await user_coll.update_one({"_id": str(message.author.id)},
+                await self.bot.user_coll.update_one({"_id": str(message.author.id)},
                                            {"$inc": {"level": 1},
                                             "$set": {
                                                 "experience": 0,
@@ -213,7 +213,7 @@ class Levelling(commands.Cog, name="Levelling"):
                                             }})
                 await message.channel.send(
                     f":tada: Congrats {message.author.mention}, you levelled up to level {lvl_start + 1}!")
-                    
+
                 if str(lvl_start + 1) in Role.LevelRoles.LEVELS:
                     role = message.guild.get_role(int(Role.LevelRoles.LEVELS[str(lvl_start + 1)]))
                     await message.author.add_roles(role)
@@ -223,7 +223,7 @@ class Levelling(commands.Cog, name="Levelling"):
         """View your or the mentioned user's level"""
         if not user:
             user = ctx.author
-        user_data = await user_coll.find_one({"_id": str(user.id)})
+        user_data = await self.bot.user_coll.find_one({"_id": str(user.id)})
         if not user_data:
             return await ctx.send("This user has no level")
         string = f"XP: {round(user_data['experience']):,}/{round(50 * (round(user_data['level']) ** 1.5)):,}"
@@ -231,12 +231,12 @@ class Levelling(commands.Cog, name="Levelling"):
         string += f"\nPoints: {user_data['points']:,}"
         string += f"\nTotal XP: {(sum([round(50 * z ** 1.5) for z in range(1, user_data['level'])]) + user_data['experience']):,}"
         string += f"\nMinutes in VC: {user_data['vc_minutes']:,}"
-        
+
         embed = Embed(user,
-                            title=f"Level: {str(round(user_data['level']))}",
-                            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley",
-                            description=string)
-        await embed.user_colour()
+                      title=f"Level: {str(round(user_data['level']))}",
+                      url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley",
+                      description=string)
+        await embed.user_colour(self.bot)
         embed.set_author(name=user, icon_url=user.avatar)
         await ctx.send(embed=embed)
 
@@ -244,7 +244,7 @@ class Levelling(commands.Cog, name="Levelling"):
     async def how_far_from_level(self, ctx, wanted_level: int = None):
         """View how far from a specific level you are, along with some other information"""
         user = ctx.author
-        user_data = await user_coll.find_one({"_id": str(user.id)})
+        user_data = await self.bot.user_coll.find_one({"_id": str(user.id)})
         level = user_data["level"]
         xp = user_data["experience"]
         if wanted_level is None:
@@ -258,7 +258,7 @@ class Levelling(commands.Cog, name="Levelling"):
         def level_xp(x):
             return round(50 * (x ** 1.5))
 
-        embed = await Embed(user, title="XP Calculator").user_colour()
+        embed = await Embed(user, title="XP Calculator").user_colour(self.bot)
         embed.add_field(name="Desired Level",
                         value=f"XP until desired level: {(sum([round(50 * z ** 1.5) for z in range(level, wanted_level)]) - xp):,}\nXP of desired level: {(level_xp(wanted_level)):,}")
         embed.add_field(name="Total XP Stats",
@@ -275,7 +275,8 @@ class Levelling(commands.Cog, name="Levelling"):
         """View the server's weekly XP leaderboard"""
         async with ctx.channel.typing():
             embeds = leaderboard_pages(self.bot, ctx.guild,
-                                       [z async for z in user_coll.find({}).sort("weekly", pymongo.DESCENDING)],
+                                       [z async for z in self.bot.user_coll.find(
+                                        {}).sort("weekly", pymongo.DESCENDING)],
                                        key="weekly", suffix=" XP")
             msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
@@ -286,7 +287,8 @@ class Levelling(commands.Cog, name="Levelling"):
         """View the server's vc minute leaderboard"""
         async with ctx.channel.typing():
             embeds = leaderboard_pages(self.bot, ctx.guild,
-                                       [z async for z in user_coll.find({}).sort("vc_minutes", pymongo.DESCENDING)],
+                                       [z async for z in self.bot.user_coll.find(
+                                        {}).sort("vc_minutes", pymongo.DESCENDING)],
                                        key="vc_minutes", suffix=" minutes",
                                        title="Voice Activity leaderboard",
                                        field_name="Talk in a voice channel to gain time")
@@ -299,7 +301,8 @@ class Levelling(commands.Cog, name="Levelling"):
         """View the server's points leaderboard"""
         async with ctx.channel.typing():
             embeds = leaderboard_pages(self.bot, ctx.guild,
-                                       [z async for z in user_coll.find({}).sort("points", pymongo.DESCENDING)],
+                                       [z async for z in self.bot.user_coll.find(
+                                        {}).sort("points", pymongo.DESCENDING)],
                                        key="points", suffix=" points",
                                        title="Points leaderboard", field_name="Gain 1 point every 1000 XP")
             msg = await ctx.send(embed=embeds[0])
@@ -310,7 +313,7 @@ class Levelling(commands.Cog, name="Levelling"):
     async def leaderboard(self, ctx):
         """View the server's XP leaderboard"""
         async with ctx.channel.typing():
-            embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in user_coll.find({}).sort(
+            embeds = leaderboard_pages(self.bot, ctx.guild, [z async for z in self.bot.user_coll.find({}).sort(
                 [("level", pymongo.DESCENDING), ("experience", pymongo.DESCENDING)])], prefix="level ")
             msg = await ctx.send(embed=embeds[0])
         await Paginator(self.bot, msg, embeds=embeds, timeout=60, use_extend=True, only=ctx.author).start()
@@ -322,12 +325,12 @@ class Levelling(commands.Cog, name="Levelling"):
         await ctx.send("Resetting...")
         with open("users.json") as f:
             users = json.load(f)
-        async for user in user_coll.find({}):
+        async for user in self.bot.user_coll.find({}):
             users[str(user["_id"])] = user
         # if (math.trunc(time.time()) + 604800) > users["config"]["week_start"]:
         with open(f"backups/{datetime.datetime.now().strftime('%d%m%y')}.json", "w") as f:
             json.dump(users, f)
-        await user_coll.update_many({}, {"$set": {"weekly": 0}})
+        await self.bot.user_coll.update_many({}, {"$set": {"weekly": 0}})
         # users["config"]["week_start"] = math.trunc(time.time())
         with open("users.json", "w") as f:
             json.dump(users, f)
@@ -362,7 +365,7 @@ class Levelling(commands.Cog, name="Levelling"):
             return
         with open("users.json") as f:
             users = json.load(f)
-        async for user in user_coll.find({}):
+        async for user in self.bot.user_coll.find({}):
             users[str(user["_id"])] = user
         with open(f"backups/{datetime.datetime.now().strftime('%d%m%y')}.json", "w+") as f:
             json.dump(users, f)
@@ -376,10 +379,10 @@ class Levelling(commands.Cog, name="Levelling"):
             return await ctx.send("Cannot remove XP from that user")
         if xp < 0:
             return await ctx.send("nice try")
-        if (await user_coll.find_one({"_id": str(user.id)}))["weekly"] < xp:
-            await user_coll.update_one({"_id": str(user.id)}, {"$set": {"weekly": 0}})
+        if (await self.bot.user_coll.find_one({"_id": str(user.id)}))["weekly"] < xp:
+            await self.bot.user_coll.update_one({"_id": str(user.id)}, {"$set": {"weekly": 0}})
         else:
-            await user_coll.update_one({"_id": str(user.id)}, {"$inc": {"weekly": -xp}})
+            await self.bot.user_coll.update_one({"_id": str(user.id)}, {"$inc": {"weekly": -xp}})
         await ctx.send(f"removed {xp} weekly xp from {user.mention}")
 
     @commands.command(name="removexp", hidden=True)
@@ -390,10 +393,10 @@ class Levelling(commands.Cog, name="Levelling"):
             return await ctx.send("Cannot remove XP from that user")
         if xp < 0:
             return await ctx.send("nice try")
-        if (await user_coll.find_one({"_id": str(user.id)}))["experience"] < xp:
-            await user_coll.update_one({"_id": str(user.id)}, {"$set": {"experience": 0}})
+        if (await self.bot.user_coll.find_one({"_id": str(user.id)}))["experience"] < xp:
+            await self.bot.user_coll.update_one({"_id": str(user.id)}, {"$set": {"experience": 0}})
         else:
-            await user_coll.update_one({"_id": str(user.id)}, {"$inc": {"experience": -xp}})
+            await self.bot.user_coll.update_one({"_id": str(user.id)}, {"$inc": {"experience": -xp}})
         await ctx.send(f"removed {xp} xp from {user.mention}")
 
     @commands.command(name="setlevel", hidden=True)
@@ -407,7 +410,7 @@ class Levelling(commands.Cog, name="Levelling"):
             return await ctx.send("Cannot set a level below 1")
         elif level > 200:
             return await ctx.send("why did you think that would work")
-        await user_coll.update_one({"_id": str(user.id)}, {"$set": {"level": level, "experience": 0}})
+        await self.bot.user_coll.update_one({"_id": str(user.id)}, {"$set": {"level": level, "experience": 0}})
         response_msg = await ctx.send(f"{user.mention} has been set to level `{level}`",
                                       allowed_mentions=discord.AllowedMentions(users=False))
         await ctx.message.delete()

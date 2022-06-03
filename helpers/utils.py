@@ -4,7 +4,6 @@ import typing
 
 import aiohttp
 
-from api_key import user_coll
 import discord
 import json
 import datetime
@@ -63,9 +62,9 @@ def strfdelta(tdelta, fmt):
     return t.substitute(**d)
 
 
-async def get_user(user):
+async def get_user(bot, user):
     try:
-        await user_coll.insert_one({
+        await bot.user_coll.insert_one({
             "_id": str(user.id),
             # levelling data
             "experience": 0,
@@ -88,7 +87,7 @@ async def get_user(user):
             "vc_minutes": 0,
         })
     finally:
-        return await user_coll.find_one({"_id": str(user.id)})
+        return await bot.user_coll.find_one({"_id": str(user.id)})
 
 
 def leaderboard_pages(bot, guild: discord.Guild, users, *, key="level", prefix="", suffix="",
@@ -262,14 +261,16 @@ def list_every(_list, *items):
 
 class ShallowContext:
     def __init__(self):
+        self.bot = None
         self.channel = None
         self.author = None
         self.guild = None
         self.__send_channel = None
 
     @classmethod
-    async def create(cls, member: discord.Member):
+    async def create(cls, bot, member: discord.Member):
         self = cls()
+        self.bot = bot
         self.channel = None
         self.__send_channel = (member.dm_channel or await member.create_dm())
         self.author = member
@@ -342,9 +343,9 @@ class Embed(discord.Embed):
         self.user = user
         super().__init__(**kwargs)
 
-    async def user_colour(self):
+    async def user_colour(self, bot):
         try:
-            self.colour = discord.Colour(int((await get_user(self.user))["embed_colour"], base=16))
+            self.colour = discord.Colour(int((await get_user(bot, self.user))["embed_colour"], base=16))
         except:
             self.colour = 0x00FF00
         return self
@@ -363,7 +364,7 @@ def min_level(level: int):
         if Role.RETIRED_SUPPORTER in (
                 roles := [z.id for z in ctx.author.roles]) or Role.BOOSTER in roles or Role.TWITCH_SUB in roles:
             return True
-        user = await user_coll.find_one({"_id": str(ctx.author.id)})
+        user = await ctx.bot.user_coll.find_one({"_id": str(ctx.author.id)})
         if not user:
             return False
         if user["level"] < level:

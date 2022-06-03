@@ -8,7 +8,6 @@ import time
 import math
 from motor.motor_asyncio import AsyncIOMotorClient
 from api_key import TOKEN, PREFIX, COGS, CONNECTION_STRING
-import api_key
 from helpers.constants import Role, Channel, Misc
 from perks.perk_system import PerkError
 import traceback
@@ -55,11 +54,11 @@ cooldowns = {}
 
 class DiscordBot(commands.Bot):
     async def setup_hook(self):
-        api_key.cluster = AsyncIOMotorClient(CONNECTION_STRING)
-        api_key.db = api_key.cluster["nullzee"]
-        api_key.user_coll = api_key.db["users"]
-        api_key.moderation_coll = api_key.db["moderation"]
-        api_key.giveaway_coll = api_key.db["giveaways"]
+        self.cluster = AsyncIOMotorClient(CONNECTION_STRING)
+        self.db = self.cluster["nullzee"]
+        self.user_coll = self.db["users"]
+        self.moderation_coll = self.db["moderation"]
+        self.giveaway_coll = self.db["giveaways"]
 
         for current_cog in self.extensions.copy():
             await self.unload_extension(current_cog)
@@ -162,11 +161,12 @@ async def reload_cogs(ctx):
     length = len(COGS)
     print_progress_bar(0, length, bar_prefix="\nInitializing:", suffix="Complete", length=50)
     for i, cog in enumerate(COGS):
-        print_progress_bar(i + 1, length, bar_prefix="Progress:", suffix="Complete", length=50)
-        print("Reloading", cog)
+        time.sleep(0.3)
+        print_progress_bar(i + 1, length, bar_prefix=f"Loading:{' ' * (20 - len(cog))} {cog}",
+                           suffix="Complete", length=50)
         await bot.reload_extension(cog)
         updated_cogs += f"{cog}\n"
-    print(f"\n{purple}Initializing Bot, Please wait...{end_colour}\n")
+    print(f"\n{yellow}Initializing Bot, Please wait...{end_colour}\n")
     print(f"{green}Cogs loaded... Bot is now ready and waiting for prefix \"{PREFIX}\"{end_colour}")
     await ctx.send(f"`Cogs reloaded by:` <@{ctx.author.id}>")
 
@@ -183,7 +183,7 @@ async def channel_command_cooldown(ctx, channel: discord.TextChannel = None, _ti
 async def restrict_command_usage(ctx):
     if not ctx.guild or (hasattr(ctx, "is_help_command") and ctx.is_help_command is True):
         return True
-    user = await get_user(ctx.author)
+    user = await get_user(ctx.bot, ctx.author)
     not_blacklist = not ("command_blacklist" in user and ctx.command.name in user["command_blacklist"])
     staff_bypass = ctx.author.guild_permissions.manage_messages
     not_on_cooldown = True
@@ -200,7 +200,7 @@ async def restrict_command_usage(ctx):
     role_bypass = (roles := [z.id for z in
                              ctx.author.roles]) and Role.RETIRED_SUPPORTER in roles or \
                                                     Role.BOOSTER in roles or Role.TWITCH_SUB in roles
-    channel_allowed = ctx.channel.id in [Channel.BOT_COMMANDS, 981960190335258654] or \
+    channel_allowed = ctx.channel.id in [Channel.BOT_COMMANDS, Channel.BOT_TEST_CHANNEL] or \
                       ctx.channel.category.id in [constants.Channel.OPEN_TICKET]
     command_bypass = ctx.command.name in ["claimroles", "purchase", "report", "sbinfo"]
     cog_bypass = ctx.command.cog.qualified_name in ["Useless Commands"] if ctx.command.cog else False
