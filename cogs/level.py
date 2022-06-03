@@ -165,6 +165,8 @@ class Levelling(commands.Cog, name="Levelling"):
             await message.author.add_roles(message.guild.get_role(int(Role.LevelRoles.LEVELS["1"])))
         if message.author.bot:
             return
+        if isinstance(message.channel, discord.VoiceChannel):
+            return
         else:
             user_data = await get_user(self.bot, message.author)
             ctx = await self.bot.get_context(message)
