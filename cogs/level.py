@@ -195,7 +195,7 @@ class Levelling(commands.Cog, name="Levelling"):
                     await Emitter().emit("point_earned", ctx, user_data["points"] + 1, user_data=user_data)
                 await self.bot.user_coll.update_one({"_id": str(message.author.id)},
                                            {"$inc": {"experience": exp, "weekly": weekly_exp, "points": points_bonus},
-                                           "$set": {"last_message": time.time(),
+                                            "$set": {"last_message": time.time(),
                                                     "last_points": user_data["experience"] + exp if points_bonus else
                                                     user_data["last_points"]}})
                 user_data = await self.bot.user_coll.find_one({"_id": str(message.author.id)})

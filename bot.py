@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord.ext.commands import CooldownMapping, BucketType
 
 from helpers import constants
 from helpers.colour import Colour
@@ -51,6 +52,8 @@ def print_progress_bar(iteration, total, bar_prefix="", suffix="", decimals=1, l
 cooldown = {}
 cooldowns = {}
 
+# _global_cooldown = commands.CooldownMapping.from_cooldown(2, 0.5, commands.BucketType.user)
+
 
 class DiscordBot(commands.Bot):
     async def setup_hook(self):
@@ -59,6 +62,8 @@ class DiscordBot(commands.Bot):
         self.user_coll = self.db["users"]
         self.moderation_coll = self.db["moderation"]
         self.giveaway_coll = self.db["giveaways"]
+
+        # self._global_cooldown = _global_cooldown
 
         for current_cog in self.extensions.copy():
             await self.unload_extension(current_cog)
@@ -150,6 +155,18 @@ async def on_command_error(ctx, error):
 
     # Ignore all other exception types, but print them to stderr
     print(f"EXCEPTION TRACE PRINT:\n{''.join(traceback.format_exception(type(error), error, error.__traceback__))}")
+
+
+# @bot.event
+# async def on_message(message):
+#     if not message.author.bot:
+#         _cooldown = _global_cooldown.get_bucket(message)
+#         retry_after = _cooldown.update_rate_limit()
+#         if retry_after:
+#             # Spam detected
+#             await message.delete()
+#         # No spam detected
+#     await bot.process_commands(message)
 
 
 @bot.command(name="reload", aliases=["-r"], hidden=True)
