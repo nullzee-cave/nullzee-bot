@@ -272,7 +272,11 @@ class ShallowContext:
         self = cls()
         self.bot = bot
         self.channel = None
-        self.__send_channel = (member.dm_channel or await member.create_dm())
+        try:
+            self.__send_channel = (member.dm_channel or await member.create_dm())
+        except discord.HTTPException:
+            # discord.errors.HTTPException: 400 Bad Request (error code: 50007): Cannot send messages to this user
+            self.__send_channel = None
         self.author = member
         self.guild = member.guild
         return self
