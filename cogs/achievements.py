@@ -212,7 +212,7 @@ class Achievements(commands.Cog, name="Achievements"):
         """Boxborder related commands"""
         await ctx.send(embed=discord.Embed(
             title="-boxBorder",
-            description="\n".join([f":arrow_right: `{ctx.PREFIX}boxBorder {z.name} {z.signature}`"
+            description="\n".join([f":arrow_right: `{ctx.prefix}boxBorder {z.name} {z.signature}`"
                                    for z in self.box_border.commands]),
             colour=0x00ff00
         ))
@@ -271,7 +271,7 @@ class Achievements(commands.Cog, name="Achievements"):
         """Background related commands"""
         await ctx.send(embed=discord.Embed(
             title="-background",
-            description="\n".join([f":arrow_right: `{ctx.PREFIX}background {z.name} {z.signature}`"
+            description="\n".join([f":arrow_right: `{ctx.prefix}background {z.name} {z.signature}`"
                                    for z in self.background.commands]),
             colour=0x00ff00
         ))

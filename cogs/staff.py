@@ -74,7 +74,7 @@ class Staff(commands.Cog, name="Staff"):
     async def send(self, ctx, channel: typing.Optional[discord.TextChannel] = None, *, message: str):
         """Make the bot send a message"""
         channel = channel if channel else ctx.channel
-        if not ctx.author.permissions_in(channel).send_messages:
+        if not channel.permissions_for(ctx.author).send_messages:
             raise commands.MissingPermissions(["manage_messages"])
         msg = await channel.send(message)
         if channel.id != ctx.channel.id:
@@ -84,7 +84,7 @@ class Staff(commands.Cog, name="Staff"):
     @staff_only
     async def reply(self, ctx, message: discord.Message, ping: typing.Optional[bool] = True, *, text: str):
         """Make the bot reply to a message"""
-        if not ctx.author.permissions_in(message.channel).send_messages:
+        if not message.channel.permissions_for(ctx.author).send_messages:
             raise commands.MissingPermissions(["manage_messages"])
         msg = await message.reply(content=text, mention_author=ping)
         if message.channel.id != ctx.channel.id:
@@ -283,7 +283,7 @@ class Staff(commands.Cog, name="Staff"):
         for cog in mod_cogs:
             cog_string = ""
             for cmd in cog.get_commands():
-                cog_string += f"\n`{ctx.PREFIX}{cmd.name}`"
+                cog_string += f"\n`{ctx.prefix}{cmd.name}`"
             string += f"\n**{cog.qualified_name}:**{cog_string}"
         embed.description = string
         await ctx.send(embed=embed)
@@ -314,17 +314,17 @@ class Staff(commands.Cog, name="Staff"):
     @staff_only
     async def blist_add(self, ctx, member: discord.Member, command: str):
         """Add a user to the blacklist for a specific command"""
-        command = command.replace(ctx.PREFIX, '')
+        command = command.replace(ctx.prefix, '')
         await self.bot.user_coll.update_one({"_id": str(member.id)}, {"$addToSet": {"command_blacklist": command}})
-        await ctx.send(f"blacklisted `{member}` from using `{ctx.PREFIX}{command}`")
+        await ctx.send(f"blacklisted `{member}` from using `{ctx.prefix}{command}`")
 
     @blacklist.command(hidden=True, name="remove")
     @staff_only
     async def blist_remove(self, ctx, member: discord.Member, command: str):
         """Remove a user from the blacklist for a specific command"""
-        command = command.replace(ctx.PREFIX, '')
+        command = command.replace(ctx.prefix, '')
         await self.bot.user_coll.update_one({"_id": str(member.id)}, {"$pull": {"command_blacklist": command}})
-        await ctx.send(f"unblacklisted `{member}` from using `{ctx.PREFIX}{command}`")
+        await ctx.send(f"unblacklisted `{member}` from using `{ctx.prefix}{command}`")
 
     @commands.group(hidden=True, aliases=["-c"])
     @staff_or_trainee
