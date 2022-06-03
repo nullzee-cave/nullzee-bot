@@ -339,7 +339,7 @@ class Util(commands.Cog, name="Other"):
                     if not await command.can_run(ctx):
                         continue
                     cog_commands.append(command.name)
-                except commands.NoPrivateMessage:
+                except commands.CheckFailure:
                     continue
             help_embed.add_field(name="Commands:", value=(", ".join(sorted(cog_commands))) if cog_commands else None)
         elif isinstance(arg, commands.Command):
