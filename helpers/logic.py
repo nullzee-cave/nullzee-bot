@@ -94,6 +94,8 @@ class BooleanLogic:
             while self.this_token is not None:
                 if self.this_token == "&":
                     self.next_token()
+                    if self.this_token == "&":
+                        self.next_token()
                     result = BooleanLogic.AndOperator(result, self.build_or())
                 else:
                     break
@@ -105,6 +107,8 @@ class BooleanLogic:
             while self.this_token is not None:
                 if self.this_token == "|":
                     self.next_token()
+                    if self.this_token == "|":
+                        self.next_token()
                     result = BooleanLogic.OrOperator(result, self.build_literal())
                 else:
                     break
