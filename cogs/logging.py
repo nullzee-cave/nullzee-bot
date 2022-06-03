@@ -11,7 +11,7 @@ class Logging(commands.Cog, name="Logging"):
 
     def __init__(self, bot: commands.Bot):
         self.hidden: bool = True
-        self.bot: commands.Bot = bot
+        self.bot = bot
 
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message):

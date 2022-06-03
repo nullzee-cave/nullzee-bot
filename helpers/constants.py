@@ -134,6 +134,8 @@ class Channel(metaclass=Constant):
     NO_MIC = 706920230089392260
     GAME_NIGHT = 751139258844184687
 
+    BOT_TEST_CHANNEL = 981960190335258654
+
     @classmethod
     def lockdown_channels(cls):
         return [

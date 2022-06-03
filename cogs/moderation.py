@@ -6,7 +6,6 @@ from helpers.utils import Embed, TimeConverter, staff_only, staff_or_trainee, Me
     get_file_json, save_file_json
 import discord
 from helpers import payloads, moderation_utils
-from api_key import moderation_coll
 import datetime
 from EZPaginator import Paginator
 
@@ -21,7 +20,7 @@ async def mass_ban_internal(ctx, user: typing.Union[discord.Member, discord.User
     payload = payloads.ban_payload(offender_id=user.id, mod_id=ctx.author.id, duration=_time, reason=reason, _id=_id)
     payload = payloads.insert_message(payload, message)
     await ctx.guild.ban(user, reason=f"Mod: {ctx.author} | Reason: {reason}")
-    await moderation_coll.insert_one(payload)
+    await ctx.bot.moderation_coll.insert_one(payload)
 
 
 class Moderation(commands.Cog, name="Moderation"):
@@ -38,7 +37,7 @@ class Moderation(commands.Cog, name="Moderation"):
         payload = payloads.warn_payload(offender_id=user.id, mod_id=ctx.author.id, reason=reason)
         message = await ctx.send(embed=moderation_utils.chat_embed(ctx, payload))
         payload = payloads.insert_message(payload, message)
-        await moderation_coll.insert_one(payload)
+        await self.bot.moderation_coll.insert_one(payload)
         await moderation_utils.log(self.bot, payload)
         await moderation_utils.warn_punishments(ctx, user)
         try:
@@ -57,10 +56,10 @@ class Moderation(commands.Cog, name="Moderation"):
         message = await ctx.send(embed=moderation_utils.chat_embed(ctx, payload))
         payload = payloads.insert_message(payload, message)
         await user.add_roles(
-            ctx.guild.get_role((await moderation_utils.get_config())["mutedRole"]),
+            ctx.guild.get_role((await moderation_utils.get_config(self.bot))["mutedRole"]),
             reason=f"Mod: {ctx.author} | Reason: {reason[:400]}{'...' if len(reason) > 400 else ''}"
         )
-        await moderation_coll.insert_one(payload)
+        await self.bot.moderation_coll.insert_one(payload)
         await moderation_utils.log(self.bot, payload)
         time_string = payload["duration_string"]
         try:
@@ -74,9 +73,9 @@ class Moderation(commands.Cog, name="Moderation"):
     @staff_or_trainee
     async def unmute(self, ctx, user: discord.Member, *, reason: str = "None"):
         """Unmute a user"""
-        await moderation_coll.update_many({"offender_id": user.id, "type": "mute"}, {"$set": {"expired": True}})
+        await self.bot.moderation_coll.update_many({"offender_id": user.id, "type": "mute"}, {"$set": {"expired": True}})
         await user.remove_roles(
-            ctx.guild.get_role((await moderation_utils.get_config())["mutedRole"]),
+            ctx.guild.get_role((await moderation_utils.get_config(self.bot))["mutedRole"]),
             reason=f"Mod: {ctx.author} | Reason: {reason[:400]}{'...' if len(reason) > 400 else ''}"
         )
         await moderation_utils.end_log(self.bot, {"type": "mute", "offender_id": user.id},
@@ -104,7 +103,7 @@ class Moderation(commands.Cog, name="Moderation"):
         await ctx.guild.ban(
             user, reason=f"Mod: {ctx.author} | Reason: {reason[:400]}{'...' if len(reason) > 400 else ''}"
         )
-        await moderation_coll.insert_one(payload)
+        await self.bot.moderation_coll.insert_one(payload)
         await moderation_utils.log(self.bot, payload)
 
     @commands.command(name="scamban", aliases=["sban", "syeet"], hidden=True)
@@ -167,11 +166,11 @@ class Moderation(commands.Cog, name="Moderation"):
     @staff_or_trainee
     async def delete_warn(self, ctx, _id: str):
         """Delete a warning from someone"""
-        doc = await moderation_coll.find_one({"id": _id})
+        doc = await self.bot.moderation_coll.find_one({"id": _id})
         if not doc:
             return await ctx.send("Could not find that warning")
         else:
-            await moderation_coll.update_one(doc, {"$set": {"expired": True}})
+            await self.bot.moderation_coll.update_one(doc, {"$set": {"expired": True}})
             await ctx.send("Successfully deleted warning `{}`".format(_id))
 
     @commands.command(hidden=True, aliases=["boot"])
@@ -184,7 +183,7 @@ class Moderation(commands.Cog, name="Moderation"):
         payload = payloads.kick_payload(offender_id=user.id, mod_id=ctx.author.id, reason=reason)
         message = await ctx.send(embed=moderation_utils.chat_embed(ctx, payload))
         payload = payloads.insert_message(payload, message)
-        await moderation_coll.insert_one(payload)
+        await self.bot.moderation_coll.insert_one(payload)
         await moderation_utils.log(self.bot, payload)
         try:
             await user.send(
@@ -200,7 +199,7 @@ class Moderation(commands.Cog, name="Moderation"):
     async def punishments(self, ctx, user: MemberUserConverter = None):
         """View a user's punishments"""
         user = user if user else ctx.author
-        warnings = [z async for z in moderation_coll.find({"offender_id": user.id, "expired": False})]
+        warnings = [z async for z in self.bot.moderation_coll.find({"offender_id": user.id, "expired": False})]
         embed = discord.Embed(title=f"{len(warnings)} punishments", colour=discord.Colour.green())
         embed.set_author(name=user, icon_url=user.avatar)
         for warning in warnings:
@@ -216,7 +215,8 @@ class Moderation(commands.Cog, name="Moderation"):
     async def warnings(self, ctx, user: MemberUserConverter = None):
         """View a user's warnings"""
         user = user if user else ctx.author
-        warnings = [z async for z in moderation_coll.find({"offender_id": user.id, "expired": False, "type": "warn"})]
+        warnings = [z async for z in self.bot.moderation_coll.find({
+                    "offender_id": user.id, "expired": False, "type": "warn"})]
         embed = discord.Embed(title=f"{len(warnings)} warnings", colour=discord.Colour.green())
         embed.set_author(name=user, icon_url=user.avatar)
         for warning in warnings:
@@ -232,7 +232,7 @@ class Moderation(commands.Cog, name="Moderation"):
     async def moderation_logs(self, ctx, user: MemberUserConverter):
         """View all of a user's moderation logs"""
         user = user if user else ctx.author
-        infractions = [z async for z in moderation_coll.find({"offender_id": user.id})]
+        infractions = [z async for z in self.bot.moderation_coll.find({"offender_id": user.id})]
         if not infractions:
             return await ctx.send(f"No infractions found for {user}")
         embeds = [discord.Embed(title=f"All infractions for {user}", color=discord.Colour.orange())]
@@ -258,7 +258,7 @@ class Moderation(commands.Cog, name="Moderation"):
     @staff_or_trainee
     async def where_is_warn(self, ctx, warn: str):
         """Find where someone was warned"""
-        warning = await moderation_coll.find_one({"id": warn})
+        warning = await self.bot.moderation_coll.find_one({"id": warn})
         if not warning:
             return await ctx.send("Could not find a warning with that ID")
         location = warning["message"].split("-")

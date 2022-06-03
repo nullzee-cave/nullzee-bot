@@ -2,7 +2,6 @@ from helpers.events import Emitter
 from perks.perk_system import perk, PerkError
 from discord.ext import commands
 import discord
-from api_key import user_coll
 from helpers.utils import get_user, Embed, get_file_json, save_file_json, list_one
 from helpers.constants import Role, Channel
 import datetime
@@ -18,9 +17,9 @@ staff_nick_changes = {}
       cost=10, require_arg=True)
 async def ask_nullzee(ctx, arg):
     embed = Embed(ctx.author, description=arg)
-    await embed.set_author(name=ctx.author, icon_url=ctx.author.avatar).user_colour()
+    await embed.set_author(name=ctx.author, icon_url=ctx.author.avatar).user_colour(ctx.bot)
     msg = await ctx.guild.get_channel(Channel.ASK_NULLZEE).send(embed=embed)
-    await ctx.send(embed=await Embed(ctx.author, title="Bought!", url=msg.jump_url).user_colour())
+    await ctx.send(embed=await Embed(ctx.author, title="Bought!", url=msg.jump_url).user_colour(ctx.bot))
 
 
 @perk(name="EmbedColour", aliases=["embedcolor", "commandcolour"], description="Change the colour of your embeds!",
@@ -30,7 +29,7 @@ async def embed_colour(ctx, arg):
         raise PerkError(embed=discord.Embed(title="Error!", description="please specify a valid hex code",
                                             color=discord.Color.red()))
     await get_user(ctx.author)
-    await user_coll.update_one({"_id": str(ctx.author.id)}, {"$set": {"embed_colour": arg.replace("#", "")}})
+    await ctx.bot.user_coll.update_one({"_id": str(ctx.author.id)}, {"$set": {"embed_colour": arg.replace("#", "")}})
 
 
 @perk(name="DeadChatPing", aliases=["deadchat", "ping", "revive", "dcp"],
@@ -42,7 +41,7 @@ async def dead_chat(ctx, arg):
     if last_ping + 7200 > time.time():
         raise PerkError(msg="This perk is on cooldown!")
     embed = Embed(ctx.author, description=arg)
-    await embed.set_author(name=ctx.author, icon_url=ctx.author.avatar).user_colour()
+    await embed.set_author(name=ctx.author, icon_url=ctx.author.avatar).user_colour(ctx.bot)
     await ctx.send(f"<@&{Role.DEAD_CHAT_PING}>", embed=embed)
     last_ping = time.time()
 

@@ -14,8 +14,7 @@ import requests
 import random
 from discord.ext.commands.cooldowns import BucketType
 import time
-import datetime
-from api_key import moderation_coll, HYPIXEL_API_KEY, DEV_ID, user_coll
+from api_key import HYPIXEL_API_KEY, DEV_ID
 from helpers.utils import Embed, strfdelta, staff_only, HelpConverter
 import mathterpreter
 
@@ -147,7 +146,7 @@ class Util(commands.Cog, name="Other"):
     @commands.command(name="serverinfo")
     async def server_info(self, ctx):
         """View some information about the server"""
-        embed = await Embed(ctx.author).user_colour()
+        embed = await Embed(ctx.author).user_colour(self.bot)
         embed.add_field(name="Owner:", value=f"{ctx.guild.owner}", inline=False)
         embed.add_field(name="Members:", value=ctx.guild.member_count, inline=True)
         embed.add_field(name="Roles:", value=len(ctx.guild.roles) - 1, inline=True)
@@ -187,7 +186,7 @@ class Util(commands.Cog, name="Other"):
                         inline=True)
         embed.add_field(name="Registered", value=user.created_at.strftime("%d/%m/%y %H:%M"), inline=True)
         if is_member:
-            user_data = await get_user(user)
+            user_data = await get_user(self.bot, user)
             embed_colour = user_data["embed_colour"]
             embed.add_field(name=f"{len(user.roles) - 1} roles",
                             value=" ".join([z.mention for z in reversed(user.roles) if not z.is_default()]) if len(
@@ -196,7 +195,7 @@ class Util(commands.Cog, name="Other"):
                             value=f"#{embed_colour}" if not embed_colour.startswith("#") else embed_colour,
                             inline=False)
         else:
-            user_data = await user_coll.find_one({"_id": str(user.id)})
+            user_data = await self.bot.user_coll.find_one({"_id": str(user.id)})
             embed_colour = f"#{user_data['embed_colour']}" if user_data else "N/A"
             embed.add_field(name="0 Roles", value="N/A", inline=False)
             embed.add_field(name="Embed Colour", value=embed_colour)
@@ -207,7 +206,7 @@ class Util(commands.Cog, name="Other"):
         embed.auto_author()
         embed.timestamp_now()
         if is_member:
-            await embed.user_colour()
+            await embed.user_colour(self.bot)
 
             extra = []
             if user.id == ctx.guild.owner.id:
@@ -227,13 +226,13 @@ class Util(commands.Cog, name="Other"):
         embed = Embed(user, title="Avatar")
         embed.set_image(url=user.avatar)
         embed.auto_author()
-        await embed.user_colour()
+        await embed.user_colour(self.bot)
         await ctx.send(embed=embed)
 
     @commands.command()
     async def appeal(self, ctx, _id: str, *, reason: str = None):
         """Appeal a punishment"""
-        punishment = await moderation_coll.find_one({"id": _id})
+        punishment = await self.bot.moderation_coll.find_one({"id": _id})
         if not punishment:
             return await ctx.send("Could not find a punishment with that ID")
         if punishment["offender_id"] != ctx.author.id:
@@ -252,7 +251,7 @@ class Util(commands.Cog, name="Other"):
         """Log a suggestion for the server"""
         with open("suggestions.json") as f:
             suggestions = json.load(f)
-        suggestion = await Embed(ctx.author, description=answer, color=0x00FF00).user_colour()
+        suggestion = await Embed(ctx.author, description=answer, color=0x00FF00).user_colour(self.bot)
         suggestion.set_author(name=ctx.author, icon_url=ctx.author.avatar)
         suggestion_channel = self.bot.get_guild(Misc.GUILD).get_channel(Channel.POLLS)
         suggestion_msg = await suggestion_channel.send(f"<@&{Role.POLL_PING}>", embed=suggestion)
