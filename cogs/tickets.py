@@ -336,7 +336,7 @@ class Tickets(commands.Cog, name="Tickets"):
             log_channel = guild.get_channel(Channel.MOD_LOGS)
             await log_channel.send(embed=embed)
 
-    @commands.command(name="add_user")
+    @commands.command(name="adduser")
     async def add_user(self, ctx: commands.Context, *, member: discord.Member):
         """Add a user to a ticket"""
         restrict_ticket_command_usage(ctx)
