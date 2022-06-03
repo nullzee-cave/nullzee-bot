@@ -239,7 +239,8 @@ achievements = {
     },
     "Great Job": {
         "listeners": {
-            "message": lambda msg: msg.guild and msg.author.guild_permissions.manage_messages,
+            "message": lambda msg: msg.guild and isinstance(msg.author, discord.Member) and
+                                   msg.author.guild_permissions.manage_messages,
             "update_roles": lambda ctx, _: ctx.author.guild_permissions.manage_messages
         },
         "description": "Get any staff position",

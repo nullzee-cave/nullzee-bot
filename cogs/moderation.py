@@ -202,7 +202,7 @@ class Moderation(commands.Cog, name="Moderation"):
         user = user if user else ctx.author
         warnings = [z async for z in moderation_coll.find({"offender_id": user.id, "expired": False})]
         embed = discord.Embed(title=f"{len(warnings)} punishments", colour=discord.Colour.green())
-        embed.set_author(name=user, icon_url=user.avatar_url)
+        embed.set_author(name=user, icon_url=user.avatar)
         for warning in warnings:
             embed.add_field(
                 name=f"ID: {warning['id']} | {self.bot.get_user(warning['mod_id'])}",
@@ -218,7 +218,7 @@ class Moderation(commands.Cog, name="Moderation"):
         user = user if user else ctx.author
         warnings = [z async for z in moderation_coll.find({"offender_id": user.id, "expired": False, "type": "warn"})]
         embed = discord.Embed(title=f"{len(warnings)} warnings", colour=discord.Colour.green())
-        embed.set_author(name=user, icon_url=user.avatar_url)
+        embed.set_author(name=user, icon_url=user.avatar)
         for warning in warnings:
             embed.add_field(
                 name=f"ID: {warning['id']} | {self.bot.get_user(warning['mod_id'])}",
@@ -433,5 +433,5 @@ class Moderation(commands.Cog, name="Moderation"):
         await ctx.message.delete()
                 
 
-def setup(bot):
-    bot.add_cog(Moderation(bot, True))
+async def setup(bot):
+    await bot.add_cog(Moderation(bot, True))

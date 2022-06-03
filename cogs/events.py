@@ -130,5 +130,5 @@ class Events(commands.Cog, name="Events"):
             json.dump(events, f)
 
 
-def setup(bot):
-    bot.add_cog(Events(bot, False))
+async def setup(bot):
+    await bot.add_cog(Events(bot, False))
