@@ -9,6 +9,7 @@ import math
 import datetime
 from EZPaginator import Paginator
 
+from api_key import DEV_ID
 from helpers.utils import get_user, Embed, get_file_json, leaderboard_pages, staff_only, ShallowContext, \
     save_file_json, clean_message_content, remove_emojis, event_hoster_or_staff, role_ids
 from helpers.constants import Category, Role, Channel, Misc
@@ -28,6 +29,7 @@ class Levelling(commands.Cog, name="Levelling"):
         self.vc_tracker.start()
         self.boost_multiplier_end.start()
         self.check_level_one_role.start()
+        self.auto_reset_weekly.start()
 
     def cog_unload(self):
         self.vc_tracker.cancel()
@@ -63,6 +65,36 @@ class Levelling(commands.Cog, name="Levelling"):
 
     @check_level_one_role.before_loop
     async def before_check_level_one_role(self):
+        await self.bot.wait_until_ready()
+
+    @tasks.loop(minutes=1)
+    async def auto_reset_weekly(self):
+        current_time = discord.utils.utcnow()
+        if current_time.time() == datetime.time(0, 0):
+            print("it is midnight on day", current_time.weekday())
+        # if current_time.weekday() == 0 and current_time.time() == datetime.time(0, 0):
+            # guild = self.bot.get_guild(Misc.GUILD)
+            # lb_channel = guild.get_channel(Channel.WEEKLY_LEADERBOARDS)
+            # async with lb_channel.typing():
+            #     embeds = leaderboard_pages(self.bot, guild,
+            #                                [z async for z in self.bot.user_coll.find(
+            #                                    {}).sort("weekly", pymongo.DESCENDING)],
+            #                                key="weekly", suffix=" XP")
+            #     await lb_channel.send(embed=embeds[0])
+            # with open("users.json") as f:
+            #     users = json.load(f)
+            # async for user in self.bot.user_coll.find({}):
+            #     users[str(user["_id"])] = user
+            # # if (math.trunc(time.time()) + 604800) > users["config"]["week_start"]:
+            # with open(f"backups/auto-weekly/{datetime.datetime.now().strftime('%d%m%y')}.json", "w") as f:
+            #     json.dump(users, f)
+            # await self.bot.user_coll.update_many({}, {"$set": {"weekly": 0}})
+            # # users["config"]["week_start"] = math.trunc(time.time())
+            # with open("users.json", "w") as f:
+            #     json.dump(users, f)
+
+    @auto_reset_weekly.before_loop
+    async def before_auto_reset_weekly(self):
         await self.bot.wait_until_ready()
 
     @commands.command(name="linktwitch")
