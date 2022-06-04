@@ -9,7 +9,6 @@ import math
 import datetime
 from EZPaginator import Paginator
 
-from api_key import DEV_ID
 from helpers.utils import get_user, Embed, get_file_json, leaderboard_pages, staff_only, ShallowContext, \
     save_file_json, clean_message_content, remove_emojis, event_hoster_or_staff, role_ids
 from helpers.constants import Category, Role, Channel, Misc
