@@ -12,7 +12,7 @@ from api_key import TOKEN, PREFIX, COGS, CONNECTION_STRING
 from helpers.constants import Role, Channel, Misc
 from perks.perk_system import PerkError
 import traceback
-from helpers.utils import get_user, staff_only, TimeConverter, ItemNotFound, HelpError, GiveawayError
+from helpers.utils import get_user, staff_only, TimeConverter, ItemNotFound, HelpError, GiveawayError, staff_check
 
 intents = discord.Intents.default()
 intents.members = True
@@ -52,10 +52,21 @@ def print_progress_bar(iteration, total, bar_prefix="", suffix="", decimals=1, l
 cooldown = {}
 cooldowns = {}
 
-# _global_cooldown = commands.CooldownMapping.from_cooldown(2, 0.5, commands.BucketType.user)
+_global_cooldown = commands.CooldownMapping.from_cooldown(3, 1, commands.BucketType.member)
 
 
 class DiscordBot(commands.Bot):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.cluster = None
+        self.db = None
+        self.user_coll = None
+        self.moderation_coll = None
+        self.giveaway_coll = None
+
+        self._global_cooldown = None
+
     async def setup_hook(self):
         self.cluster = AsyncIOMotorClient(CONNECTION_STRING)
         self.db = self.cluster["nullzee"]
@@ -63,7 +74,7 @@ class DiscordBot(commands.Bot):
         self.moderation_coll = self.db["moderation"]
         self.giveaway_coll = self.db["giveaways"]
 
-        # self._global_cooldown = _global_cooldown
+        self._global_cooldown = _global_cooldown
 
         for current_cog in self.extensions.copy():
             await self.unload_extension(current_cog)
@@ -157,16 +168,16 @@ async def on_command_error(ctx, error):
     print(f"EXCEPTION TRACE PRINT:\n{''.join(traceback.format_exception(type(error), error, error.__traceback__))}")
 
 
-# @bot.event
-# async def on_message(message):
-#     if not message.author.bot:
-#         _cooldown = _global_cooldown.get_bucket(message)
-#         retry_after = _cooldown.update_rate_limit()
-#         if retry_after:
-#             # Spam detected
-#             await message.delete()
-#         # No spam detected
-#     await bot.process_commands(message)
+@bot.event
+async def on_message(message):
+    if not (message.author.bot or staff_check(message.author)):
+        _cooldown = _global_cooldown.get_bucket(message)
+        retry_after = _cooldown.update_rate_limit()
+        if retry_after:
+            # Spam detected
+            return await message.delete()
+        # No spam detected
+    await bot.process_commands(message)
 
 
 @bot.command(name="reload", aliases=["-r"], hidden=True)
