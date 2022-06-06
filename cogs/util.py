@@ -388,7 +388,7 @@ class Util(commands.Cog, name="Other"):
         if member.guild.id == Misc.GUILD:
             channel = member.guild.get_channel(Channel.WELCOME)
             await channel.send(
-                f"Welcome to Nullzee's Cave, {member.mention}, Make sure to read <#{Channel.RULES_AND_INFO}> carefully and ensure you understand them. We hope you enjoy your time here! :heart: :wave:")
+                f"Welcome to Nullzee's Cave, {member.mention}, make sure to read <#{Channel.RULES_AND_INFO}> carefully and ensure you understand them. We hope you enjoy your time here! :heart: :wave:")
 
     @tasks.loop(minutes=30)
     async def auto_toggle_status(self):
