@@ -103,9 +103,9 @@ class UselessCommands(commands.Cog, name="Useless Commands"):
         await ctx.send(embed=embed)
         
    @commands.command(aliases=["goodluck"])
-    async def gl(self, ctx):
+   async def gl(self, ctx):
         embed = Embed(ctx.author, title="Good luck",
-                      description="<:Prayge:900013539048189962> I wish you the best of luck! ")
+                      description="<:Prayge:900013539048189962> I wish you the best of luck!")
         await embed.user_colour(self.bot)
         await ctx.send(embed=embed)
         
