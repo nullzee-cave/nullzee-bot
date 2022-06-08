@@ -6,8 +6,6 @@ from helpers.utils import Embed
 class UselessCommands(commands.Cog, name="Useless Commands"):
     """All the fun but useless commands"""
 
-    # TODO: replace emoji links with actual emojis using their ids
-
     def __init__(self, bot, hidden):
         self.bot = bot
         self.hidden = hidden 
@@ -52,48 +50,42 @@ class UselessCommands(commands.Cog, name="Useless Commands"):
     @commands.command()
     async def hug(self, ctx, member: discord.Member):
         if member == ctx.author:
-            embed = Embed(ctx.author, description=f"{ctx.author} tried to hug themself",
-                          url="https://cdn.discordapp.com/emojis/759485870146584586.png?v=1")
+            embed = Embed(ctx.author, description=f"<:hug:984118224507535390>{ctx.author} tried to hug themself")
             embed.set_footer(text="self love is appreciated")
             await embed.user_colour(self.bot)
             await ctx.send(embed=embed)
         else:    
-            embed = Embed(ctx.author, description=f"{ctx.author.mention} hugged {member.mention}",
-                          url="https://cdn.discordapp.com/emojis/759485870146584586.png?7v=1")
+            embed = Embed(ctx.author, description=f"<:hug:984118224507535390>{ctx.author.mention} hugged {member.mention}")
             await embed.user_colour(self.bot)
             await ctx.send(embed=embed)
     
-    @commands.command()
+    @commands.command(aliases=["goodnight"])
     async def gn(self, ctx, member: discord.Member):
         if member == ctx.author:
-            embed = Embed(ctx.author, description=f"{ctx.author} wished themselves a good sleep",
-                          url="https://cdn.discordapp.com/emojis/759485870146584586.png?v=1")
+            embed = Embed(ctx.author, description=f"<:hug:984118224507535390>{ctx.author} wished themselves a good sleep")
             embed.set_footer(text="Goodnight!")
             await embed.user_colour(self.bot)
             await ctx.send(embed=embed)
         else:    
-            embed = Embed(ctx.author, description=f"{ctx.author.mention} wished {member.mention} happy dreams",
-                          url="https://cdn.discordapp.com/emojis/759485870146584586.png?7v=1")
+            embed = Embed(ctx.author, description=f"<:hug:984118224507535390> {ctx.author.mention} wished {member.mention} happy dreams")
             await embed.user_colour(self.bot)
             await ctx.send(embed=embed)
     
-    @commands.command()
+    @commands.command(aliases=["goodmorning"])
     async def gm(self, ctx, member: discord.Member):
         if member == ctx.author:
-            embed = Embed(ctx.author, description=f"{ctx.author} wished themselves a good morning",
-                          url="https://cdn.discordapp.com/emojis/759485870146584586.png?v=1")
+            embed = Embed(ctx.author, description=f"<:hug:984118224507535390> {ctx.author} wished themselves a good morning")
             embed.set_footer(text="Good morning!")
             await embed.user_colour(self.bot)
             await ctx.send(embed=embed)
         else:    
-            embed = Embed(ctx.author, description=f"{ctx.author.mention} blessed {member.mention} with a good morning!",
-                          url="https://cdn.discordapp.com/emojis/759485870146584586.png?7v=1")
+            embed = Embed(ctx.author, description=f"<:hug:984118224507535390> {ctx.author.mention} blessed {member.mention} with a good morning!")
             await embed.user_colour(self.bot)
             await ctx.send(embed=embed)
     
     @commands.command()
     async def bonk(self, ctx, member: discord.Member):
-        embed = Embed(ctx.author, description=f"{member.mention} got bonked")
+        embed = Embed(ctx.author, description=f"<:Bonk:984117093685403690> {member.mention} got bonked")
         await embed.user_colour(self.bot)
         await ctx.send(embed=embed)
     
@@ -107,6 +99,13 @@ class UselessCommands(commands.Cog, name="Useless Commands"):
     async def gg(self, ctx):
         embed = Embed(ctx.author, title="gg",
                       description="<a:RainbowDancin:856584656799137803> You did something! Congrats! ")
+        await embed.user_colour(self.bot)
+        await ctx.send(embed=embed)
+        
+   @commands.command(aliases=["goodluck"])
+    async def gl(self, ctx):
+        embed = Embed(ctx.author, title="Good luck",
+                      description="<:Prayge:900013539048189962> I wish you the best of luck! ")
         await embed.user_colour(self.bot)
         await ctx.send(embed=embed)
         
