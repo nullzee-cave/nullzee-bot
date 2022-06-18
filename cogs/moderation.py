@@ -240,7 +240,7 @@ class Moderation(commands.Cog, name="Moderation"):
         for i, infraction in enumerate(infractions):
             embeds[embed_count].add_field(
                 name=f"{infraction['type']} | ID: {infraction['id']} | {self.bot.get_user(infraction['mod_id'])}",
-                value=f"{infraction['reason']} - "
+                value=f"{infraction['reason'][:800]} - "
                       f"{datetime.datetime.fromtimestamp(infraction['timestamp']).strftime('%d/%m/%Y, %H:%M:%S')}",
                 inline=False)
             if not i % 5 and i != 0:
