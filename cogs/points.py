@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
 from api_key import PREFIX
-from helpers.utils import get_user, Embed, staff_only
+from helpers.utils import get_user, Embed, staff_only, not_in_voice_text
 from perks.perk_system import PerkConverter, perk_list
 from helpers.events import Emitter
 
@@ -39,6 +39,7 @@ class Points(commands.Cog, name="Points"):
 
     @commands.command(aliases=["buy", "redeem", "claim"])
     @commands.guild_only()
+    @not_in_voice_text
     async def purchase(self, ctx, item: PerkConverter, *, arg=None):
         """Redeem something from the shop at the cost of points"""
         user = await get_user(self.bot, ctx.author)

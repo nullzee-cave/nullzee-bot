@@ -22,6 +22,13 @@ def staff_check(ctx):
     return list_one(roles, Role.STAFF, Role.ADMIN)
 
 
+def staff_or_trainee_check(ctx):
+    if not ctx.guild or ctx.guild.id != Misc.GUILD:
+        return False
+    roles = role_ids(ctx.author.roles)
+    return list_one(roles, Role.TRAINEE, Role.STAFF, Role.ADMIN)
+
+
 def event_hoster_staff_check(ctx):
     if not ctx.guild or ctx.guild.id != Misc.GUILD:
         return False
@@ -29,14 +36,17 @@ def event_hoster_staff_check(ctx):
     return list_one(roles, Role.EVENT_HOSTER, Role.STAFF, Role.ADMIN)
 
 
+def not_in_voice_text_check(ctx):
+    return type(ctx.channel) == discord.VoiceChannel
+
+
 staff_only = commands.check(staff_check)
 
-staff_or_trainee = commands.check(
-    lambda ctx: ctx.guild and ctx.guild.id == Misc.GUILD and (
-            Role.ADMIN in (roles := [z.id for z in ctx.author.roles]) or
-            Role.STAFF in roles or Role.TRAINEE in roles))
+staff_or_trainee = commands.check(staff_or_trainee_check)
 
 event_hoster_or_staff = commands.check(event_hoster_staff_check)
+
+not_in_voice_text = commands.check(not_in_voice_text_check)
 
 
 class MemberUserConverter(commands.Converter):
