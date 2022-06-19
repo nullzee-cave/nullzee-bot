@@ -1,14 +1,18 @@
 import asyncio
 import datetime
+import inspect
+import typing
 from functools import wraps
 
 import discord
+from discord import app_commands
 from discord.ext import commands, tasks
 
 import re
 
 from helpers.constants import Channel, Role, Category, Misc
-from helpers.utils import staff_check, Embed, staff_only, get_file_json, save_file_json, MessageOrReplyConverter
+from helpers.utils import staff_check, Embed, get_file_json, MessageOrReplyConverter, MemberUserConverter, role_ids, \
+    list_one
 
 TICKET_TOPIC_REGEX = r"opened by (?P<user>.+#\d{4}) \((?P<user_id>\d+)\) at (?P<time>.+)"
 
@@ -36,6 +40,32 @@ def restrict_ticket_command_usage(ctx: commands.Context, raise_on_false=True):
         raise commands.MissingPermissions(["manage_ticket"])
     else:
         return False
+
+
+def ticket_restriction_for_app_commands(interaction: discord.Interaction, raise_on_false=False):
+    if interaction.channel.category.id != Category.TICKETS:
+        if raise_on_false:
+            raise commands.MissingPermissions(["manage_ticket"])
+        else:
+            return False
+    roles = role_ids(interaction.user.roles)
+    if list_one(roles, Role.STAFF, Role.ADMIN):
+        return True
+    match = re.search(TICKET_TOPIC_REGEX, interaction.channel.topic)
+    if not match:
+        if raise_on_false:
+            raise commands.MissingPermissions(["manage_ticket"])
+        else:
+            return False
+    if str(interaction.user.id) == str(match.group("user_id")):
+        return True
+    if raise_on_false:
+        raise commands.MissingPermissions(["manage_ticket"])
+    else:
+        return False
+
+
+ticket_restriction_check = app_commands.check(ticket_restriction_for_app_commands)
 
 
 def markdown(string):
@@ -402,6 +432,15 @@ class Tickets(commands.Cog, name="Tickets"):
         self.bot.add_view(PersistentTicketView())
         self.add_inner_ticket_views.start()
 
+        self.remove_user_context_menu = discord.app_commands.ContextMenu(
+            name="Remove User",
+            callback=self.remove_user_context_menu_callback,
+        )
+        self.bot.tree.add_command(self.remove_user_context_menu)
+
+    async def cog_unload(self) -> None:
+        self.bot.tree.remove_command(self.remove_user_context_menu.name, type=self.remove_user_context_menu.type)
+
     @tasks.loop(seconds=1)
     async def add_inner_ticket_views(self):
         await self.bot.wait_until_ready()
@@ -456,6 +495,19 @@ class Tickets(commands.Cog, name="Tickets"):
         restrict_ticket_command_usage(ctx)
         message: discord.Message = await MessageOrReplyConverter().convert(ctx, message)
         await message.pin(reason=f"pinned by {ctx.author}")
+
+    @app_commands.guild_only
+    @app_commands.default_permissions(manage_messages=True)
+    @ticket_restriction_check
+    async def remove_user_context_menu_callback(self, interaction: discord.Interaction, member: discord.Member):
+        """Remove a user from a ticket via a context menu"""
+        if list_one(role_ids(member.roles), Role.STAFF, Role.ADMIN):
+            raise app_commands.errors.MissingPermissions(["manage_tickets"])
+        match = re.search(TICKET_TOPIC_REGEX, interaction.channel.topic)
+        if str(member.id) == str(match.group("user_id")):
+            raise app_commands.errors.MissingPermissions(["manage_tickets"])
+        await interaction.channel.set_permissions(member, read_messages=False)
+        await interaction.response.send_message(f"{interaction.user.mention} removed {member.mention} from this ticket")
 
     @commands.command()
     async def unpin(self, ctx: commands.Context, message: str = "none"):

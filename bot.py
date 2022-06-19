@@ -1,5 +1,10 @@
+from typing import Optional, Literal
+
 import discord
+from discord import Object, app_commands
+from discord.app_commands import AppCommandError
 from discord.ext import commands, tasks
+from discord.ext.commands import Greedy
 
 from helpers import constants
 from helpers.colour import Colour
@@ -180,6 +185,15 @@ async def on_command_error(ctx, error):
     print(f"EXCEPTION TRACE PRINT:\n{''.join(traceback.format_exception(type(error), error, error.__traceback__))}")
 
 
+@bot.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: AppCommandError):
+    if isinstance(error, app_commands.errors.CheckFailure):
+        return await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+
+    # Ignore all other exception types, but print them to stderr
+    print(f"EXCEPTION TRACE PRINT:\n{''.join(traceback.format_exception(type(error), error, error.__traceback__))}")
+
+
 @bot.event
 async def on_message(message):
     if not (message.author.bot or staff_check(message)):
@@ -218,6 +232,45 @@ async def channel_command_cooldown(ctx, channel: discord.TextChannel = None, _ti
     cooldowns[channel.id] = _time
     # TODO: make and use an inverse of string_to_seconds() here to make it look nicer
     await ctx.send(f"Set command cooldown for {channel.mention} to {_time:,} seconds")
+
+
+@bot.command()
+@commands.is_owner()
+async def sync(ctx: commands.Context, guilds: Greedy[Object], spec: Optional[Literal["~", "*"]] = None) -> None:
+    """
+    I don't have a clue how this works
+    Umbra's sync command, found with `?tag umbras sync command` in dpy discord
+
+    Works like:
+    -sync -> global sync
+    -sync ~ -> sync current guild
+    -sync * -> copies all global app commands to current guild and syncs
+    -sync id_1 id_2 -> syncs guilds with id 1 and 2
+    """
+    if not guilds:
+        if spec == "~":
+            fmt = await ctx.bot.tree.sync(guild=ctx.guild)
+        elif spec == "*":
+            ctx.bot.tree.copy_global_to(guild=ctx.guild)
+            fmt = await ctx.bot.tree.sync(guild=ctx.guild)
+        else:
+            fmt = await ctx.bot.tree.sync()
+
+        await ctx.send(
+            f"Synced {len(fmt)} commands {'globally' if spec is None else 'to the current guild.'}"
+        )
+        return
+
+    fmt = 0
+    for guild in guilds:
+        try:
+            await ctx.bot.tree.sync(guild=guild)
+        except discord.HTTPException:
+            pass
+        else:
+            fmt += 1
+
+    await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
 
 
 async def restrict_command_usage(ctx):

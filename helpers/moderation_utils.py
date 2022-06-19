@@ -1,6 +1,8 @@
 import re
+from typing import Union
 
 import discord
+from discord.ext import commands
 import datetime
 
 from helpers.utils import get_file_json, Embed
@@ -65,14 +67,17 @@ async def automod_name(bot, user: discord.Member):
             await user.kick(reason="Inappropriate name")
 
 
-async def send_report(ctx, message, reason):
+async def send_report(ctx: Union[commands.Context, discord.Interaction], message, reason):
     embed = discord.Embed(title="New report", colour=discord.Color.red(), url=message.jump_url,
-                          description=f"Reason: {reason}" if reason else "")\
-        .add_field(name="Message Content",
-                   value=f"{message.content[:1900]}{'...' if message.content[:1900] != message.content else ''}",
-                   inline=False)\
-        .add_field(name="Reported By", value=f"{ctx.author.mention} ({ctx.author})", inline=False)\
-        .set_author(name=message.author, icon_url=message.author.avatar)
+                          description=f"Reason: {reason}" if reason else "")
+    embed.add_field(name="Message Content",
+                    value=f"{message.content[:1900]}{'...' if message.content[:1900] != message.content else ''}",
+                    inline=False)
+    if isinstance(ctx, commands.Context):
+        embed.add_field(name="Reported By", value=f"{ctx.author.mention} ({ctx.author})", inline=False)
+    else:
+        embed.add_field(name="Reported By", value=f"{ctx.user.mention} ({ctx.user})", inline=False)
+    embed.set_author(name=message.author, icon_url=message.author.avatar)
     if message.attachments:
         embed.set_image(url=message.attachments[0].url)
     await ctx.guild.get_channel(Channel.REPORTS_APPEALS).send(embed=embed)
