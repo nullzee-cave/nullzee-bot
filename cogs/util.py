@@ -1,10 +1,12 @@
 import math
 
+from discord import app_commands
 from discord.ext import commands, tasks
 from random import randint
 
 from helpers import constants, logic, moderation_utils, utils
 from helpers.constants import Skyblock, Role, Channel, Misc
+from helpers.modals import ShortTextInputModal
 from helpers.utils import min_level, get_user, RoleConverter, staff_check, MemberUserConverter
 import json
 import asyncio
@@ -36,6 +38,12 @@ class Util(commands.Cog, name="Other"):
         self.tags = utils.get_file_json("config/tags")
         self.sub_count = {}
         self.update_sub_count()
+
+        self.report_context_menu = discord.app_commands.ContextMenu(
+            name="Report Message",
+            callback=self.report_context_menu_callback,
+        )
+        self.bot.tree.add_command(self.report_context_menu)
 
     async def toggle_bot_status(self):
         watching = ["discord.gg/nullzee", "twitch.tv/nullzeelive"]
@@ -132,7 +140,7 @@ class Util(commands.Cog, name="Other"):
         except (mathterpreter.MathSyntaxError, OverflowError) as e:
             if isinstance(e, OverflowError):
                 return await ctx.send(f"{ctx.author.mention}, an error occurred! Result too large")
-            await ctx.send(f"{ctx.author.mention}, an error occurred! ```\n{e.reason}\n``` ```\n{e.visualisation}\n```",
+            await ctx.send(f"{ctx.author.mention}, an error occurred! ```\n{e.text}\n``` ```\n{e.visualisation}\n```",
                            allowed_mentions=discord.AllowedMentions(roles=False, users=True, everyone=False))
 
     #    @commands.command(aliases=["color"])
@@ -417,6 +425,18 @@ class Util(commands.Cog, name="Other"):
                 "Your report has been submitted. For any further concerns, do not hesitate to contact a staff member")
         except:
             pass
+
+    @app_commands.guild_only
+    async def report_context_menu_callback(self, interaction: discord.Interaction, message: discord.Message):
+        """Report a message a user has sent via context menu"""
+        modal = ShortTextInputModal(title="Report", label="Reason", placeholder="Reason")
+        await interaction.response.send_modal(modal)
+        await modal.wait()
+        await moderation_utils.send_report(interaction, message, modal.text)
+        await modal.response.send_message(
+            "Your report has been submitted. For any further concerns, do not hesitate to contact a staff member",
+            ephemeral=True
+        )
 
     @commands.command(name="claimroles")
     @commands.cooldown(2, 60, BucketType.user)
