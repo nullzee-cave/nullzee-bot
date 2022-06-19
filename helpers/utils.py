@@ -37,7 +37,7 @@ def event_hoster_staff_check(ctx):
 
 
 def not_in_voice_text_check(ctx):
-    return type(ctx.channel) == discord.VoiceChannel
+    return not isinstance(ctx.channel, discord.VoiceChannel)
 
 
 staff_only = commands.check(staff_check)
