@@ -415,7 +415,7 @@ class Tickets(commands.Cog, name="Tickets"):
 
     @commands.command(name="createticketview", hidden=True)
     @commands.has_role(Role.ADMIN)
-    async def create_ticket_view(self, ctx, channel: discord.TextChannel):
+    async def create_ticket_view(self, ctx, channel: discord.TextChannel = None):
         embed = discord.Embed(
             title="Open a Ticket",
             description="The bot will DM you some questions for you to answer before creating the ticket. "
@@ -427,6 +427,7 @@ class Tickets(commands.Cog, name="Tickets"):
         embed.add_field(name="Ticket Types", value="💰 - Donate for a giveaway\n"
                                                    "🛄 - Claim a giveaway prize\n"
                                                    "❓ - Anything else")
+        channel = ctx.channel if channel is None else channel
         await channel.send(embed=embed, view=PersistentTicketView())
 
     @commands.command(name="adduser")
