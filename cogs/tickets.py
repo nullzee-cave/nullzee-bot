@@ -253,17 +253,6 @@ def can_open_ticket(func):
     return wrapper
 
 
-def add_button_to_inner_callback(func, **kwargs):
-
-    @wraps(func)
-    async def wrapper(*inner_args, **inner_kwargs):
-        if "button" in kwargs:
-            inner_kwargs["button"] = kwargs["button"]
-        await func(*inner_args, **inner_kwargs)
-
-    return wrapper
-
-
 class PersistentTicketView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
