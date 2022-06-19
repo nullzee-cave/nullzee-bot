@@ -1,6 +1,5 @@
 import discord
-from discord.ext import commands
-from discord.ext.commands import CooldownMapping, BucketType
+from discord.ext import commands, tasks
 
 from helpers import constants
 from helpers.colour import Colour
@@ -9,7 +8,7 @@ import time
 import math
 from motor.motor_asyncio import AsyncIOMotorClient
 from api_key import TOKEN, PREFIX, COGS, CONNECTION_STRING
-from helpers.constants import Role, Channel, Misc
+from helpers.constants import Role, Channel, Misc, Category
 from perks.perk_system import PerkError
 import traceback
 from helpers.utils import get_user, staff_only, TimeConverter, ItemNotFound, HelpError, GiveawayError, staff_check
@@ -67,6 +66,8 @@ class DiscordBot(commands.Bot):
 
         self._global_cooldown = None
 
+        self.initialisation_vars = {}
+
     async def setup_hook(self):
         self.cluster = AsyncIOMotorClient(CONNECTION_STRING)
         self.db = self.cluster["nullzee"]
@@ -76,21 +77,32 @@ class DiscordBot(commands.Bot):
 
         self._global_cooldown = _global_cooldown
 
-        for current_cog in self.extensions.copy():
-            await self.unload_extension(current_cog)
-
         print(f"{yellow}Loading the beast: {self.user.name}!{end_colour}\n")
+
         time.sleep(1)
         length = len(COGS)
+
         print_progress_bar(0, length, bar_prefix=f"\nInitializing:                ", suffix="Complete", length=50)
         for i, cog in enumerate(COGS):
             time.sleep(0.3)
             print_progress_bar(i + 1, length, bar_prefix=f"Loading:{' ' * (20 - len(cog))} {cog}",
                                suffix="Complete", length=50)
             await self.load_extension(cog)
+
         print(f"{yellow}\n\nInitializing Bot, Please wait...{end_colour}\n")
+
+        self.is_bot_initialised.start()
+
+    @tasks.loop(seconds=3)
+    async def is_bot_initialised(self):
+        if "cogs.tickets" in COGS and \
+           not ("ticket_inner_views" in self.initialisation_vars and self.initialisation_vars["ticket_inner_views"]):
+            return False
+
         print(f"{green}Cogs loaded... Bot is now ready and waiting for prefix \"{PREFIX}\"{end_colour}")
         print(f"{green}\n√ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √ √  {end_colour}")
+
+        self.is_bot_initialised.stop()
 
 
 bot = DiscordBot(command_prefix=PREFIX, case_insensitive=True, intents=intents)
@@ -229,7 +241,7 @@ async def restrict_command_usage(ctx):
                              ctx.author.roles]) and Role.RETIRED_SUPPORTER in roles or \
                                                     Role.BOOSTER in roles or Role.TWITCH_SUB in roles
     channel_allowed = ctx.channel.id in [Channel.BOT_COMMANDS, Channel.BOT_TEST_CHANNEL] or \
-                      ctx.channel.category.id in [constants.Channel.OPEN_TICKET]
+                      ctx.channel.category.id in [constants.Category.TICKETS]
     command_bypass = ctx.command.name in ["claimroles", "purchase", "report", "sbinfo"]
     cog_bypass = ctx.command.cog.qualified_name in ["Useless Commands"] if ctx.command.cog else False
     return staff_bypass or (not_blacklist and not_on_cooldown and (

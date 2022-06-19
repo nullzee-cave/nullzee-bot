@@ -1,12 +1,13 @@
 import asyncio
 import datetime
+from functools import wraps
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 import re
 
-from helpers.constants import Channel, Role, Category
+from helpers.constants import Channel, Role, Category, Misc
 from helpers.utils import staff_check, Embed, staff_only, get_file_json, save_file_json, MessageOrReplyConverter
 
 TICKET_TOPIC_REGEX = r"opened by (?P<user>.+#\d{4}) \((?P<user_id>\d+)\) at (?P<time>.+)"
@@ -16,7 +17,7 @@ TICKET_TOPIC_REGEX = r"opened by (?P<user>.+#\d{4}) \((?P<user_id>\d+)\) at (?P<
 
 
 def restrict_ticket_command_usage(ctx: commands.Context, raise_on_false=True):
-    if ctx.channel.category.id != Channel.OPEN_TICKET:
+    if ctx.channel.category.id != Category.TICKETS:
         if raise_on_false:
             raise commands.MissingPermissions(["manage_ticket"])
         else:
@@ -222,119 +223,222 @@ ticket_types = {
 }
 
 
+class TicketError(Exception):
+    def __init__(self, msg=None):
+        self.message = msg
+
+
+def can_open_ticket(func):
+
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        interaction = args[1]
+
+        if get_file_json("config")["lockdown"]:
+            return await interaction.response.send_message("Unable to create ticket: **Server in lockdown!**",
+                                                           ephemeral=True)
+
+        owned_ticket_count = 0
+        for c in interaction.guild.get_channel(Category.TICKETS).channels:
+            if isinstance(c, discord.TextChannel):
+                if c.topic is not None:
+                    if str(interaction.user.id) in c.topic:
+                        owned_ticket_count += 1
+                        if owned_ticket_count >= 3:
+                            return await interaction.response.send_message(
+                                "Unable to create ticket: **Too many tickets!**", ephemeral=True)
+
+        await func(*args, **kwargs)
+
+    return wrapper
+
+
+def add_button_to_inner_callback(func, **kwargs):
+
+    @wraps(func)
+    async def wrapper(*inner_args, **inner_kwargs):
+        if "button" in kwargs:
+            inner_kwargs["button"] = kwargs["button"]
+        await func(*inner_args, **inner_kwargs)
+
+    return wrapper
+
+
+class PersistentTicketView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @can_open_ticket
+    @discord.ui.button(label="Donate", emoji="💰", style=discord.ButtonStyle.green, custom_id="ticket_view:donate")
+    async def ticket_donate(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.user.send("Ticket Creation - `Giveaway Donation`")
+            await interaction.response.defer()
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                "I couldn't DM you! Check you have DMs from this server enabled and try again.",
+                ephemeral=True
+            )
+        await ask_ticket_questions(interaction, button)
+
+    @can_open_ticket
+    @discord.ui.button(label="Claim", emoji="🛄", style=discord.ButtonStyle.blurple, custom_id="ticket_view:claim")
+    async def ticket_claim(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.user.send("Ticket Creation - `Giveaway Claim`")
+            await interaction.response.defer()
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                "I couldn't DM you! Check you have DMs from this server enabled and try again",
+                ephemeral=True
+            )
+        await ask_ticket_questions(interaction, button)
+
+    @can_open_ticket
+    @discord.ui.button(label="Other", emoji="❓", style=discord.ButtonStyle.grey, custom_id="ticket_view:other")
+    async def ticket_other(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.user.send("Ticket Creation - `Other`")
+            await interaction.response.defer()
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                "I couldn't DM you! Ensure you have DMs from this server enabled and try again",
+                ephemeral=True
+            )
+        await ask_ticket_questions(interaction, button)
+
+
+class PersistentInnerTicketView(discord.ui.View):
+    def __init__(self, channel_id: int):
+        self.channel_id = channel_id
+
+        self.close_button = discord.ui.button(
+            label="Close",
+            style=discord.ButtonStyle.red,
+            custom_id=f"inner_ticket_view:{channel_id}:close"
+        )(PersistentInnerTicketView.ticket_close)
+
+        super().__init_subclass__()
+        super().__init__(timeout=None)
+
+    async def ticket_close(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        with open(f"transcripts/{interaction.channel.name}.html", "w", encoding="utf-8") as f:
+            f.write(transcribe(reversed([z async for z in interaction.channel.history(limit=500)])))
+        user = re.search(TICKET_TOPIC_REGEX, interaction.channel.topic)
+        user = int(user.group("user_id"))
+        try:
+            user = self.bot.get_user(user)
+            if user.id != interaction.user.id:
+                await user.send(f"Your ticket has been closed\nReason: `None`")
+        except (discord.Forbidden, discord.NotFound, AttributeError):
+            pass
+        await interaction.channel.delete()
+        embed = Embed(interaction.user, colour=0xff0000, title="Ticket closed",
+                      description=f"{interaction.channel.name}\nReason: None")
+        embed.auto_author()
+        log_channel = interaction.guild.get_channel(Channel.MOD_LOGS)
+        await log_channel.send(embed=embed,
+                               file=discord.File(f"transcripts/{interaction.channel.name}.html", "transcript.html"))
+
+
+async def ask_ticket_questions(interaction: discord.Interaction, button: discord.ui.Button):
+    embed = discord.Embed(title=ticket_types[str(button.emoji)]["name"], colour=discord.Colour.green(),
+                          description="**Commands:**\n"
+                                      "`-close [reason]` : close the ticket\n"
+                                      "`-adduser [user]` : add someone else to the ticket\n"
+                                      "`-removeuser [user]` : remove someone else from the ticket")
+    embed.set_author(name=interaction.user, icon_url=interaction.user.avatar)
+    images = []
+    for question in ticket_types[str(button.emoji)]["questions"]:
+        try:
+            msg = await interaction.user.send(question)
+        except discord.Forbidden:
+            return
+        try:
+            message = await interaction.client.wait_for(
+                "message",
+                check=lambda m: m.channel.id == msg.channel.id and m.author.id == interaction.user.id,
+                timeout=300.0)
+            if message.attachments is not None:
+                for attachment in message.attachments:
+                    images.append(attachment.url)
+            embed.add_field(name=question,
+                            value=message.content if message.content else "`None`",
+                            inline=False)
+        except asyncio.TimeoutError:
+            try:
+                return await interaction.user.send("Ticket creation timed out")
+            except discord.Forbidden:
+                return
+    if images:
+        embed.set_image(url=images[0])
+    channel: discord.TextChannel = await interaction.guild.create_text_channel(
+        f"{interaction.user.name}-{interaction.user.discriminator}",
+        category=interaction.guild.get_channel(Category.TICKETS),
+        topic=f"opened by {interaction.user} ({interaction.user.id}) at "
+              f"{datetime.datetime.now().strftime('%d/%m/%y %H:%M')}",
+        overwrites={
+            interaction.guild.default_role: discord.PermissionOverwrite(
+                read_messages=False),
+            interaction.guild.get_role(
+                Role.STAFF): discord.PermissionOverwrite(
+                read_messages=True,
+                send_messages=True),
+            interaction.guild.get_role(
+                Role.TRAINEE): discord.PermissionOverwrite(
+                read_messages=True,
+                send_messages=True),
+            interaction.user: discord.PermissionOverwrite(
+                read_messages=True,
+                send_messages=True)
+        })
+    start = await channel.send(f"<@&{Role.TICKET_PING}> {interaction.user.mention}",
+                               embed=embed, view=PersistentInnerTicketView(channel.id))
+    await start.pin()
+    await interaction.user.send(f"Ticket created! {start.jump_url}")
+    embed = Embed(interaction.user, colour=0x00ff00, title="Ticket opened",
+                  description=f"{channel.name}\nReason: {ticket_types[str(button.emoji)]['name']}")
+    embed.auto_author()
+    log_channel = interaction.guild.get_channel(Channel.MOD_LOGS)
+    await log_channel.send(embed=embed)
+
+
 class Tickets(commands.Cog, name="Tickets"):
     """The ticket system, and all related commands"""
 
     def __init__(self, bot):
         self.hidden = False
         self.bot = bot
-        self.message_ids = []
-        self.load_message_ids()
+        self.bot.add_view(PersistentTicketView())
+        self.add_inner_ticket_views.start()
 
-    def load_message_ids(self):
-        self.message_ids = get_file_json("config")["ticket_messages"]
+    @tasks.loop(seconds=1)
+    async def add_inner_ticket_views(self):
+        await self.bot.wait_until_ready()
+        for channel in self.bot.get_guild(Misc.GUILD).get_channel(Category.TICKETS).channels:
+            if isinstance(channel, discord.TextChannel) and channel.id != Channel.OPEN_TICKET:
+                view_message = (await channel.pins())[-1]
+                if view_message.components:
+                    self.bot.add_view(PersistentInnerTicketView(channel.id))
+        self.bot.initialisation_vars["ticket_inner_views"] = True
+        self.add_inner_ticket_views.stop()
 
-    @commands.command(name="addticketmessage", hidden=True)
-    @staff_only
-    async def add_ticket_message(self, ctx, message: discord.Message):
-        """Add a message that should trigger ticket creation"""
-        config = get_file_json("config")
-        config["ticket_messages"].append(message.id)
-        save_file_json(config, "config")
-        self.load_message_ids()
-        await ctx.send("Successfully added message")
-
-    @commands.command(name="removeticketmessage", hidden=True)
-    @staff_only
-    async def remove_ticket_message(self, ctx, message: discord.Message):
-        """Remove a message from those that can trigger ticket creation"""
-        config = get_file_json("config")
-        config["ticket_messages"].remove(message.id)
-        save_file_json(config, "config")
-        self.load_message_ids()
-        await ctx.send("Successfully removed message")
-
-    @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
-        if payload.message_id not in self.message_ids:
-            return
-        if str(payload.emoji) in ticket_types:
-            guild = self.bot.get_guild(payload.guild_id)
-            msg = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
-            await msg.remove_reaction(payload.emoji, payload.member)
-            in_lockdown = get_file_json("config")["lockdown"]
-            if in_lockdown:
-                return await payload.member.send("Unable to create ticket: `Server in lockdown!`")
-            cat: discord.CategoryChannel = guild.get_channel(Category.TICKETS)
-            owned_ticket_count = 0
-            for c in cat.channels:
-                if isinstance(c, discord.TextChannel):
-                    if c.topic is not None:
-                        if str(payload.member.id) in c.topic:
-                            owned_ticket_count += 1
-                            if owned_ticket_count >= 3:
-                                try:
-                                    return await payload.member.send("You have too many open tickets!")
-                                except discord.Forbidden:
-                                    return
-            embed = discord.Embed(title=ticket_types[str(payload.emoji)]["name"], colour=discord.Colour.green(),
-                                  description="**Commands:**\n"
-                                              "`-close [reason]` : close the ticket\n"
-                                              "`-adduser [user]` : add someone else to the ticket\n"
-                                              "`-removeuser [user]` : remove someone else from the ticket")
-            embed.set_author(name=payload.member, icon_url=payload.member.avatar)
-            images = []
-            for question in ticket_types[str(payload.emoji)]["questions"]:
-                try:
-                    msg = await payload.member.send(question)
-                except discord.Forbidden:
-                    return
-                try:
-                    message = await self.bot.wait_for("message",
-                                                      check=lambda m: m.channel.id == msg.channel.id and
-                                                                      m.author.id == payload.member.id,
-                                                      timeout=300.0)
-                    if message.attachments is not None:
-                        for attachment in message.attachments:
-                            images.append(attachment.url)
-                    embed.add_field(name=question,
-                                    value=message.content if message.content else "`None`",
-                                    inline=False)
-                except asyncio.TimeoutError:
-                    try:
-                        return await payload.member.send("Ticket creation timed out")
-                    except discord.Forbidden:
-                        return
-            if images:
-                embed.set_image(url=images[0])
-            channel: discord.TextChannel = await guild.create_text_channel(
-                f"{payload.member.name}-{payload.member.discriminator}",
-                category=guild.get_channel(Channel.OPEN_TICKET),
-                topic=f"opened by {payload.member} ({payload.member.id}) at "
-                      f"{datetime.datetime.now().strftime('%d/%m/%y %H:%M')}",
-                overwrites={
-                    guild.default_role: discord.PermissionOverwrite(
-                        read_messages=False),
-                    guild.get_role(
-                        Role.STAFF): discord.PermissionOverwrite(
-                        read_messages=True,
-                        send_messages=True),
-                    guild.get_role(
-                        Role.TRAINEE): discord.PermissionOverwrite(
-                        read_messages=True,
-                        send_messages=True),
-                    payload.member: discord.PermissionOverwrite(
-                        read_messages=True,
-                        send_messages=True)
-                })
-            start = await channel.send(f"<@&{Role.TICKET_PING}> {payload.member.mention}", embed=embed)
-            await start.pin()
-            await payload.member.send(f"Ticket created! {start.jump_url}")
-            embed = Embed(payload.member, colour=0x00ff00, title="Ticket opened",
-                          description=f"{channel.name}\nReason: {ticket_types[str(payload.emoji)]['name']}")
-            embed.auto_author()
-            log_channel = guild.get_channel(Channel.MOD_LOGS)
-            await log_channel.send(embed=embed)
+    @commands.command(name="createticketview", hidden=True)
+    @commands.has_role(Role.ADMIN)
+    async def create_ticket_view(self, ctx, channel: discord.TextChannel):
+        embed = discord.Embed(
+            title="Open a Ticket",
+            description="The bot will DM you some questions for you to answer before creating the ticket. "
+                        "If you wish to cancel ticket creation, simply ignore the messages and it will time out. "
+                        "Please answer all DM questions as fully as possible. If donating for a giveaway, "
+                        f"please check <#{Channel.GIVEAWAY_INFO}> to make sure it is allowed.",
+            colour=discord.Colour.blurple()
+        )
+        embed.add_field(name="Ticket Types", value="💰 - Donate for a giveaway\n"
+                                                   "🛄 - Claim a giveaway prize\n"
+                                                   "❓ - Anything else")
+        await channel.send(embed=embed, view=PersistentTicketView())
 
     @commands.command(name="adduser")
     async def add_user(self, ctx: commands.Context, *, member: discord.Member):
@@ -368,6 +472,8 @@ class Tickets(commands.Cog, name="Tickets"):
         """Unpin a message in a ticket"""
         restrict_ticket_command_usage(ctx)
         message: discord.Message = await MessageOrReplyConverter().convert(ctx, message)
+        if message.id == (await ctx.pins())[-1].id:
+            return await ctx.send("You cannot unpin that message")
         await message.unpin(reason=f"unpinned by {ctx.author}")
         await ctx.send("Unpinned!")
 
