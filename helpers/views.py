@@ -79,7 +79,7 @@ class PersistentTicketView(discord.ui.View):
                     send_messages=True)
             })
 
-        start = await channel.send(f"<@&> {modal.interaction.user.mention}",
+        start = await channel.send(f"<@&{Role.TICKET_PING}> {modal.interaction.user.mention}",
                                    embed=embed, view=PersistentInnerTicketView(channel.id))
         await start.pin()
         await modal.interaction.response.send_message(f"Ticket created! {start.jump_url}", ephemeral=True)
