@@ -130,13 +130,6 @@ class Tickets(commands.Cog, name="Tickets"):
         await ctx.channel.set_permissions(member, read_messages=False)
         await ctx.send(string)
 
-    @commands.command()
-    async def pin(self, ctx: commands.Context, message: str = "none"):
-        """Pin a message in a ticket"""
-        restrict_ticket_command_usage(ctx)
-        message: discord.Message = await MessageOrReplyConverter().convert(ctx, message)
-        await message.pin(reason=f"pinned by {ctx.author}")
-
     @app_commands.guild_only
     @app_commands.default_permissions(manage_messages=True)
     @ticket_restriction_check
@@ -149,6 +142,13 @@ class Tickets(commands.Cog, name="Tickets"):
             raise app_commands.errors.MissingPermissions(["manage_tickets"])
         await interaction.channel.set_permissions(member, read_messages=False)
         await interaction.response.send_message(f"{interaction.user.mention} removed {member.mention} from this ticket")
+
+    @commands.command()
+    async def pin(self, ctx: commands.Context, message: str = "none"):
+        """Pin a message in a ticket"""
+        restrict_ticket_command_usage(ctx)
+        message: discord.Message = await MessageOrReplyConverter().convert(ctx, message)
+        await message.pin(reason=f"pinned by {ctx.author}")
 
     @commands.command()
     async def unpin(self, ctx: commands.Context, message: str = "none"):
