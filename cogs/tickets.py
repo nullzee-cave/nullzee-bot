@@ -1,3 +1,4 @@
+import chat_exporter
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
@@ -163,8 +164,16 @@ class Tickets(commands.Cog, name="Tickets"):
     async def close(self, ctx, *, reason: str = None):
         """Close a ticket"""
         restrict_ticket_command_usage(ctx)
-        with open(f"transcripts/{ctx.channel.name}.html", "w", encoding="utf-8") as f:
-            f.write(transcribe(reversed([z async for z in ctx.channel.history(limit=500)])))
+        messages = [*reversed([z async for z in ctx.channel.history()])]
+        html = "<!--\n"
+        for message in messages:
+            html += f"{message.author} | {message.created_at.strftime('%d/%m/%y %H:%M')}: {message.content}\n"
+        html += "\n-->\n\n"
+        transcript = await chat_exporter.export(ctx.channel, military_time=True, bot=ctx.bot)
+        html += transcript
+        with open(f"transcripts/{ctx.channel.name}.html",
+                  "w", encoding="utf-8") as f:
+            f.write(html)
         user = re.search(TICKET_TOPIC_REGEX, ctx.channel.topic)
         user = int(user.group("user_id"))
         try:
