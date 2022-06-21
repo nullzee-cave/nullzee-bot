@@ -45,6 +45,9 @@ class Util(commands.Cog, name="Other"):
         )
         self.bot.tree.add_command(self.report_context_menu)
 
+    async def cog_unload(self) -> None:
+        self.bot.tree.remove_command(self.report_context_menu.name, type=self.report_context_menu.type)
+
     async def toggle_bot_status(self):
         watching = ["discord.gg/nullzee", "twitch.tv/nullzeelive"]
         playing = ["with -help", "with Nullzee", "Hypixel Skyblock"]
