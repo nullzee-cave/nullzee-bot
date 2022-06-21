@@ -1,5 +1,6 @@
 import typing
 
+from discord import app_commands
 from discord.ext import commands, tasks
 import json
 import asyncio
@@ -30,8 +31,15 @@ class Levelling(commands.Cog, name="Levelling"):
         self.check_level_one_role.start()
         self.auto_reset_weekly.start()
 
-    def cog_unload(self):
+        self.level_context_menu = discord.app_commands.ContextMenu(
+            name="User Level",
+            callback=self.level_context_menu_callback,
+        )
+        self.bot.tree.add_command(self.level_context_menu)
+
+    async def cog_unload(self) -> None:
         self.vc_tracker.cancel()
+        self.bot.tree.remove_command(self.level_context_menu.name, type=self.level_context_menu.type)
 
     @tasks.loop(minutes=1)
     async def vc_tracker(self):
@@ -272,6 +280,29 @@ class Levelling(commands.Cog, name="Levelling"):
         await embed.user_colour(self.bot)
         embed.set_author(name=user, icon_url=user.avatar)
         await ctx.send(embed=embed)
+
+    @app_commands.guild_only
+    async def level_context_menu_callback(self, interaction: discord.Interaction, user: typing.Union[discord.Member, discord.User]):
+        """View your or the mentioned user's level via context menu"""
+        if not user:
+            user = interaction.user
+        await interaction.response.defer()
+        user_data = await self.bot.user_coll.find_one({"_id": str(user.id)})
+        if not user_data:
+            return await interaction.followup.send("This user has no level")
+        string = f"XP: {round(user_data['experience']):,}/{round(50 * (round(user_data['level']) ** 1.5)):,}"
+        string += f"\nWeekly XP: {round(user_data['weekly']):,}"
+        string += f"\nPoints: {user_data['points']:,}"
+        string += f"\nTotal XP: {(sum([round(50 * z ** 1.5) for z in range(1, user_data['level'])]) + user_data['experience']):,}"
+        string += f"\nMinutes in VC: {user_data['vc_minutes']:,}"
+
+        embed = Embed(user,
+                      title=f"Level: {str(round(user_data['level']))}",
+                      url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley",
+                      description=string)
+        await embed.user_colour(self.bot)
+        embed.set_author(name=user, icon_url=user.avatar)
+        await interaction.followup.send(embed=embed)
 
     @commands.command(name="hffl", aliases=["howfarfromlevel"])
     async def how_far_from_level(self, ctx, wanted_level: int = None):
