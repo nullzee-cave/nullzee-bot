@@ -1,4 +1,4 @@
-# Nullzee's Slave Bot
+# Nullzee's Cave Bot
 
 The discord bot found in [Nullzee's Cave](https://discord.com/invite/nullzee).
 
@@ -30,3 +30,4 @@ If you are adding new features which have not been discussed, or you are unsure 
 - When discord add dropdowns to modals make a staff application command
 - [This](https://canary.discord.com/channels/667953033929293855/708924416028966922/981643060838543410)
 - a `-threadinfo` command
+- more context menus!
