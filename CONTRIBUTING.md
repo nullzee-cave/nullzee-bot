@@ -6,7 +6,7 @@ Below are the guidelines for contributing.
 
 ### Getting Started
 
-The [README](./README.md) is always a good place to check first, it contains a TODO list of everything that currently *needs* doing for the bot.
+The [README](https://github.com/nullzee-cave/nullzee-bot/projects?type=beta) is always a good place to check first, it contains a TODO list of everything that currently *needs* doing for the bot.
 Please try to avoid asking questions in the issues page, use the [discussions](https://github.com/nullzee-cave/nullzee-bot/discussions) page instead.
 
 ### Issues
