@@ -124,7 +124,6 @@ class Channel(metaclass=Constant):
     MEMES = 683390490707492932
     WEEB_ZONE = 729686172498001930
     SELF_PROMO = 667960498448367668
-    TEXTURE_PACK = 843171845510529024
     QOTD_ANSWERS = 749631176431370260
     STAFF_ANNOUNCEMENTS = 709820460162089061
     STAFF_CHAT = 668723004213166080
@@ -157,7 +156,6 @@ class Channel(metaclass=Constant):
             cls.MUSIC,
             cls.FOOD,
             cls.MEMES,
-            cls.TEXTURE_PACK,
 
             cls.QOTD_ANSWERS,
 
