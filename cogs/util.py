@@ -16,7 +16,7 @@ import requests
 import random
 from discord.ext.commands.cooldowns import BucketType
 import time
-from api_key import HYPIXEL_API_KEY, DEV_ID
+from api_key import HYPIXEL_API_KEY, DEV_ID, YT_API_KEY
 from helpers.utils import Embed, strfdelta, staff_only, HelpConverter
 import mathterpreter
 
@@ -61,7 +61,7 @@ class Util(commands.Cog, name="Other"):
     def update_sub_count(self):
         if time.time() - self.last_update > 600:
             self.sub_count = requests.get(
-                "https://www.googleapis.com/youtube/v3/channels?part=statistics&id=UCvltzrCoxXIlmqG2VUvV1WA&key=YT_API_KEY"
+                f"https://www.googleapis.com/youtube/v3/channels?part=statistics&id=UCvltzrCoxXIlmqG2VUvV1WA&key={YT_API_KEY}"
             ).json()["items"][0]["statistics"]
             self.last_update = time.time()
 
