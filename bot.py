@@ -13,7 +13,7 @@ import time
 import math
 from motor.motor_asyncio import AsyncIOMotorClient
 from api_key import TOKEN, PREFIX, COGS, CONNECTION_STRING
-from helpers.constants import Role, Channel, Misc, Category
+from helpers.constants import Role, Channel, Misc
 from perks.perk_system import PerkError
 import traceback
 from helpers.utils import get_user, staff_only, TimeConverter, ItemNotFound, HelpError, GiveawayError, staff_check
