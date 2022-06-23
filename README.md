@@ -21,7 +21,6 @@ If you are adding new features which have not been discussed, or you are unsure 
 3. Do the TODOs in this project
 4. Rewrite the level roles system because it's terrible
 5. Improve `mass_ban` to cut after a full line instead of halfway through
-6. Update `server_info`
 7. Add error checks for `maths` command for errors such as Overflow
 
 - Add descriptions to achievements without any
