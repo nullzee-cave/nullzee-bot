@@ -30,5 +30,4 @@ If you are adding new features which have not been discussed, or you are unsure 
 - Work on the dashboard
 - When discord add dropdowns to modals make a staff application command
 - [This](https://canary.discord.com/channels/667953033929293855/708924416028966922/981643060838543410)
-- a `-threadinfo` command
 - more context menus!

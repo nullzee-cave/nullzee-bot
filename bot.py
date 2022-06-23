@@ -1,5 +1,3 @@
-from typing import Optional, Literal
-
 import discord
 from discord import Object, app_commands
 from discord.app_commands import AppCommandError
@@ -9,6 +7,8 @@ from discord.ext.commands import Greedy
 from helpers import constants
 from helpers.colour import Colour
 from datetime import datetime
+from logging import FileHandler
+from typing import Optional, Literal
 import time
 import math
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -21,6 +21,11 @@ from helpers.utils import get_user, staff_only, TimeConverter, ItemNotFound, Hel
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
+
+with open("logs/discord.log", "r") as log, open("logs/discord-prev.log", "w") as prev:
+    prev.write(log.read())
+
+log_handler = FileHandler(filename="logs/discord.log", encoding="utf-8", mode="w")
 
 
 def fmt_time():
@@ -256,9 +261,7 @@ async def sync(ctx: commands.Context, guilds: Greedy[Object], spec: Optional[Lit
         else:
             fmt = await ctx.bot.tree.sync()
 
-        await ctx.send(
-            f"Synced {len(fmt)} commands {'globally' if spec is None else 'to the current guild.'}"
-        )
+        await ctx.send(f"Synced {len(fmt)} commands {'globally' if spec is None else 'to the current guild.'}")
         return
 
     fmt = 0
@@ -302,4 +305,4 @@ async def restrict_command_usage(ctx):
 
 bot.add_check(restrict_command_usage)
 
-bot.run(TOKEN)
+bot.run(TOKEN, log_handler=log_handler)
