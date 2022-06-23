@@ -154,11 +154,34 @@ class Util(commands.Cog, name="Other"):
     #        except TypeError:
     #            raise commands.BadArgument()
 
+    @commands.command(name="threadinfo")
+    async def thread_info(self, ctx, channel: discord.Thread = None):
+        """View some information about the current thread"""
+        if channel is None:
+            if isinstance(ctx.channel, discord.Thread):
+                channel = ctx.channel
+            else:
+                raise commands.UserInputError()
+        embed = await Embed(ctx.author, title="Thread Info", description=channel.mention).user_colour(self.bot)
+        thread_creator = ctx.guild.get_member(channel.owner_id)
+        embed.add_field(name="Creator:", value=f"{thread_creator.mention} ({thread_creator})", inline=False)
+        embed.add_field(name="Members:", value=channel.member_count if channel.member_count < 50 else "50+",
+                        inline=False)
+        embed.add_field(name="Parent:", value=channel.parent.mention, inline=False)
+        if channel.created_at is not None:
+            embed.add_field(name="Created:",
+                            value=f"<t:{(channel.created_at.timestamp()):.0f}:f> (<t:{(channel.created_at.timestamp()):.0f}:R>)",
+                            inline=False)
+        else:
+            embed.add_field(name="Created:", value=f"Before 9 January 2022", inline=False)
+        embed.set_footer(text=f"ID: {channel.id}")
+        await ctx.send(embed=embed)
+
     @commands.command(name="serverinfo")
     async def server_info(self, ctx):
         """View some information about the server"""
-        embed = await Embed(ctx.author).user_colour(self.bot)
-        embed.add_field(name="Owner:", value=f"{ctx.guild.owner}", inline=False)
+        embed = await Embed(ctx.author, description=ctx.guild.description).user_colour(self.bot)
+        embed.add_field(name="Owner:", value=f"{ctx.guild.owner.mention} ({ctx.guild.owner})", inline=False)
         embed.add_field(name="Members:", value=ctx.guild.member_count, inline=True)
         embed.add_field(name="Roles:", value=len(ctx.guild.roles) - 1, inline=True)
         bots = 0

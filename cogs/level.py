@@ -77,7 +77,7 @@ class Levelling(commands.Cog, name="Levelling"):
     @tasks.loop(minutes=1)
     async def auto_reset_weekly(self):
         current_time = discord.utils.utcnow()
-        if current_time.time() == datetime.time(0, 0):
+        if current_time.hour == 0 and current_time.minute == 0:
             print("it is midnight on day", current_time.weekday())
         # if current_time.weekday() == 0 and current_time.time() == datetime.time(0, 0):
             # guild = self.bot.get_guild(Misc.GUILD)

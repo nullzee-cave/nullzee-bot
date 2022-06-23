@@ -16,3 +16,5 @@ image_cache/
 transcripts/
 transcript.html
 *.swp
+logs/discord.log
+logs/discord-prev.log
