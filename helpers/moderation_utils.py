@@ -70,9 +70,10 @@ async def automod_name(bot, user: discord.Member):
 async def send_report(ctx: Union[commands.Context, discord.Interaction], message, reason):
     embed = discord.Embed(title="New report", colour=discord.Color.red(), url=message.jump_url,
                           description=f"Reason: {reason}" if reason else "")
-    embed.add_field(name="Message Content",
-                    value=f"{message.content[:1900]}{'...' if message.content[:1900] != message.content else ''}",
-                    inline=False)
+    if message.content:
+        embed.add_field(name="Message Content",
+                        value=f"{message.content[:1900]}{'...' if message.content[:1900] != message.content else ''}",
+                        inline=False)
     if isinstance(ctx, commands.Context):
         embed.add_field(name="Reported By", value=f"{ctx.author.mention} ({ctx.author})", inline=False)
     else:
