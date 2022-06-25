@@ -91,7 +91,7 @@ async def warn_punishments(ctx, user):
     punishment = config["punishForWarns"][str(score)] if str(score) in config["punishForWarns"] else None
     if not punishment:
         if int(list(config["punishForWarns"].keys())[-1]) < score:
-            await ctx.invoke(ctx.bot.get_command("ban"), user, 31536000, reason="maximum warning limit exceeded")
+            await ctx.invoke(ctx.bot.get_command("ban"), user, 31536000, reason="Maximum Warning Limit Exceeded")
         return
     ctx.author = ctx.guild.me
     cmd = ctx.bot.get_command(punishment["type"].lower())
