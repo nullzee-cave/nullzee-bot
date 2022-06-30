@@ -51,7 +51,7 @@ def print_progress_bar(iteration, total, bar_prefix="", suffix="", decimals=1, l
     filled_length = int(length * iteration // total)
     bar = fill * filled_length + "-" * (length - filled_length)
     if iteration == total:
-        print(f"\r{purple}Loading Complete:             |{bar}| {percent}% {suffix}{end_colour}", end="\n")
+        print(f"\r{purple}Loading Complete:             |{bar}| {percent}% {suffix}{end_colour} ", end="\n")
     elif iteration in [0, 1]:
         print(f"\r{purple}{bar_prefix} |{bar}| {percent}%   {suffix}{end_colour}", end=print_end)
     else:
