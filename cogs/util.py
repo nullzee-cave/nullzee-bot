@@ -138,6 +138,8 @@ class Util(commands.Cog, name="Other"):
     @commands.command(aliases=["calc", "math", "m"])
     async def maths(self, ctx, *, expr: str):
         """Get the bot to do your maths homework for you"""
+        await ctx.send(f"{ctx.author.mention}, this command is temporarily disabled! Sorry for the inconvenience!")
+        return
         try:
             await ctx.send(f"{ctx.author.mention}: ```\n{mathterpreter.interpret(expr)}\n```")
         except (mathterpreter.MathSyntaxError, OverflowError) as e:
