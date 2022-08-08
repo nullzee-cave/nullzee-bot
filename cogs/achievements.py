@@ -49,7 +49,7 @@ def generate_static_pages():
 async def get_inventory(ctx, user, inv, name):
     user_data = await get_user(ctx.bot, user)
     bgs = user_data["achievement_inventory"][inv]
-    return await Embed(ctx.bot, user, title=f"Your {name} inventory", description="\n".join(bgs)).user_colour(ctx.bot)
+    return await Embed(user, title=f"Your {name} inventory", description="\n".join(bgs)).user_colour(ctx.bot)
 
 
 async def get_bg_inv(ctx, user):

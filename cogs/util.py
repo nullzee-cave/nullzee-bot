@@ -353,7 +353,7 @@ class Util(commands.Cog, name="Other"):
         """Pings the bot to show latency"""
         embed = discord.Embed(title="Pong!", description=f"That took {round(100 * self.bot.latency)} ms",
                               color=0x00FF00)
-        embed.set_thumbnail(url="https://i.gifer.com/fyMe.gif")
+        embed.set_thumbnail(url="https://i.imgur.com/qbyZc2j.gif")
         await ctx.send(embed=embed)
         # await ctx.message.delete()
 
