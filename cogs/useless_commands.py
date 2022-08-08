@@ -8,7 +8,7 @@ class UselessCommands(commands.Cog, name="Useless Commands"):
 
     def __init__(self, bot, hidden):
         self.bot = bot
-        self.hidden = hidden 
+        self.hidden = hidden
         
     @commands.command()
     async def smh(self, ctx):
