@@ -28,7 +28,7 @@ async def embed_colour(ctx, arg):
     if not (len(arg.replace("#", "")) == 6):
         raise PerkError(embed=discord.Embed(title="Error!", description="please specify a valid hex code",
                                             color=discord.Color.red()))
-    await get_user(ctx.author)
+    await get_user(ctx.bot, ctx.author)
     await ctx.bot.user_coll.update_one({"_id": str(ctx.author.id)}, {"$set": {"embed_colour": arg.replace("#", "")}})
 
 
