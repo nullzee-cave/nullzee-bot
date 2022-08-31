@@ -1,3 +1,6 @@
+import logging
+import traceback
+
 import discord
 
 
@@ -36,6 +39,10 @@ class TicketQuestionsModal(discord.ui.Modal):
                 self.responses.append(child.value)
         self.interaction = interaction
         self.stop()
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
+        await interaction.response.send_message("Oops! Something went wrong.", ephemeral=True)
+        logging.log(logging.ERROR, traceback.format_exception(type(error), error, error.__traceback__))
 
 
 class ShortTextInputModal(discord.ui.Modal):
