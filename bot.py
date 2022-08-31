@@ -139,6 +139,7 @@ async def on_command_error(ctx, error):
             fmt = " and ".join(missing)
         _message = "I need the **{}** permission(s) to run this command.".format(fmt)
         return await ctx.send(_message)
+
     if isinstance(error, commands.MissingRole) or isinstance(error, commands.MissingAnyRole):
         if isinstance(error, commands.MissingAnyRole):
             roles = error.missing_roles

@@ -79,26 +79,23 @@ class Levelling(commands.Cog, name="Levelling"):
         current_time = discord.utils.utcnow()
         if current_time.hour == 0 and current_time.minute == 0:
             print("it is midnight on day", current_time.weekday())
-        # if current_time.weekday() == 0 and current_time.time() == datetime.time(0, 0):
-            # guild = self.bot.get_guild(Misc.GUILD)
-            # lb_channel = guild.get_channel(Channel.WEEKLY_LEADERBOARDS)
-            # async with lb_channel.typing():
-            #     embeds = leaderboard_pages(self.bot, guild,
-            #                                [z async for z in self.bot.user_coll.find(
-            #                                    {}).sort("weekly", pymongo.DESCENDING)],
-            #                                key="weekly", suffix=" XP")
-            #     await lb_channel.send(embed=embeds[0])
-            # with open("users.json") as f:
-            #     users = json.load(f)
-            # async for user in self.bot.user_coll.find({}):
-            #     users[str(user["_id"])] = user
-            # # if (math.trunc(time.time()) + 604800) > users["config"]["week_start"]:
-            # with open(f"backups/auto-weekly/{datetime.datetime.now().strftime('%d%m%y')}.json", "w") as f:
-            #     json.dump(users, f)
-            # await self.bot.user_coll.update_many({}, {"$set": {"weekly": 0}})
-            # # users["config"]["week_start"] = math.trunc(time.time())
-            # with open("users.json", "w") as f:
-            #     json.dump(users, f)
+        if current_time.weekday() == 0 and current_time.hour == 0 and current_time.minute == 0:
+            print("resetting weekly")
+            guild = self.bot.get_guild(Misc.GUILD)
+            lb_channel = guild.get_channel(Channel.WEEKLY_LEADERBOARDS)
+            async with lb_channel.typing():
+                embeds = leaderboard_pages(self.bot, guild,
+                                           [z async for z in self.bot.user_coll.find(
+                                               {}).sort("weekly", pymongo.DESCENDING)],
+                                           key="weekly", suffix=" XP")
+                await lb_channel.send(embed=embeds[0])
+            users = get_file_json("users")
+            async for user in self.bot.user_coll.find({}):
+                users[str(user["_id"])] = user
+            with open(f"backups/auto-weekly/{datetime.datetime.now().strftime('%d%m%y')}.json", "w") as f:
+                json.dump(users, f)
+            await self.bot.user_coll.update_many({}, {"$set": {"weekly": 0}})
+            save_file_json(users, "users")
 
     @auto_reset_weekly.before_loop
     async def before_auto_reset_weekly(self):
@@ -108,7 +105,7 @@ class Levelling(commands.Cog, name="Levelling"):
     async def link_twitch(self, ctx, username: str):
         """Link your twitch to your discord to start gaining xp in twitch chat"""
         await self.bot.user_coll.update_one({"_id": str(ctx.author.id)},
-                                   {"$set": {"twitch_name": username.lower(), "twitch_verified": False}})
+                                            {"$set": {"twitch_name": username.lower(), "twitch_verified": False}})
         await ctx.send(embed=discord.Embed(
             description=f"You have linked your discord account to your twitch account. "
                         f"In order to start gaining XP in Nullzee's twitch chat, you must type "
@@ -387,17 +384,13 @@ class Levelling(commands.Cog, name="Levelling"):
     async def weekly_reset(self, ctx):
         """Reset everyone's weekly xp"""
         await ctx.send("Resetting...")
-        with open("users.json") as f:
-            users = json.load(f)
+        users = get_file_json("users")
         async for user in self.bot.user_coll.find({}):
             users[str(user["_id"])] = user
-        # if (math.trunc(time.time()) + 604800) > users["config"]["week_start"]:
         with open(f"backups/{datetime.datetime.now().strftime('%d%m%y')}.json", "w") as f:
             json.dump(users, f)
         await self.bot.user_coll.update_many({}, {"$set": {"weekly": 0}})
-        # users["config"]["week_start"] = math.trunc(time.time())
-        with open("users.json", "w") as f:
-            json.dump(users, f)
+        save_file_json(users, "users")
         embed = discord.Embed(description="Weekly XP leaderboard was reset", color=discord.Color.blue())
         await self.bot.get_guild(Misc.GUILD).get_channel(Channel.MOD_LOGS).send(embed=embed)
         await ctx.send(embed=embed)
