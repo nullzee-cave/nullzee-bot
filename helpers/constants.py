@@ -13,7 +13,7 @@ class Constant(type):
 class Role(metaclass=Constant):
     # The following roles are ordered the same as the role list in the discord
     ADMIN = 685027474522112000
-    MUTED = 749178299518943343
+    MUTED = 678911295835078657
     STAFF_ROLES = 708567952051666964
     # Staff Roles
     STAFF = 667953757954244628
