@@ -17,7 +17,7 @@ If you are adding new features which have not been discussed, or you are unsure 
 #### Other:
 
 1. Move the TODO list here out of the README
-2. Make weekly leaderboard reset weekly after sending the leaderboard into a dedicated channel, add weekly as a giveaway req somehow, and possibly a role and/or achievement for top 3 on the last week's leaderboard
+2. Add weekly as a giveaway req somehow, and possibly a role and/or achievement for top 3 on the last week's leaderboard
 3. Do the TODOs in this project
 4. Rewrite the level roles system because it's terrible
 5. Improve `mass_ban` to cut after a full line instead of halfway through
