@@ -128,7 +128,7 @@ class Util(commands.Cog, name="Other"):
         embed.add_field(name="Member count", value=f"{count:,}", inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command(name="rolecolour")
+    @commands.command(name="rolecolour", aliases=["rolecolor", "rc"])
     async def role_colour(self, ctx, *, role: RoleConverter):
         """View the colour of a role"""
         embed = discord.Embed(title=str(role.colour), description=f"Colour for {role.mention}", colour=role.colour)
