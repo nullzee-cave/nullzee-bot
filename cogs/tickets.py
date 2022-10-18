@@ -7,7 +7,7 @@ import re
 
 from helpers.constants import Channel, Role, Category, Misc
 from helpers.ticket_utils import TICKET_TOPIC_REGEX
-from helpers.utils import staff_check, Embed, MessageOrReplyConverter, role_ids, list_one
+from helpers.utils import staff_check, Embed, MessageOrReplyConverter, role_ids, list_one, staff_or_trainee
 from helpers.views import PersistentTicketView, PersistentInnerTicketView
 
 
@@ -189,6 +189,12 @@ class Tickets(commands.Cog, name="Tickets"):
         log_channel = ctx.guild.get_channel(Channel.MOD_LOGS)
         await log_channel.send(embed=embed,
                                file=discord.File(f"transcripts/{ctx.channel.name}.html", "transcript.html"))
+
+    @commands.command(hidden=True, aliases=['sc', 'staffclaim'])
+    @staff_or_trainee
+    async def staff_claim(self, ctx, arg):
+        restrict_ticket_command_usage(ctx)
+        await ctx.channel.name.id.edit(name=f"{arg}{ctx.channel.name}")
 
 
 async def setup(bot):
