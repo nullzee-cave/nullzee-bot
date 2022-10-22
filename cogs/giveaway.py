@@ -51,11 +51,14 @@ class Giveaway(commands.Cog, name="Giveaway"):
         await ctx.send("How long will the giveaway last?")
         time_msg = await self.get_input(ctx)
         giveaway_time = await TimeConverter().convert(ctx, time_msg.content)
-        if giveaway_time < 10800 or \
-          (giveaway_time > 604800 and channel.id not in [Channel.GIVEAWAY, Channel.STAFF_ANNOUNCEMENTS]) or \
-          (giveaway_time > 1209600 and channel.id in [Channel.GIVEAWAY, Channel.STAFF_ANNOUNCEMENTS]):
+        if (channel.id in [Channel.GIVEAWAY, Channel.STAFF_ANNOUNCEMENTS] and
+           (giveaway_time < 86400 or giveaway_time > 1209600)):
             return await ctx.send(
-                "Giveaways can last a minimum of 3 hours and a maximum of 1 week (or 2 for large giveaways).")
+                "Large giveaways can last a minimum of 24 hours and a maximum of 2 weeks.")
+        if (channel.id not in [Channel.GIVEAWAY, Channel.STAFF_ANNOUNCEMENTS] and
+           (giveaway_time < 10800 or giveaway_time > 604800)):
+            return await ctx.send(
+                "Small giveaways can last a minimum of 3 hours and a maximum of 1 week.")
 
         await ctx.send("How many winners will there be?")
         winner_count_msg = await self.get_input(ctx)
