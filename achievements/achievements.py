@@ -210,7 +210,7 @@ achievements = {
     },
     "Establishing Connections": {
         "listeners": {},
-        "description": "Send a message in twitch chat after linking your twitch to your discord",
+        "description": "Send a message in twitch chat after linking your twitch to your discord. This is now unobtainable",
         "value": 5
     },
     "Bad boy": {
@@ -255,6 +255,7 @@ achievements = {
             "message": lambda ctx: ctx.guild and ctx.guild.get_member(
                 540953289219375146) in ctx.message.mentions and "help" in ctx.message.content
         },
+        "description": "Ask Qwerety#2929 (@540953289219375146) for help",
         "hidden": True,
         "value": 3
     },
@@ -353,12 +354,12 @@ achievements = {
     # TODO: these on twitch bot
     "Stream viewer": {
         "listeners": {},
-        "description": "Have 24h watchtime in Nullzee's stream",
+        "description": "Have 24h watchtime in Nullzee's stream. This is now unobtainable",
         "value": 5
     },
     "Stream fan": {
         "listeners": {},
-        "description": "Have 3 Days watchtime in Nullzee's stream",
+        "description": "Have 3 Days watchtime in Nullzee's stream. This is now unobtainable",
         "value": 10
     },
     "Kindness": {
@@ -425,7 +426,7 @@ achievements = {
     },
     "Twitch Main": {
         "listeners": {},
-        "description": "",
+        "description": "An achievement for levelling up on Twitch. This is now unobtainable",
         "value": 0,
         "hidden": True
     },
@@ -433,7 +434,7 @@ achievements = {
         "listeners": {
             "message": lambda ctx: list_one(ctx.message.content, "https://youtube.com/watch?v=dQw4w9WgXcQ")
         },
-        "description": "",
+        "description": "Rickroll someone",
         "value": 4,
         "hidden": True
     },
@@ -441,7 +442,7 @@ achievements = {
         "listeners": {
             "message": lambda ctx: ctx.message.content.lower().startswith("-claimroles timedeo")
         },
-        "description": "",
+        "description": "For being too literal in following the channel description",
         "value": 4,
         "hidden": True
     },
@@ -449,7 +450,7 @@ achievements = {
         "listeners": {
             "message": lambda ctx: ctx.channel.id == Channel.SELF_PROMO and "discord.gg/nullzee" in ctx.message.content.lower()
         },
-        "description": "",
+        "description": "Advertise the cave... In the cave",
         "value": 4,
         "hidden": True
     },
@@ -457,7 +458,7 @@ achievements = {
         "listeners": {
             "message": lambda ctx: ctx.channel.id == Channel.PETS and ctx.message.attachments
         },
-        "description": "",
+        "description": "Such a cute pet",
         "value": 5,
         "hidden": True
     },
@@ -465,7 +466,7 @@ achievements = {
         "listeners": {
             "command": lambda _, name: name == "avatar"
         },
-        "description": "",
+        "description": "Admire your own profile picture",
         "value": 3,
         "hidden": True
     },
@@ -473,7 +474,7 @@ achievements = {
         "listeners": {
             "level_up": lambda ctx, _: ctx.channel.id == Channel.BOT_GAMES
         },
-        "description": "",
+        "description": "Level up playing bot games... somehow",
         "value": 5,
         "hidden": True
     },
@@ -481,7 +482,7 @@ achievements = {
         "listeners": {
             "message": lambda ctx: ctx.channel.id == Channel.NO_MIC and ctx.author.voice and ctx.author.voice.self_mute
         },
-        "description": "",
+        "description": "Send a message in the no mic channel while muted in voice chat. This is now unobtainable",
         "value": 5,
         "hidden": True
     },
