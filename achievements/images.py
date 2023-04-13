@@ -152,7 +152,10 @@ def achievement_page(page, filename="image.png"):
         name = [k for k in achievements if "hidden" not in achievements[k]][page_num]
         draw.rectangle([(x_pos, y_pos), (x_pos + 300, y_pos + 100)], BackgroundMeta.get().default.box_background_colour,
                        BackgroundMeta.get().default.box_text_colour)
-        draw.text((x_pos + 10, y_pos + 10), name, "black", font=font_medium)
+        if name == "Old Man":
+            draw.text((x_pos + 10, y_pos + 10), "Old Person", "black", font=font_medium)
+        else:
+            draw.text((x_pos + 10, y_pos + 10), name, "black", font=font_medium)
         draw.text((x_pos + 10, y_pos + 40), wrap_text(achievements[name]["description"], 280, font_thin), "black",
                   font=font_thin)
         y_pos += 150
