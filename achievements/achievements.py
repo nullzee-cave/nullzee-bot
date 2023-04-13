@@ -273,7 +273,7 @@ achievements = {
         "description": "Be on the server for more than a month",
         "value": 5
     },
-    "Old man": {
+    "Old Person": {
         "listeners": {
             "message": lambda msg: msg.guild and msg.author.joined_at.timestamp() + 15768000 < time.time()
         },
@@ -513,7 +513,10 @@ async def award_achievement(ctx, data, name):
         string += f" and earned {','.join(f'{v} {k}' for k, v in achievements[name]['db_rewards'].items())}"
     channel = ctx.author if "hidden" in achievements[name] and achievements[name]["hidden"] else ctx
     try:
-        await channel.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
+        if name == "Old Man":
+            await channel.send(f"Congratulations {ctx.author.mention}, you just achieved `Old Person`!")
+        else:
+            await channel.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
     except discord.Forbidden:
         return
     await ctx.bot.user_coll.update_one({"_id": str(ctx.author.id)},
