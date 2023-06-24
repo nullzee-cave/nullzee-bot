@@ -273,7 +273,7 @@ achievements = {
         "description": "Be on the server for more than a month",
         "value": 5
     },
-    "Old man": {
+    "Old Person": {
         "listeners": {
             "message": lambda msg: msg.guild and msg.author.joined_at.timestamp() + 15768000 < time.time()
         },
