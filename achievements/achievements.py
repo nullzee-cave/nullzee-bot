@@ -512,7 +512,10 @@ async def award_achievement(ctx, data, name):
         await ctx.bot.user_coll.update_one({"_id": str(ctx.author.id)}, {"$inc": achievements[name]["db_rewards"]})
         string += f" and earned {','.join(f'{v} {k}' for k, v in achievements[name]['db_rewards'].items())}"
     channel = ctx.author if "hidden" in achievements[name] and achievements[name]["hidden"] else ctx
-    await channel.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
+    try:
+        await channel.send(f"Congratulations {ctx.author.mention}, you just achieved `{name}`{string}!")
+    except: discord.Forbidden:
+        return
     await ctx.bot.user_coll.update_one({"_id": str(ctx.author.id)},
                                {"$set": {f"achievements.{name}": time.time()},
                                "$inc": {"achievement_points": achievements[name]["value"]}})
