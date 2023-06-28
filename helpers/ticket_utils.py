@@ -6,6 +6,7 @@ from helpers.constants import Category
 from helpers.utils import get_file_json
 
 TICKET_TOPIC_REGEX = r"opened by (?P<user>.+#\d{4}) \((?P<user_id>\d+)\) at (?P<time>.+)"
+ALTERNATE_TICKET_TOPIC_REGEX = r"opened by (?P<user>.+#\d) \((?P<user_id>\d+)\) at (?P<time>.+)"
 
 
 ticket_types = {
