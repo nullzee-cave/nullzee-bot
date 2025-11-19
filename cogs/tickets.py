@@ -6,7 +6,7 @@ from discord.ext import commands, tasks
 import re
 
 from helpers.constants import Channel, Role, Category, Misc
-from helpers.ticket_utils import TICKET_TOPIC_REGEX, ALTERNATE_TICKET_TOPIC_REGEX
+from helpers.ticket_utils import TICKET_TOPIC_REGEX, ALTERNATE_TICKET_TOPIC_REGEX, NEW_TICKET_TOPIC_REGEX
 from helpers.utils import staff_check, Embed, MessageOrReplyConverter, role_ids, list_one
 from helpers.views import PersistentTicketView, PersistentInnerTicketView
 
@@ -177,6 +177,8 @@ class Tickets(commands.Cog, name="Tickets"):
         user = re.search(TICKET_TOPIC_REGEX, ctx.channel.topic)
         if user is None:
             user = re.search(ALTERNATE_TICKET_TOPIC_REGEX, ctx.channel.topic)
+            if user is None:
+                user = re.search(NEW_TICKET_TOPIC_REGEX, ctx.channel.topic)
         user = int(user.group("user_id"))
         try:
             user = self.bot.get_user(user)
